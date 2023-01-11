@@ -1,25 +1,24 @@
-use crate::core::registers::RegisterBankError::AddressOutOfRange;
-
 const REGISTER_BANK_SIZE: usize = 8;
 const FLAG_REGISTER: usize = 6;
 
-struct RegisterBank {
+#[derive(Default)]
+pub struct RegisterBank {
 	register_bank: [u8; REGISTER_BANK_SIZE],
 }
 
 impl RegisterBank {
-	fn new() -> Self {
+	pub fn new() -> Self {
 		Self {
 			register_bank: [0u8; REGISTER_BANK_SIZE]
 		}
 	}
 
-	fn read_single(&self, address: usize) -> Result<u8, RegisterBankError> {
+	pub fn read_single(&self, address: usize) -> Result<u8, RegisterBankError> {
 		self.register_bank.get(address).copied()
 			.ok_or(RegisterBankError::AddressOutOfRange { address })
 	}
 
-	fn write_single(&mut self, address: usize, value: u8) -> Result<(), RegisterBankError> {
+	pub fn write_single(&mut self, address: usize, value: u8) -> Result<(), RegisterBankError> {
 		let register = self.register_bank.get_mut(address)
 			.ok_or(RegisterBankError::AddressOutOfRange { address })?;
 		*register = value;
@@ -36,7 +35,7 @@ impl RegisterBank {
 		}
 	}
 
-	fn read_double(&self, address: usize) -> Result<u16, RegisterBankError> {
+	pub fn read_double(&self, address: usize) -> Result<u16, RegisterBankError> {
 		let (high_address, low_address) = Self::get_double_address(address)
 			.ok_or(RegisterBankError::AddressOutOfRange { address })?;
 		let high = self.read_single(high_address)?;
@@ -44,13 +43,13 @@ impl RegisterBank {
 		Ok(u16::from_be_bytes([high, low]))
 	}
 
-	fn write_double(&mut self, address: usize, value: u16) -> Result<(), RegisterBankError> {
+	pub fn write_double(&mut self, address: usize, value: u16) -> Result<(), RegisterBankError> {
 		let (high_address, low_address) = Self::get_double_address(address)
 			.ok_or(RegisterBankError::InvalidDoubleRegister { address })?;
 		let [high, low] = value.to_be_bytes();
 
 		let high_register = self.register_bank.get_mut(high_address)
-			.ok_or(AddressOutOfRange { address: high_address })?;
+			.ok_or(RegisterBankError::AddressOutOfRange { address: high_address })?;
 		*high_register = high;
 
 		let low_register = self.register_bank.get_mut(low_address)
@@ -61,7 +60,7 @@ impl RegisterBank {
 	}
 }
 
-enum RegisterBankError {
+pub enum RegisterBankError {
 	AddressOutOfRange { address: usize },
 	InvalidDoubleRegister { address: usize },
 }
