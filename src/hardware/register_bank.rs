@@ -1,15 +1,17 @@
-const REGISTER_BANK_SIZE: usize = 8;
+pub const SINGLE_REGISTER_BANK_SIZE: usize = 8;
+pub const DOUBLE_REGISTER_BANK_SIZE: usize = SINGLE_REGISTER_BANK_SIZE / 2;
+
 const FLAG_REGISTER: usize = 6;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct RegisterBank {
-	register_bank: [u8; REGISTER_BANK_SIZE],
+	register_bank: [u8; SINGLE_REGISTER_BANK_SIZE],
 }
 
 impl RegisterBank {
 	pub fn new() -> Self {
 		Self {
-			register_bank: [0u8; REGISTER_BANK_SIZE]
+			register_bank: [0u8; SINGLE_REGISTER_BANK_SIZE]
 		}
 	}
 
@@ -37,7 +39,7 @@ impl RegisterBank {
 
 	pub fn read_double(&self, address: usize) -> Result<u16, RegisterBankError> {
 		let (high_address, low_address) = Self::get_double_address(address)
-			.ok_or(RegisterBankError::AddressOutOfRange { address })?;
+			.ok_or(RegisterBankError::InvalidDoubleRegister { address })?;
 		let high = self.read_single(high_address)?;
 		let low = self.read_single(low_address)?;
 		Ok(u16::from_be_bytes([high, low]))
@@ -53,13 +55,14 @@ impl RegisterBank {
 		*high_register = high;
 
 		let low_register = self.register_bank.get_mut(low_address)
-			.ok_or(RegisterBankError::InvalidDoubleRegister { address: low_address })?;
+			.ok_or(RegisterBankError::AddressOutOfRange { address: low_address })?;
 		*low_register = low;
 
 		Ok(())
 	}
 }
 
+#[derive(Debug, PartialEq, Eq)]
 pub enum RegisterBankError {
 	AddressOutOfRange { address: usize },
 	InvalidDoubleRegister { address: usize },
