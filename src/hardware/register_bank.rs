@@ -5,7 +5,7 @@ pub const DOUBLE_REGISTER_BANK_SIZE: usize = SINGLE_REGISTER_BANK_SIZE / 2;
 
 const FLAG_REGISTER: usize = 6;
 
-#[derive(IntoPrimitive)]
+#[derive(IntoPrimitive, Copy, Clone)]
 #[repr(u8)]
 pub enum RegisterFlags {
 	Zero = 7,
