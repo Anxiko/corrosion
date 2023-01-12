@@ -1,4 +1,6 @@
-use corrosion::hardware::register_bank::{DOUBLE_REGISTER_BANK_SIZE, RegisterBank, RegisterBankError, SINGLE_REGISTER_BANK_SIZE};
+use corrosion::hardware::register_bank::{
+	DOUBLE_REGISTER_BANK_SIZE, RegisterBank, RegisterBankError, RegisterFlags, SINGLE_REGISTER_BANK_SIZE,
+};
 
 #[test]
 fn single_register() {
@@ -48,4 +50,18 @@ fn double_register() {
 		register_bank.write_double(DOUBLE_REGISTER_BANK_SIZE, 0xab12),
 		Err(RegisterBankError::InvalidDoubleRegister { address: DOUBLE_REGISTER_BANK_SIZE })
 	);
+}
+
+#[test]
+fn bit_flags() {
+	let mut register_bank = RegisterBank::new();
+	for bit_flag in [
+		RegisterFlags::Carry, RegisterFlags::HalfCarry, RegisterFlags::Subtraction, RegisterFlags::Zero
+	] {
+		assert!(!register_bank.read_bit_flag(bit_flag));
+		register_bank.write_bit_flag(bit_flag, true);
+		assert!(register_bank.read_bit_flag(bit_flag));
+		register_bank.write_bit_flag(bit_flag, false);
+		assert!(!register_bank.read_bit_flag(bit_flag));
+	}
 }
