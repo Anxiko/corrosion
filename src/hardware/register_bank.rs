@@ -1,7 +1,18 @@
+use num_enum::IntoPrimitive;
+
 pub const SINGLE_REGISTER_BANK_SIZE: usize = 8;
 pub const DOUBLE_REGISTER_BANK_SIZE: usize = SINGLE_REGISTER_BANK_SIZE / 2;
 
 const FLAG_REGISTER: usize = 6;
+
+#[derive(IntoPrimitive)]
+#[repr(u8)]
+pub enum RegisterFlags {
+	Zero = 7,
+	Subtraction = 6,
+	HalfCarry = 5,
+	Carry = 4,
+}
 
 #[derive(Default, Debug)]
 pub struct RegisterBank {
@@ -59,6 +70,31 @@ impl RegisterBank {
 		*low_register = low;
 
 		Ok(())
+	}
+
+	pub fn read_bit_flag(&self, flag: RegisterFlags) -> bool {
+		let flag: u8 = flag.into();
+		let bitmask: u8 = 1u8 << flag;
+
+		let flag_register = self.read_single(FLAG_REGISTER).unwrap();
+
+		flag_register & bitmask != 0
+	}
+
+	pub fn write_bit_flag(&mut self, flag: RegisterFlags, bit: bool) {
+		let flag: u8 = flag.into();
+		let bitmask: u8 = 1u8 << flag;
+		let shifted_bit: u8 =
+			if bit {
+				bitmask
+			} else {
+				0
+			};
+
+		let flag_register: u8 = self.read_single(FLAG_REGISTER).unwrap();
+		let new_flag_registerr = (flag_register & (!bitmask)) | shifted_bit;
+
+		self.write_single(FLAG_REGISTER, new_flag_registerr).unwrap();
 	}
 }
 
