@@ -3,6 +3,39 @@ use num_enum::IntoPrimitive;
 pub const SINGLE_REGISTER_BANK_SIZE: usize = 8;
 pub const DOUBLE_REGISTER_BANK_SIZE: usize = SINGLE_REGISTER_BANK_SIZE / 2;
 
+#[derive(IntoPrimitive, Copy, Clone)]
+#[repr(u8)]
+pub enum SingleRegisters {
+	A = 0,
+	B,
+	C,
+	D,
+	E,
+	F,
+	G,
+	H,
+}
+
+#[derive(IntoPrimitive, Copy, Clone)]
+#[repr(u8)]
+pub enum DoubleRegisters {
+	AF = 0,
+	BC,
+	DE,
+	GH,
+}
+
+impl DoubleRegisters {
+	fn get_high_and_low(&self) -> (SingleRegisters, SingleRegisters) {
+		match self {
+			Self::AF => (SingleRegisters::A, SingleRegisters::F),
+			Self::BC => (SingleRegisters::B, SingleRegisters::C),
+			Self::DE => (SingleRegisters::D, SingleRegisters::E),
+			Self::GH => (SingleRegisters::G, SingleRegisters::H)
+		}
+	}
+}
+
 const FLAG_REGISTER: usize = 6;
 
 #[derive(IntoPrimitive, Copy, Clone)]
@@ -95,6 +128,27 @@ impl RegisterBank {
 		let new_flag_registerr = (flag_register & (!bitmask)) | shifted_bit;
 
 		self.write_single(FLAG_REGISTER, new_flag_registerr).unwrap();
+	}
+
+	pub fn read_single_named(&self, single_register: SingleRegisters) -> u8 {
+		let address: u8 = single_register.into();
+		self.read_single(address as usize).unwrap()
+	}
+
+	pub fn write_single_named(&mut self, single_register: SingleRegisters, value: u8) {
+		let address: u8 = single_register.into();
+		self.write_single(address as usize, value).unwrap();
+	}
+
+
+	pub fn read_double_named(&self, double_register: DoubleRegisters) -> u16 {
+		let address: u8 = double_register.into();
+		self.read_double(address as usize).unwrap()
+	}
+
+	pub fn write_double_named(&mut self, double_register: DoubleRegisters, value: u16) {
+		let address: u8 = double_register.into();
+		self.write_double(address as usize, value).unwrap();
 	}
 }
 

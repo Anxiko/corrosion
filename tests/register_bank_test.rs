@@ -1,5 +1,6 @@
 use corrosion::hardware::register_bank::{
 	DOUBLE_REGISTER_BANK_SIZE, RegisterBank, RegisterBankError, RegisterFlags, SINGLE_REGISTER_BANK_SIZE,
+	SingleRegisters, DoubleRegisters,
 };
 
 #[test]
@@ -64,4 +65,20 @@ fn bit_flags() {
 		register_bank.write_bit_flag(bit_flag, false);
 		assert!(!register_bank.read_bit_flag(bit_flag));
 	}
+}
+
+#[test]
+fn named_register() {
+	let mut register_bank = RegisterBank::new();
+
+	register_bank.write_single_named(SingleRegisters::A, 0x12);
+	assert_eq!(register_bank.read_single_named(SingleRegisters::A), 0x12);
+
+	register_bank.write_single_named(SingleRegisters::F, 0x34);
+	assert_eq!(register_bank.read_single_named(SingleRegisters::F), 0x34);
+
+	assert_eq!(register_bank.read_double_named(DoubleRegisters::AF), 0x1234);
+
+	register_bank.write_double_named(DoubleRegisters::BC, 0x5678);
+	assert_eq!(register_bank.read_double_named(DoubleRegisters::BC), 0x5678);
 }
