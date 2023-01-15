@@ -1,6 +1,8 @@
 use crate::hardware::cpu::Cpu;
 
-mod arithmetic;
+pub(crate) mod arithmetic;
+#[cfg(test)]
+mod tests;
 
 const LOWER_NIBBLE: u8 = 0xF;
 
