@@ -1,5 +1,8 @@
 use num_enum::IntoPrimitive;
 
+#[cfg(test)]
+mod tests;
+
 pub const SINGLE_REGISTER_BANK_SIZE: usize = 8;
 pub const DOUBLE_REGISTER_BANK_SIZE: usize = SINGLE_REGISTER_BANK_SIZE / 2;
 

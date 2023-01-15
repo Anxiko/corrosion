@@ -1,4 +1,4 @@
-use corrosion::hardware::register_bank::{
+use crate::hardware::register_bank::{
 	DOUBLE_REGISTER_BANK_SIZE, RegisterBank, RegisterBankError, RegisterFlags, SINGLE_REGISTER_BANK_SIZE,
 	SingleRegisters, DoubleRegisters,
 };
