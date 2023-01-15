@@ -2,7 +2,7 @@ use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::{RegisterFlags, SingleRegisters};
 use crate::instructions::{half_carry, Instruction};
 
-const ACC_REGISTER: SingleRegisters = SingleRegisters::A;
+pub(crate) const ACC_REGISTER: SingleRegisters = SingleRegisters::A;
 
 pub(crate) struct Add {
 	src: SingleRegisters,
