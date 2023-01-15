@@ -1,6 +1,7 @@
 use crate::hardware::cpu::Cpu;
-use crate::hardware::register_bank::{RegisterFlags, SingleRegisters};
-use crate::instructions::arithmetic::{ACC_REGISTER, Add, ArithmeticOperation};
+use crate::hardware::ram::Ram;
+use crate::hardware::register_bank::{DoubleRegisters, RegisterFlags, SingleRegisters};
+use crate::instructions::arithmetic::{ACC_REGISTER, Add, AddHl, ArithmeticOperation};
 use crate::instructions::Instruction;
 
 #[test]
@@ -64,6 +65,22 @@ fn add() {
 
 	assert!(Add::new(SingleRegisters::B).execute(&mut cpu).is_ok());
 
+	assert_eq!(cpu.register_bank.read_single_named(ACC_REGISTER), 0x46);
+	assert!(!cpu.register_bank.read_bit_flag(RegisterFlags::Zero));
+	assert!(!cpu.register_bank.read_bit_flag(RegisterFlags::Subtraction));
+	assert!(!cpu.register_bank.read_bit_flag(RegisterFlags::Carry));
+	assert!(!cpu.register_bank.read_bit_flag(RegisterFlags::HalfCarry));
+}
+
+#[test]
+fn add_hl() {
+	let mut cpu = Cpu::new();
+	cpu.register_bank.write_single_named(ACC_REGISTER, 0x12);
+	let mem_address = 0xC123;
+	cpu.mapped_ram.write(mem_address, 0x34).expect("Write to working RAM");
+	cpu.register_bank.write_double_named(DoubleRegisters::HL, mem_address);
+
+	assert!(AddHl::new().execute(&mut cpu).is_ok());
 	assert_eq!(cpu.register_bank.read_single_named(ACC_REGISTER), 0x46);
 	assert!(!cpu.register_bank.read_bit_flag(RegisterFlags::Zero));
 	assert!(!cpu.register_bank.read_bit_flag(RegisterFlags::Subtraction));

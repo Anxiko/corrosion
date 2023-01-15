@@ -4,14 +4,15 @@ use crate::hardware::ram::RamError;
 pub(crate) mod arithmetic;
 
 trait Instruction {
-	fn execute(&self, cpu: &mut Cpu) -> Result<(), InstructionError>;
+	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError>;
 }
 
-pub(crate) enum InstructionError {
+#[derive(Debug)]
+pub(crate) enum ExecutionError {
 	RamError(RamError)
 }
 
-impl From<RamError> for InstructionError {
+impl From<RamError> for ExecutionError {
 	fn from(ram_error: RamError) -> Self {
 		Self::RamError(ram_error)
 	}

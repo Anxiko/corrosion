@@ -1,6 +1,6 @@
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::{DoubleRegisters, RegisterFlags, SingleRegisters};
-use crate::instructions::{Instruction, InstructionError};
+use crate::instructions::{Instruction, ExecutionError};
 use crate::hardware::ram::Ram;
 
 #[cfg(test)]
@@ -56,7 +56,7 @@ impl ArithmeticOperation {
 }
 
 impl Instruction for Add {
-	fn execute(&self, cpu: &mut Cpu) -> Result<(), InstructionError> {
+	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
 		let registers = &mut cpu.register_bank;
 		let dst_val = registers.read_single_named(ACC_REGISTER);
 		let src_val = registers.read_single_named(self.src);
@@ -76,7 +76,7 @@ impl AddHl {
 }
 
 impl Instruction for AddHl {
-	fn execute(&self, cpu: &mut Cpu) -> Result<(), InstructionError> {
+	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
 		let src_address = cpu.register_bank.read_double_named(DoubleRegisters::HL);
 		let src_val = cpu.mapped_ram.read(src_address)?;
 		let dst_val = cpu.register_bank.read_single_named(ACC_REGISTER);

@@ -10,6 +10,7 @@ pub(crate) trait Ram {
 	fn write(&mut self, address: u16, value: u8) -> Result<(), RamError>;
 }
 
+#[derive(Debug)]
 pub(crate) enum RamError {
 	InvalidAddress(u16),
 	UnmappedRegion(u16),
@@ -33,7 +34,7 @@ struct RamMapping {
 
 impl RamMapping {
 	fn mapped_here(&self, address: u16) -> bool {
-		usize::from(address - self.offset) < self.size
+		address >= self.offset && usize::from(address - self.offset) < self.size
 	}
 }
 
