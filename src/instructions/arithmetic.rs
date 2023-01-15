@@ -1,9 +1,14 @@
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::{DoubleRegisters, RegisterFlags, SingleRegisters};
-use crate::instructions::{half_carry, Instruction, InstructionError};
+use crate::instructions::{Instruction, InstructionError};
 use crate::hardware::ram::Ram;
 
+#[cfg(test)]
+mod tests;
+
 pub(crate) const ACC_REGISTER: SingleRegisters = SingleRegisters::A;
+
+const LOWER_NIBBLE: u8 = 0xF;
 
 pub(crate) struct Add {
 	src: SingleRegisters,
@@ -15,14 +20,39 @@ impl Add {
 	}
 }
 
-fn base_adder(cpu: &mut Cpu, left: u8, right: u8) {
-	let (result, overflow) = left.overflowing_add(right);
-	cpu.register_bank.write_single_named(ACC_REGISTER, result);
+pub(crate) struct ArithmeticOperation {
+	result: u8,
+	zero: bool,
+	subtraction: bool,
+	carry: bool,
+	half_carry: bool,
+}
 
-	cpu.register_bank.write_bit_flag(RegisterFlags::Zero, result == 0);
-	cpu.register_bank.write_bit_flag(RegisterFlags::Subtraction, false);
-	cpu.register_bank.write_bit_flag(RegisterFlags::Carry, overflow);
-	cpu.register_bank.write_bit_flag(RegisterFlags::HalfCarry, half_carry(left, right));
+impl ArithmeticOperation {
+	pub(crate) fn add(left: u8, right: u8) -> Self {
+		let (result, overflow) = left.overflowing_add(right);
+
+		Self {
+			result,
+			zero: result == 0,
+			subtraction: false,
+			carry: overflow,
+			half_carry: Self::half_carry(left, right),
+		}
+	}
+
+	fn commit(&self, cpu: &mut Cpu) {
+		cpu.register_bank.write_single_named(ACC_REGISTER, self.result);
+
+		cpu.register_bank.write_bit_flag(RegisterFlags::Zero, self.zero);
+		cpu.register_bank.write_bit_flag(RegisterFlags::Subtraction, self.subtraction);
+		cpu.register_bank.write_bit_flag(RegisterFlags::Carry, self.carry);
+		cpu.register_bank.write_bit_flag(RegisterFlags::HalfCarry, self.half_carry);
+	}
+
+	fn half_carry(left: u8, right: u8) -> bool {
+		(left & LOWER_NIBBLE) + (right & LOWER_NIBBLE) > LOWER_NIBBLE
+	}
 }
 
 impl Instruction for Add {
@@ -31,7 +61,7 @@ impl Instruction for Add {
 		let dst_val = registers.read_single_named(ACC_REGISTER);
 		let src_val = registers.read_single_named(self.src);
 
-		base_adder(cpu, dst_val, src_val);
+		ArithmeticOperation::add(dst_val, src_val).commit(cpu);
 
 		Ok(())
 	}
@@ -51,7 +81,7 @@ impl Instruction for AddHl {
 		let src_val = cpu.mapped_ram.read(src_address)?;
 		let dst_val = cpu.register_bank.read_single_named(ACC_REGISTER);
 
-		base_adder(cpu, dst_val, src_val);
+		ArithmeticOperation::add(dst_val, src_val).commit(cpu);
 
 		Ok(())
 	}
