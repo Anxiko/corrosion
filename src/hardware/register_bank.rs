@@ -15,8 +15,8 @@ pub enum SingleRegisters {
 	D,
 	E,
 	F,
-	G,
 	H,
+	L,
 }
 
 #[derive(IntoPrimitive, Copy, Clone)]
@@ -25,7 +25,7 @@ pub enum DoubleRegisters {
 	AF = 0,
 	BC,
 	DE,
-	GH,
+	HL,
 }
 
 impl DoubleRegisters {
@@ -34,7 +34,7 @@ impl DoubleRegisters {
 			Self::AF => (SingleRegisters::A, SingleRegisters::F),
 			Self::BC => (SingleRegisters::B, SingleRegisters::C),
 			Self::DE => (SingleRegisters::D, SingleRegisters::E),
-			Self::GH => (SingleRegisters::G, SingleRegisters::H)
+			Self::HL => (SingleRegisters::H, SingleRegisters::L)
 		}
 	}
 }

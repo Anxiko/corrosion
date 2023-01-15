@@ -1,3 +1,3 @@
 pub mod register_bank;
-mod ram;
+pub(crate) mod ram;
 pub mod cpu;
