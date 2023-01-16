@@ -73,6 +73,27 @@ fn arithmetic_add() {
 }
 
 #[test]
+fn arithmetic_add_with_carry() {
+	let operation = ArithmeticOperation::add_with_carry(0x8, 0x7, true);
+
+	assert_eq!(operation.result, 0x10);
+	assert!(!operation.zero);
+	assert!(!operation.subtraction);
+	assert!(!operation.carry);
+	assert!(operation.half_carry);
+
+	let operation = ArithmeticOperation::add_with_carry(0x80, 0x7F, true);
+
+	assert_eq!(operation.result, 0x00);
+	assert!(operation.zero);
+	assert!(!operation.subtraction);
+	assert!(operation.carry);
+	assert!(operation.half_carry);
+
+
+}
+
+#[test]
 fn arithmetic_commit() {
 	test_commit_config(0x10, false, false, true, false);
 	test_commit_config(0x00, true, false, false, true);
