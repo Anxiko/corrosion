@@ -3,6 +3,7 @@ use crate::hardware::ram::{Ram, WORKING_RAM_START};
 use crate::hardware::register_bank::{DoubleRegisters, RegisterFlags, SingleRegisters};
 use crate::instructions::arithmetic::ACC_REGISTER;
 use crate::instructions::arithmetic::add::{Add, AddHl, AddImmediate, AddWithCarry};
+use crate::instructions::arithmetic::sub::Sub;
 use crate::instructions::Instruction;
 
 #[test]
@@ -67,5 +68,19 @@ fn add_with_carry() {
 	assert!(!cpu.register_bank.read_bit_flag(RegisterFlags::Subtraction));
 	assert!(cpu.register_bank.read_bit_flag(RegisterFlags::Carry));
 	assert!(cpu.register_bank.read_bit_flag(RegisterFlags::HalfCarry));
+}
 
+#[test]
+fn sub() {
+	let mut cpu = Cpu::new();
+	cpu.register_bank.write_single_named(ACC_REGISTER, 0x34);
+	cpu.register_bank.write_single_named(SingleRegisters::B, 0x12);
+
+	assert!(Sub::new(SingleRegisters::B).execute(&mut cpu).is_ok());
+
+	assert_eq!(cpu.register_bank.read_single_named(ACC_REGISTER), 0x22);
+	assert!(!cpu.register_bank.read_bit_flag(RegisterFlags::Zero));
+	assert!(cpu.register_bank.read_bit_flag(RegisterFlags::Subtraction));
+	assert!(!cpu.register_bank.read_bit_flag(RegisterFlags::Carry));
+	assert!(!cpu.register_bank.read_bit_flag(RegisterFlags::HalfCarry));
 }
