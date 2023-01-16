@@ -128,9 +128,9 @@ impl RegisterBank {
 			};
 
 		let flag_register: u8 = self.read_single(FLAG_REGISTER).unwrap();
-		let new_flag_registerr = (flag_register & (!bitmask)) | shifted_bit;
+		let new_flag_register = (flag_register & (!bitmask)) | shifted_bit;
 
-		self.write_single(FLAG_REGISTER, new_flag_registerr).unwrap();
+		self.write_single(FLAG_REGISTER, new_flag_register).unwrap();
 	}
 
 	pub fn read_single_named(&self, single_register: SingleRegisters) -> u8 {

@@ -1,5 +1,5 @@
 use crate::hardware::register_bank::ProgramCounter;
-use crate::instructions::ExecutionError;
+
 use super::ram::MappedRam;
 use super::register_bank::RegisterBank;
 
