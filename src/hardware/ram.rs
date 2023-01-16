@@ -16,6 +16,7 @@ pub(crate) enum RamError {
 	UnmappedRegion(u16),
 }
 
+#[derive(Debug, PartialEq, Clone)]
 pub struct MappedRam {
 	working_ram: WorkingRam,
 }
@@ -94,6 +95,7 @@ impl Ram for MappedRam {
 	}
 }
 
+#[derive(Debug, PartialEq, Clone)]
 struct WorkingRam {
 	memory: Box<[u8; WORKING_RAM_SIZE]>,
 }

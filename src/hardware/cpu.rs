@@ -3,6 +3,7 @@ use crate::hardware::register_bank::ProgramCounter;
 use super::ram::MappedRam;
 use super::register_bank::RegisterBank;
 
+#[derive(Debug, PartialEq, Clone)]
 pub struct Cpu {
 	pub register_bank: RegisterBank,
 	pub mapped_ram: MappedRam,

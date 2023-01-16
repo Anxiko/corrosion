@@ -50,7 +50,7 @@ pub enum RegisterFlags {
 	Carry = 4,
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, PartialEq, Eq, Clone)]
 pub struct RegisterBank {
 	register_bank: [u8; SINGLE_REGISTER_BANK_SIZE],
 }
@@ -163,6 +163,7 @@ pub enum RegisterBankError {
 
 const PC_START: u16 = 0x100;
 
+#[derive(Debug, PartialEq, Clone)]
 pub(crate) struct ProgramCounter {
 	pc: u16,
 }
