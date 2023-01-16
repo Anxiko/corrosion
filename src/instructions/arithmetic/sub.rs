@@ -69,3 +69,21 @@ impl Instruction for Compare {
 		Ok(())
 	}
 }
+
+pub(super) struct Decrement {}
+
+impl Decrement {
+	pub(crate) fn new() -> Self {
+		Self {}
+	}
+}
+
+impl Instruction for Decrement {
+	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
+		let dst_val = cpu.register_bank.read_single_named(ACC_REGISTER);
+
+		ArithmeticOperation::sub(dst_val, 1).commit(cpu);
+
+		Ok(())
+	}
+}
