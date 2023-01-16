@@ -2,7 +2,7 @@ use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::{Ram, WORKING_RAM_START};
 use crate::hardware::register_bank::{DoubleRegisters, RegisterFlags, SingleRegisters};
 use crate::instructions::arithmetic::ACC_REGISTER;
-use crate::instructions::arithmetic::add::{Add, AddHl, AddImmediate, AddWithCarry};
+use crate::instructions::arithmetic::add::{Add, AddHl, AddImmediate, AddWithCarry, Increment};
 use crate::instructions::arithmetic::sub::{Compare, Sub, SubWithCarry};
 use crate::instructions::Instruction;
 
@@ -114,5 +114,21 @@ fn compare() {
 	expected.register_bank.write_bit_flag(RegisterFlags::Subtraction, true);
 
 	assert!(Compare::new(SingleRegisters::B).execute(&mut cpu).is_ok());
+	assert_eq!(cpu, expected);
+}
+
+#[test]
+fn increment() {
+	let mut cpu = Cpu::new();
+	cpu.register_bank.write_single_named(ACC_REGISTER, 0x7F);
+
+	let mut expected = cpu.clone();
+	expected.register_bank.write_single_named(ACC_REGISTER, 0x80);
+	expected.register_bank.write_bit_flag(RegisterFlags::Zero, false);
+	expected.register_bank.write_bit_flag(RegisterFlags::Carry, false);
+	expected.register_bank.write_bit_flag(RegisterFlags::HalfCarry, true);
+	expected.register_bank.write_bit_flag(RegisterFlags::Subtraction, false);
+
+	assert!(Increment::new().execute(&mut cpu).is_ok());
 	assert_eq!(cpu, expected);
 }

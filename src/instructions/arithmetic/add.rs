@@ -90,3 +90,22 @@ impl Instruction for AddHl {
 		Ok(())
 	}
 }
+
+
+pub(crate) struct Increment {}
+
+impl Increment {
+	pub(crate) fn new() -> Self {
+		Self {}
+	}
+}
+
+impl Instruction for Increment {
+	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
+		let dst_val = cpu.register_bank.read_single_named(ACC_REGISTER);
+
+		ArithmeticOperation::add(dst_val, 1).commit(cpu);
+
+		Ok(())
+	}
+}
