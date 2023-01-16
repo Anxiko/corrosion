@@ -2,6 +2,7 @@ use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::RegisterFlags;
 use crate::instructions::arithmetic::ACC_REGISTER;
 
+#[derive(PartialEq, Debug)]
 pub(super) struct ArithmeticOperation {
 	result: u8,
 	zero: bool,
@@ -26,7 +27,26 @@ impl ArithmeticOperation {
 			zero: result == 0,
 			subtraction: false,
 			carry: first_overflow || second_overflow,
-			half_carry: Self::half_carry(left, right, carry),
+			half_carry: Self::add_half_carry_flag(left, right, carry),
+		}
+	}
+
+	pub(super) fn sub(left: u8, right: u8) -> Self {
+		Self::sub_with_carry(left, right, false)
+	}
+
+	pub(super) fn sub_with_carry(left: u8, right: u8, carry: bool) -> Self {
+		let carry_val: u8 = carry.into();
+
+		let (result, first_underflow) = left.overflowing_sub(right);
+		let (result, second_underflow) = result.overflowing_sub(carry_val);
+
+		Self {
+			result,
+			zero: result == 0,
+			subtraction: true,
+			carry: first_underflow || second_underflow,
+			half_carry: Self::sub_half_carry_flag(left, right, carry),
 		}
 	}
 
@@ -39,9 +59,14 @@ impl ArithmeticOperation {
 		cpu.register_bank.write_bit_flag(RegisterFlags::HalfCarry, self.half_carry);
 	}
 
-	fn half_carry(left: u8, right: u8, carry: bool) -> bool {
+	fn add_half_carry_flag(left: u8, right: u8, carry: bool) -> bool {
 		let carry_val: u8 = carry.into();
 		(left & LOWER_NIBBLE) + (right & LOWER_NIBBLE) + carry_val > LOWER_NIBBLE
+	}
+
+	fn sub_half_carry_flag(left: u8, right: u8, carry: bool) -> bool {
+		let carry_val: u8 = carry.into();
+		(left & LOWER_NIBBLE) < ((right & LOWER_NIBBLE) + carry_val)
 	}
 }
 
@@ -89,8 +114,53 @@ fn arithmetic_add_with_carry() {
 	assert!(!operation.subtraction);
 	assert!(operation.carry);
 	assert!(operation.half_carry);
+}
 
+#[test]
+fn arithmetic_sub() {
+	assert_eq!(
+		ArithmeticOperation::sub(0x34, 0x12),
+		ArithmeticOperation {
+			result: 0x22,
+			zero: false,
+			subtraction: true,
+			carry: false,
+			half_carry: false,
+		}
+	);
 
+	assert_eq!(
+		ArithmeticOperation::sub(0x31, 0x14),
+		ArithmeticOperation {
+			result: 0x1D,
+			zero: false,
+			subtraction: true,
+			carry: false,
+			half_carry: true,
+		}
+	);
+
+	assert_eq!(
+		ArithmeticOperation::sub(0x12, 0x12),
+		ArithmeticOperation {
+			result: 0x00,
+			zero: true,
+			subtraction: true,
+			carry: false,
+			half_carry: false,
+		}
+	);
+
+	assert_eq!(
+		ArithmeticOperation::sub(0x10, 0x20),
+		ArithmeticOperation {
+			result: 0xF0,
+			zero: false,
+			subtraction: true,
+			carry: true,
+			half_carry: false,
+		}
+	);
 }
 
 #[test]
