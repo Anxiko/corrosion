@@ -12,14 +12,21 @@ pub(super) struct ArithmeticOperation {
 
 impl ArithmeticOperation {
 	pub(super) fn add(left: u8, right: u8) -> Self {
-		let (result, overflow) = left.overflowing_add(right);
+		Self::add_with_carry(left, right, false)
+	}
+
+	pub(super) fn add_with_carry(left: u8, right: u8, carry: bool) -> Self {
+		let carry_val: u8 = carry.into();
+
+		let (result, first_overflow) = left.overflowing_add(right);
+		let (result, second_overflow) = result.overflowing_add(carry_val);
 
 		Self {
 			result,
 			zero: result == 0,
 			subtraction: false,
-			carry: overflow,
-			half_carry: Self::half_carry(left, right),
+			carry: first_overflow || second_overflow,
+			half_carry: Self::half_carry(left, right, carry),
 		}
 	}
 
@@ -32,8 +39,9 @@ impl ArithmeticOperation {
 		cpu.register_bank.write_bit_flag(RegisterFlags::HalfCarry, self.half_carry);
 	}
 
-	fn half_carry(left: u8, right: u8) -> bool {
-		(left & LOWER_NIBBLE) + (right & LOWER_NIBBLE) > LOWER_NIBBLE
+	fn half_carry(left: u8, right: u8, carry: bool) -> bool {
+		let carry_val: u8 = carry.into();
+		(left & LOWER_NIBBLE) + (right & LOWER_NIBBLE) + carry_val > LOWER_NIBBLE
 	}
 }
 

@@ -2,7 +2,7 @@ use operation::ArithmeticOperation;
 
 use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::Ram;
-use crate::hardware::register_bank::{DoubleRegisters, SingleRegisters};
+use crate::hardware::register_bank::{DoubleRegisters, RegisterFlags, SingleRegisters};
 use crate::instructions::{ExecutionError, Instruction};
 
 #[cfg(test)]
@@ -71,6 +71,30 @@ impl Instruction for AddImmediate {
 		let dst_val = cpu.register_bank.read_single_named(ACC_REGISTER);
 
 		ArithmeticOperation::add(dst_val, src_val).commit(cpu);
+
+		Ok(())
+	}
+}
+
+pub(crate) struct AddWithCarry {
+	src: SingleRegisters,
+}
+
+impl AddWithCarry {
+	fn new(src: SingleRegisters) -> Self {
+		Self {
+			src
+		}
+	}
+}
+
+impl Instruction for AddWithCarry {
+	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
+		let src_val = cpu.register_bank.read_single_named(self.src);
+		let carry_bit = cpu.register_bank.read_bit_flag(RegisterFlags::Carry);
+		let dst_val = cpu.register_bank.read_single_named(ACC_REGISTER);
+
+		ArithmeticOperation::add_with_carry(dst_val, src_val, carry_bit).commit(cpu);
 
 		Ok(())
 	}
