@@ -1,7 +1,7 @@
 use crate::hardware::cpu::Cpu;
-use crate::hardware::ram::Ram;
+use crate::hardware::ram::{Ram, WORKING_RAM_START};
 use crate::hardware::register_bank::{DoubleRegisters, RegisterFlags, SingleRegisters};
-use crate::instructions::arithmetic::{ACC_REGISTER, Add, AddHl, ArithmeticOperation};
+use crate::instructions::arithmetic::{ACC_REGISTER, Add, AddHl, AddImmediate, ArithmeticOperation};
 use crate::instructions::Instruction;
 
 #[test]
@@ -81,6 +81,23 @@ fn add_hl() {
 	cpu.register_bank.write_double_named(DoubleRegisters::HL, mem_address);
 
 	assert!(AddHl::new().execute(&mut cpu).is_ok());
+	assert_eq!(cpu.register_bank.read_single_named(ACC_REGISTER), 0x46);
+	assert!(!cpu.register_bank.read_bit_flag(RegisterFlags::Zero));
+	assert!(!cpu.register_bank.read_bit_flag(RegisterFlags::Subtraction));
+	assert!(!cpu.register_bank.read_bit_flag(RegisterFlags::Carry));
+	assert!(!cpu.register_bank.read_bit_flag(RegisterFlags::HalfCarry));
+}
+
+#[test]
+fn add_immediate() {
+	let mut cpu = Cpu::new();
+
+	let src_address = WORKING_RAM_START;
+	cpu.pc.write(WORKING_RAM_START);
+	cpu.mapped_ram.write(src_address, 0x34).expect("Write to working RAM");
+	cpu.register_bank.write_single_named(ACC_REGISTER, 0x12);
+
+	assert!(AddImmediate::new().execute(&mut cpu).is_ok());
 	assert_eq!(cpu.register_bank.read_single_named(ACC_REGISTER), 0x46);
 	assert!(!cpu.register_bank.read_bit_flag(RegisterFlags::Zero));
 	assert!(!cpu.register_bank.read_bit_flag(RegisterFlags::Subtraction));

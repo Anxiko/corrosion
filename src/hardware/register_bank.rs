@@ -160,3 +160,28 @@ pub enum RegisterBankError {
 	AddressOutOfRange { address: usize },
 	InvalidDoubleRegister { address: usize },
 }
+
+const PC_START: u16 = 0x100;
+
+pub(crate) struct ProgramCounter {
+	pc: u16,
+}
+
+impl ProgramCounter {
+	pub(crate) fn new() -> Self {
+		Self { pc: PC_START }
+	}
+
+	pub(crate) fn read(&self) -> u16 {
+		self.pc
+	}
+
+	pub(crate) fn write(&mut self, value: u16) {
+		self.pc = value;
+	}
+
+	pub(crate) fn increment(&mut self) {
+		let (result, _overflow) = self.pc.overflowing_add(1);
+		self.pc = result;
+	}
+}

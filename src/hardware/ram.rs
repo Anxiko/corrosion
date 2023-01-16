@@ -1,6 +1,6 @@
-const WORKING_RAM_START: u16 = 0xC000;
-const ECHO_RAM_START: u16 = 0xE000;
-const OAM_START: u16 = 0xFE00;
+pub(crate) const WORKING_RAM_START: u16 = 0xC000;
+pub(crate) const ECHO_RAM_START: u16 = 0xE000;
+pub(crate) const OAM_START: u16 = 0xFE00;
 
 const WORKING_RAM_SIZE: usize = (ECHO_RAM_START - WORKING_RAM_START) as usize;
 

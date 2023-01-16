@@ -86,3 +86,23 @@ impl Instruction for AddHl {
 		Ok(())
 	}
 }
+
+pub(crate) struct AddImmediate {}
+
+impl AddImmediate {
+	pub(crate) fn new() -> Self {
+		Self {}
+	}
+}
+
+impl Instruction for AddImmediate {
+	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
+		let src_address = cpu.next_pc();
+		let src_val = cpu.mapped_ram.read(src_address)?;
+		let dst_val = cpu.register_bank.read_single_named(ACC_REGISTER);
+
+		ArithmeticOperation::add(dst_val, src_val).commit(cpu);
+
+		Ok(())
+	}
+}
