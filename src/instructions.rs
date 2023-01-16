@@ -3,6 +3,7 @@ use crate::hardware::ram::RamError;
 
 pub(crate) mod arithmetic;
 pub(crate) mod logical;
+pub(crate) mod bitwise;
 
 trait Instruction {
 	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError>;
