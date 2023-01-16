@@ -164,6 +164,31 @@ fn arithmetic_sub() {
 }
 
 #[test]
+fn arithmetic_sub_with_carry() {
+	assert_eq!(
+		ArithmeticOperation::sub_with_carry(0x14, 0x04, true),
+		ArithmeticOperation {
+			result: 0x0F,
+			zero: false,
+			subtraction: true,
+			carry: false,
+			half_carry: true,
+		}
+	);
+
+	assert_eq!(
+		ArithmeticOperation::sub_with_carry(0x77, 0x86, true),
+		ArithmeticOperation {
+			result: 0xF0,
+			zero: false,
+			subtraction: true,
+			carry: true,
+			half_carry: false,
+		}
+	)
+}
+
+#[test]
 fn arithmetic_commit() {
 	test_commit_config(0x10, false, false, true, false);
 	test_commit_config(0x00, true, false, false, true);
