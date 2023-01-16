@@ -1,6 +1,6 @@
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::RegisterFlags;
-use crate::instructions::arithmetic::{ACC_REGISTER, LOWER_NIBBLE};
+use crate::instructions::arithmetic::ACC_REGISTER;
 
 pub(super) struct ArithmeticOperation {
 	result: u8,
@@ -118,3 +118,5 @@ fn test_commit_config(result: u8, zero: bool, subtraction: bool, half_carry: boo
 	assert_eq!(cpu.register_bank.read_bit_flag(RegisterFlags::Carry), carry);
 	assert_eq!(cpu.register_bank.read_bit_flag(RegisterFlags::HalfCarry), half_carry);
 }
+
+const LOWER_NIBBLE: u8 = 0xF;
