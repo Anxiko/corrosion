@@ -46,3 +46,26 @@ impl Instruction for SubWithCarry {
 		Ok(())
 	}
 }
+
+pub(super) struct Compare {
+	src: SingleRegisters,
+}
+
+impl Compare {
+	pub(super) fn new(src: SingleRegisters) -> Self {
+		Self { src }
+	}
+}
+
+impl Instruction for Compare {
+	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
+		let src_val = cpu.register_bank.read_single_named(self.src);
+		let dst_val = cpu.register_bank.read_single_named(ACC_REGISTER);
+
+		ArithmeticOperation::sub(dst_val, src_val).commit(cpu);
+		// Restore ACC, since Compare only updates bit flags
+		cpu.register_bank.write_single_named(ACC_REGISTER, dst_val);
+
+		Ok(())
+	}
+}
