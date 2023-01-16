@@ -69,6 +69,25 @@ impl Instruction for Xor {
 	}
 }
 
+pub(crate) struct Negate {}
+
+impl Negate {
+	pub(crate) fn new() -> Self {
+		Self {}
+	}
+}
+
+impl Instruction for Negate {
+	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
+		let dst_val = cpu.register_bank.read_single_named(ACC_REGISTER);
+		let resutl = !dst_val;
+
+		cpu.register_bank.write_single_named(ACC_REGISTER, resutl);
+
+		Ok(())
+	}
+}
+
 #[test]
 fn and_instruction() {
 	let mut cpu = Cpu::new();
@@ -105,5 +124,17 @@ fn xor_instruction() {
 	expected.register_bank.write_single_named(ACC_REGISTER, 0b0110_0110);
 
 	assert!(Xor::new(SingleRegisters::B).execute(&mut cpu).is_ok());
+	assert_eq!(cpu, expected);
+}
+
+#[test]
+fn neg_instruction() {
+	let mut cpu = Cpu::new();
+	cpu.register_bank.write_single_named(ACC_REGISTER, 0b1100_1010);
+
+	let mut expected = cpu.clone();
+	expected.register_bank.write_single_named(ACC_REGISTER, 0b0011_0101);
+
+	assert!(Negate::new().execute(&mut cpu).is_ok());
 	assert_eq!(cpu, expected);
 }
