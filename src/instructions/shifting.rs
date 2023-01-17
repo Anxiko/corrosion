@@ -34,18 +34,14 @@ impl RotateLeftWithCarry {
 	}
 }
 
-impl Instruction for RotateLeftWithCarry {
-	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
-		let old_carry = cpu.register_bank.read_bit_flag(RegisterFlags::Carry);
-		let result = cpu.register_bank.read_single_named(ACC_REGISTER);
-		let highest_bit = result & 0x80 != 0;
-
-		let result = (result << 1) | u8::from(old_carry);
-
-		cpu.register_bank.write_single_named(ACC_REGISTER, result);
-		cpu.register_bank.write_bit_flag(RegisterFlags::Carry, highest_bit);
-
-		Ok(())
+impl AsShiftOperation for RotateLeftWithCarry {
+	fn as_shift_operation(&self, cpu: &mut Cpu) -> ShiftOperation {
+		ShiftOperation::new(
+			cpu.register_bank.read_single_named(ACC_REGISTER),
+			ShiftDestination::Acc,
+			ShiftDirection::Left,
+			ShiftType::RotateWithCarry { old_carry: cpu.register_bank.read_bit_flag(RegisterFlags::Carry) },
+		)
 	}
 }
 
