@@ -3,6 +3,8 @@ use crate::hardware::register_bank::RegisterFlags;
 use crate::instructions::{ExecutionError, Instruction};
 use crate::instructions::ACC_REGISTER;
 
+mod operation;
+
 struct RotateLeft {}
 
 impl RotateLeft {

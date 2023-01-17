@@ -6,7 +6,7 @@ mod tests;
 pub const SINGLE_REGISTER_BANK_SIZE: usize = 8;
 pub const DOUBLE_REGISTER_BANK_SIZE: usize = SINGLE_REGISTER_BANK_SIZE / 2;
 
-#[derive(IntoPrimitive, Copy, Clone)]
+#[derive(IntoPrimitive, Copy, Clone, Debug, PartialEq)]
 #[repr(u8)]
 pub enum SingleRegisters {
 	A = 0,
