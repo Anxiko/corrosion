@@ -1,5 +1,6 @@
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::RegisterFlags;
+use crate::hardware::register_bank::SingleRegisters::C;
 use crate::instructions::{ExecutionError, Instruction};
 use crate::instructions::ACC_REGISTER;
 
@@ -17,6 +18,29 @@ impl Instruction for RotateLeft {
 		let highest_bit = result & 0x80 != 0;
 
 		let result = result.rotate_left(1);
+
+		cpu.register_bank.write_single_named(ACC_REGISTER, result);
+		cpu.register_bank.write_bit_flag(RegisterFlags::Carry, highest_bit);
+
+		Ok(())
+	}
+}
+
+struct RotateLeftWithCarry {}
+
+impl RotateLeftWithCarry {
+	fn new() -> Self {
+		Self {}
+	}
+}
+
+impl Instruction for RotateLeftWithCarry {
+	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
+		let old_carry = cpu.register_bank.read_bit_flag(RegisterFlags::Carry);
+		let result = cpu.register_bank.read_single_named(ACC_REGISTER);
+		let highest_bit = result & 0x80 != 0;
+
+		let result = (result << 1) | u8::from(old_carry);
 
 		cpu.register_bank.write_single_named(ACC_REGISTER, result);
 		cpu.register_bank.write_bit_flag(RegisterFlags::Carry, highest_bit);
@@ -45,5 +69,31 @@ fn rotate_left() {
 	expected.register_bank.write_bit_flag(RegisterFlags::Carry, false);
 
 	assert!(RotateLeft::new().execute(&mut cpu).is_ok());
+	assert_eq!(cpu, expected);
+}
+
+#[test]
+fn rotate_left_with_carry() {
+	let mut cpu = Cpu::new();
+
+	cpu.register_bank.write_single_named(ACC_REGISTER, 0b1010_1010);
+
+	let mut expected = cpu.clone();
+	expected.register_bank.write_single_named(ACC_REGISTER, 0b0101_0100);
+	expected.register_bank.write_bit_flag(RegisterFlags::Carry, true);
+
+	assert!(RotateLeftWithCarry::new().execute(&mut cpu).is_ok());
+	assert_eq!(cpu, expected);
+
+	let mut cpu = Cpu::new();
+
+	cpu.register_bank.write_single_named(ACC_REGISTER, 0b0101_0101);
+	cpu.register_bank.write_bit_flag(RegisterFlags::Carry, true);
+
+	let mut expected = cpu.clone();
+	expected.register_bank.write_single_named(ACC_REGISTER, 0b1010_1011);
+	expected.register_bank.write_bit_flag(RegisterFlags::Carry, false);
+
+	assert!(RotateLeftWithCarry::new().execute(&mut cpu).is_ok());
 	assert_eq!(cpu, expected);
 }
