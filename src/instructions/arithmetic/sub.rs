@@ -1,7 +1,7 @@
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::{RegisterFlags, SingleRegisters};
 use crate::instructions::{ExecutionError, Instruction};
-use crate::instructions::arithmetic::ACC_REGISTER;
+use crate::instructions::ACC_REGISTER;
 use crate::instructions::arithmetic::operation::ArithmeticOperation;
 
 pub(super) struct Sub {

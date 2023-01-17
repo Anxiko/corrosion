@@ -1,7 +1,7 @@
 use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::{Ram, WORKING_RAM_START};
 use crate::hardware::register_bank::{DoubleRegisters, RegisterFlags, SingleRegisters};
-use crate::instructions::arithmetic::ACC_REGISTER;
+use crate::instructions::ACC_REGISTER;
 use crate::instructions::arithmetic::add::{Add, AddHl, AddImmediate, AddWithCarry, Increment};
 use crate::instructions::arithmetic::sub::{Compare, Decrement, Sub, SubWithCarry};
 use crate::instructions::Instruction;

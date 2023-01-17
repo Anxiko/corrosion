@@ -1,6 +1,6 @@
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::RegisterFlags;
-use crate::instructions::arithmetic::ACC_REGISTER;
+use crate::instructions::ACC_REGISTER;
 
 #[derive(PartialEq, Debug)]
 pub(super) struct ArithmeticOperation {

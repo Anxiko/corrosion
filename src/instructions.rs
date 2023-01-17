@@ -1,9 +1,11 @@
 use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::RamError;
+use crate::hardware::register_bank::SingleRegisters;
 
 pub(crate) mod arithmetic;
 pub(crate) mod logical;
-pub(crate) mod bitwise;
+pub(crate) mod flags;
+pub(crate) mod shifting;
 
 trait Instruction {
 	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError>;
@@ -19,3 +21,5 @@ impl From<RamError> for ExecutionError {
 		Self::RamError(ram_error)
 	}
 }
+
+pub(crate) const ACC_REGISTER: SingleRegisters = SingleRegisters::A;
