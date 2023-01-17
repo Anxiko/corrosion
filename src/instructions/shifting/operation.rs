@@ -200,3 +200,69 @@ fn rotate_with_carry() {
 		}
 	);
 }
+
+#[test]
+fn shift_logical() {
+	assert_eq!(
+		ShiftOperation {
+			value: 0b0011_1010,
+			destination: ShiftDestination::Acc,
+			type_: ShiftType::LogicalShift,
+			direction: ShiftDirection::Right,
+		}.calculate(),
+		ShiftOperationResult {
+			result: 0b0001_1101,
+			destination: ShiftDestination::Acc,
+			new_carry: false,
+			new_zero: false,
+		}
+	);
+
+	assert_eq!(
+		ShiftOperation {
+			value: 0b1001_1101,
+			destination: ShiftDestination::Acc,
+			type_: ShiftType::LogicalShift,
+			direction: ShiftDirection::Left,
+		}.calculate(),
+		ShiftOperationResult {
+			result: 0b0011_1010,
+			destination: ShiftDestination::Acc,
+			new_carry: true,
+			new_zero: false,
+		}
+	);
+}
+
+#[test]
+fn shift_arithmetic() {
+	assert_eq!(
+		ShiftOperation {
+			value: 0b1100_1010,
+			destination: ShiftDestination::Acc,
+			type_: ShiftType::ArithmeticShift,
+			direction: ShiftDirection::Right,
+		}.calculate(),
+		ShiftOperationResult {
+			result: 0b1110_0101,
+			destination: ShiftDestination::Acc,
+			new_carry: false,
+			new_zero: false,
+		}
+	);
+
+	assert_eq!(
+		ShiftOperation {
+			value: 0b1000_1101,
+			destination: ShiftDestination::Acc,
+			type_: ShiftType::ArithmeticShift,
+			direction: ShiftDirection::Left,
+		}.calculate(),
+		ShiftOperationResult {
+			result: 0b0001_1010,
+			destination: ShiftDestination::Acc,
+			new_carry: true,
+			new_zero: false,
+		}
+	);
+}
