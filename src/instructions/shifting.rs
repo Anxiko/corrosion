@@ -1,6 +1,5 @@
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::RegisterFlags;
-use crate::hardware::register_bank::SingleRegisters::C;
 use crate::instructions::{ExecutionError, Instruction};
 use crate::instructions::ACC_REGISTER;
 
@@ -44,6 +43,28 @@ impl Instruction for RotateLeftWithCarry {
 
 		cpu.register_bank.write_single_named(ACC_REGISTER, result);
 		cpu.register_bank.write_bit_flag(RegisterFlags::Carry, highest_bit);
+
+		Ok(())
+	}
+}
+
+struct RotateRight {}
+
+impl RotateRight {
+	fn new() -> Self {
+		Self {}
+	}
+}
+
+impl Instruction for RotateRight {
+	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
+		let result = cpu.register_bank.read_single_named(ACC_REGISTER);
+		let lowest_bit = result & 0x01 != 0;
+
+		let result = result.rotate_right(1);
+
+		cpu.register_bank.write_single_named(ACC_REGISTER, result);
+		cpu.register_bank.write_bit_flag(RegisterFlags::Carry, lowest_bit);
 
 		Ok(())
 	}
@@ -95,5 +116,29 @@ fn rotate_left_with_carry() {
 	expected.register_bank.write_bit_flag(RegisterFlags::Carry, false);
 
 	assert!(RotateLeftWithCarry::new().execute(&mut cpu).is_ok());
+	assert_eq!(cpu, expected);
+}
+
+
+#[test]
+fn rotate_right() {
+	let mut cpu = Cpu::new();
+	cpu.register_bank.write_single_named(ACC_REGISTER, 0b1010_1010);
+
+	let mut expected = cpu.clone();
+	expected.register_bank.write_single_named(ACC_REGISTER, 0b0101_0101);
+	expected.register_bank.write_bit_flag(RegisterFlags::Carry, false);
+
+	assert!(RotateRight::new().execute(&mut cpu).is_ok());
+	assert_eq!(cpu, expected);
+
+	let mut cpu = Cpu::new();
+	cpu.register_bank.write_single_named(ACC_REGISTER, 0b0101_0101);
+
+	let mut expected = cpu.clone();
+	expected.register_bank.write_single_named(ACC_REGISTER, 0b1010_1010);
+	expected.register_bank.write_bit_flag(RegisterFlags::Carry, true);
+
+	assert!(RotateRight::new().execute(&mut cpu).is_ok());
 	assert_eq!(cpu, expected);
 }
