@@ -1,3 +1,5 @@
+use operation::{AsShiftOperation, ShiftDestination, ShiftDirection, ShiftOperation, ShiftType};
+
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::RegisterFlags;
 use crate::instructions::{ExecutionError, Instruction};
@@ -13,17 +15,14 @@ impl RotateLeft {
 	}
 }
 
-impl Instruction for RotateLeft {
-	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
-		let result = cpu.register_bank.read_single_named(ACC_REGISTER);
-		let highest_bit = result & 0x80 != 0;
-
-		let result = result.rotate_left(1);
-
-		cpu.register_bank.write_single_named(ACC_REGISTER, result);
-		cpu.register_bank.write_bit_flag(RegisterFlags::Carry, highest_bit);
-
-		Ok(())
+impl AsShiftOperation for RotateLeft {
+	fn as_shift_operation(&self, cpu: &mut Cpu) -> ShiftOperation {
+		ShiftOperation::new(
+			cpu.register_bank.read_single_named(ACC_REGISTER),
+			ShiftDestination::Acc,
+			ShiftDirection::Left,
+			ShiftType::Rotate,
+		)
 	}
 }
 

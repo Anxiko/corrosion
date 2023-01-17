@@ -1,5 +1,6 @@
-use std::thread::sleep;
-use crate::hardware::register_bank::SingleRegisters;
+use crate::hardware::cpu::Cpu;
+use crate::hardware::register_bank::{RegisterFlags, SingleRegisters};
+use crate::instructions::{ACC_REGISTER, ExecutionError, Instruction};
 
 #[derive(Copy, Clone)]
 pub(super) enum ShiftDirection {
@@ -30,11 +31,31 @@ pub(super) enum ShiftDestination {
 	Single(SingleRegisters),
 }
 
+impl ShiftDestination {
+	fn as_single_named_register(self) -> SingleRegisters {
+		match self {
+			Self::Acc => ACC_REGISTER,
+			Self::Single(register) => register
+		}
+	}
+}
+
 pub(super) struct ShiftOperation {
 	value: u8,
 	destination: ShiftDestination,
 	direction: ShiftDirection,
 	type_: ShiftType,
+}
+
+impl ShiftOperation {
+	pub(super) fn new(value: u8, destination: ShiftDestination, direction: ShiftDirection, type_: ShiftType) -> Self {
+		Self {
+			value,
+			destination,
+			direction,
+			type_,
+		}
+	}
 }
 
 impl ShiftOperation {
@@ -100,6 +121,32 @@ pub(super) struct ShiftOperationResult {
 	destination: ShiftDestination,
 	new_carry: bool,
 	new_zero: bool,
+}
+
+impl ShiftOperationResult {
+	fn commit(&self, cpu: &mut Cpu) {
+		cpu.register_bank.write_single_named(self.destination.as_single_named_register(), self.result);
+		cpu.register_bank.write_bit_flag(RegisterFlags::Carry, self.new_carry);
+		cpu.register_bank.write_bit_flag(RegisterFlags::Zero, self.new_zero);
+		cpu.register_bank.write_bit_flag(RegisterFlags::HalfCarry, false);
+		cpu.register_bank.write_bit_flag(RegisterFlags::Subtraction, false);
+	}
+}
+
+pub(super) trait AsShiftOperation {
+	fn as_shift_operation(&self, cpu: &mut Cpu) -> ShiftOperation;
+}
+
+impl<T> Instruction for T
+	where T: AsShiftOperation
+{
+	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
+		let shift_operation = self.as_shift_operation(cpu);
+		let operation_result = shift_operation.calculate();
+		operation_result.commit(cpu);
+
+		Ok(())
+	}
 }
 
 #[test]
