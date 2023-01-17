@@ -53,19 +53,17 @@ impl RotateRight {
 	}
 }
 
-impl Instruction for RotateRight {
-	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
-		let result = cpu.register_bank.read_single_named(ACC_REGISTER);
-		let lowest_bit = result & 0x01 != 0;
-
-		let result = result.rotate_right(1);
-
-		cpu.register_bank.write_single_named(ACC_REGISTER, result);
-		cpu.register_bank.write_bit_flag(RegisterFlags::Carry, lowest_bit);
-
-		Ok(())
+impl AsShiftOperation for RotateRight {
+	fn as_shift_operation(&self, cpu: &mut Cpu) -> ShiftOperation {
+		ShiftOperation::new(
+			cpu.register_bank.read_single_named(ACC_REGISTER),
+			ShiftDestination::Acc,
+			ShiftDirection::Right,
+			ShiftType::Rotate,
+		)
 	}
 }
+
 
 struct RotateRightWithCarry {}
 
@@ -75,18 +73,14 @@ impl RotateRightWithCarry {
 	}
 }
 
-impl Instruction for RotateRightWithCarry {
-	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
-		let old_carry = cpu.register_bank.read_bit_flag(RegisterFlags::Carry);
-		let result = cpu.register_bank.read_single_named(ACC_REGISTER);
-		let lowest_bit = result & 0x01 != 0;
-
-		let result = (result >> 1) | (u8::from(old_carry) * 0x80);
-
-		cpu.register_bank.write_single_named(ACC_REGISTER, result);
-		cpu.register_bank.write_bit_flag(RegisterFlags::Carry, lowest_bit);
-
-		Ok(())
+impl AsShiftOperation for RotateRightWithCarry {
+	fn as_shift_operation(&self, cpu: &mut Cpu) -> ShiftOperation {
+		ShiftOperation::new(
+			cpu.register_bank.read_single_named(ACC_REGISTER),
+			ShiftDestination::Acc,
+			ShiftDirection::Right,
+			ShiftType::RotateWithCarry { old_carry: cpu.register_bank.read_bit_flag(RegisterFlags::Carry) },
+		)
 	}
 }
 
