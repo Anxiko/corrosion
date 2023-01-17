@@ -31,7 +31,7 @@ pub(super) enum ShiftDestination {
 }
 
 pub(super) struct ShiftOperation {
-	src: u8,
+	value: u8,
 	destination: ShiftDestination,
 	direction: ShiftDirection,
 	type_: ShiftType,
@@ -39,7 +39,7 @@ pub(super) struct ShiftOperation {
 
 impl ShiftOperation {
 	pub(super) fn calculate(&self) -> ShiftOperationResult {
-		let old_sign = self.src & 80 != 0;
+		let old_sign = self.value & 80 != 0;
 		let (mut result, shifted_out) = self.shift_result();
 
 		let shift_in_bit = self.shift_in(shifted_out).unwrap_or(false);
@@ -62,10 +62,10 @@ impl ShiftOperation {
 	fn shift_result(&self) -> (u8, bool) {
 		match self.direction {
 			ShiftDirection::Left => {
-				(self.src << 1, self.src & 0x80 != 0)
+				(self.value << 1, self.value & 0x80 != 0)
 			}
 			ShiftDirection::Right => {
-				(self.src >> 1, self.src & 0x01 != 0)
+				(self.value >> 1, self.value & 0x01 != 0)
 			}
 		}
 	}
@@ -106,7 +106,7 @@ pub(super) struct ShiftOperationResult {
 fn zero_flag() {
 	assert_eq!(
 		ShiftOperation {
-			src: 0,
+			value: 0,
 			destination: ShiftDestination::Acc,
 			direction: ShiftDirection::Right,
 			type_: ShiftType::Rotate,
@@ -121,7 +121,7 @@ fn zero_flag() {
 
 	assert_eq!(
 		ShiftOperation {
-			src: 0,
+			value: 0,
 			destination: ShiftDestination::Single(SingleRegisters::B),
 			direction: ShiftDirection::Right,
 			type_: ShiftType::Rotate,
@@ -139,7 +139,7 @@ fn zero_flag() {
 fn rotate() {
 	assert_eq!(
 		ShiftOperation {
-			src: 0b1100_1010,
+			value: 0b1100_1010,
 			destination: ShiftDestination::Acc,
 			direction: ShiftDirection::Right,
 			type_: ShiftType::Rotate,
@@ -154,16 +154,49 @@ fn rotate() {
 
 	assert_eq!(
 		ShiftOperation {
-			src: 0b1100_1010,
-			destination: ShiftDestination::Single(SingleRegisters::B),
+			value: 0b1100_1010,
+			destination: ShiftDestination::Acc,
 			direction: ShiftDirection::Left,
 			type_: ShiftType::Rotate,
 		}.calculate(),
 		ShiftOperationResult {
 			result: 0b1001_0101,
-			destination: ShiftDestination::Single(SingleRegisters::B),
+			destination: ShiftDestination::Acc,
 			new_carry: true,
 			new_zero: false,
 		}
 	)
+}
+
+#[test]
+fn rotate_with_carry() {
+	assert_eq!(
+		ShiftOperation {
+			value: 0b0011_1010,
+			destination: ShiftDestination::Acc,
+			type_: ShiftType::RotateWithCarry { old_carry: true },
+			direction: ShiftDirection::Right,
+		}.calculate(),
+		ShiftOperationResult {
+			result: 0b1001_1101,
+			destination: ShiftDestination::Acc,
+			new_carry: false,
+			new_zero: false,
+		}
+	);
+
+	assert_eq!(
+		ShiftOperation {
+			value: 0b1001_1101,
+			destination: ShiftDestination::Acc,
+			type_: ShiftType::RotateWithCarry { old_carry: false },
+			direction: ShiftDirection::Left,
+		}.calculate(),
+		ShiftOperationResult {
+			result: 0b0011_1010,
+			destination: ShiftDestination::Acc,
+			new_carry: true,
+			new_zero: false,
+		}
+	);
 }
