@@ -84,6 +84,49 @@ impl AsShiftOperation for RotateRightWithCarry {
 	}
 }
 
+struct RotateRegisterLeft {
+	reg: SingleRegisters,
+}
+
+impl RotateRegisterLeft {
+	fn new(reg: SingleRegisters) -> Self {
+		Self { reg }
+	}
+}
+
+impl AsShiftOperation for RotateRegisterLeft {
+	fn as_shift_operation(&self, cpu: &mut Cpu) -> ShiftOperation {
+		ShiftOperation::new(
+			cpu.register_bank.read_single_named(self.reg),
+			ShiftDestination::Single(self.reg),
+			ShiftDirection::Left,
+			ShiftType::Rotate,
+		)
+	}
+}
+
+struct RotateRegisterLeftWithCarry {
+	reg: SingleRegisters,
+}
+
+impl RotateRegisterLeftWithCarry {
+	fn new(reg: SingleRegisters) -> Self {
+		Self { reg }
+	}
+}
+
+impl AsShiftOperation for RotateRegisterLeftWithCarry {
+	fn as_shift_operation(&self, cpu: &mut Cpu) -> ShiftOperation {
+		ShiftOperation::new(
+			cpu.register_bank.read_single_named(self.reg),
+			ShiftDestination::Single(self.reg),
+			ShiftDirection::Left,
+			ShiftType::RotateWithCarry { old_carry: cpu.register_bank.read_bit_flag(RegisterFlags::Carry) },
+		)
+	}
+}
+
+
 struct RotateRegisterRight {
 	reg: SingleRegisters,
 }
@@ -172,6 +215,59 @@ fn rotate_left_with_carry() {
 	expected.register_bank.write_bit_flag(RegisterFlags::Carry, false);
 
 	assert!(RotateLeftWithCarry::new().execute(&mut cpu).is_ok());
+	assert_eq!(cpu, expected);
+}
+
+#[test]
+fn rotate_register_left() {
+	let reg = SingleRegisters::B;
+
+	let mut cpu = Cpu::new();
+	cpu.register_bank.write_single_named(reg, 0b1010_1010);
+
+	let mut expected = cpu.clone();
+	expected.register_bank.write_single_named(reg, 0b0101_0101);
+	expected.register_bank.write_bit_flag(RegisterFlags::Carry, true);
+
+	assert!(RotateRegisterLeft::new(reg).execute(&mut cpu).is_ok());
+	assert_eq!(cpu, expected);
+
+	let mut cpu = Cpu::new();
+	cpu.register_bank.write_single_named(reg, 0b0101_0101);
+
+	let mut expected = cpu.clone();
+	expected.register_bank.write_single_named(reg, 0b1010_1010);
+	expected.register_bank.write_bit_flag(RegisterFlags::Carry, false);
+
+	assert!(RotateRegisterLeft::new(reg).execute(&mut cpu).is_ok());
+	assert_eq!(cpu, expected);
+}
+
+#[test]
+fn rotate_reigister_left_with_carry() {
+	let reg = SingleRegisters::B;
+
+	let mut cpu = Cpu::new();
+
+	cpu.register_bank.write_single_named(reg, 0b1010_1010);
+
+	let mut expected = cpu.clone();
+	expected.register_bank.write_single_named(reg, 0b0101_0100);
+	expected.register_bank.write_bit_flag(RegisterFlags::Carry, true);
+
+	assert!(RotateRegisterLeftWithCarry::new(reg).execute(&mut cpu).is_ok());
+	assert_eq!(cpu, expected);
+
+	let mut cpu = Cpu::new();
+
+	cpu.register_bank.write_single_named(reg, 0b0101_0101);
+	cpu.register_bank.write_bit_flag(RegisterFlags::Carry, true);
+
+	let mut expected = cpu.clone();
+	expected.register_bank.write_single_named(reg, 0b1010_1011);
+	expected.register_bank.write_bit_flag(RegisterFlags::Carry, false);
+
+	assert!(RotateRegisterLeftWithCarry::new(reg).execute(&mut cpu).is_ok());
 	assert_eq!(cpu, expected);
 }
 
