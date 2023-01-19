@@ -25,6 +25,12 @@ pub(super) enum ShiftType {
 	ArithmeticShift,
 }
 
+impl ShiftType {
+	pub(super) fn rotate_with_carry_for_cpu(cpu: &Cpu) -> Self {
+		Self::RotateWithCarry { old_carry: cpu.register_bank.read_bit_flag(RegisterFlags::Carry) }
+	}
+}
+
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub(super) enum ShiftDestination {
 	Acc,
