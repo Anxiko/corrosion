@@ -1,6 +1,6 @@
 use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::{Ram, WORKING_RAM_START};
-use crate::hardware::register_bank::{DoubleRegisters, RegisterFlags, SingleRegisters};
+use crate::hardware::register_bank::{DoubleRegisters, BitFlags, SingleRegisters};
 use crate::instructions::ACC_REGISTER;
 use crate::instructions::arithmetic::add::{Add, AddHl, AddImmediate, AddWithCarry, Increment};
 use crate::instructions::arithmetic::sub::{Compare, Decrement, Sub, SubWithCarry};
@@ -15,10 +15,10 @@ fn add() {
 	assert!(Add::new(SingleRegisters::B).execute(&mut cpu).is_ok());
 
 	assert_eq!(cpu.register_bank.read_single_named(ACC_REGISTER), 0x46);
-	assert!(!cpu.register_bank.read_bit_flag(RegisterFlags::Zero));
-	assert!(!cpu.register_bank.read_bit_flag(RegisterFlags::Subtraction));
-	assert!(!cpu.register_bank.read_bit_flag(RegisterFlags::Carry));
-	assert!(!cpu.register_bank.read_bit_flag(RegisterFlags::HalfCarry));
+	assert!(!cpu.register_bank.read_bit_flag(BitFlags::Zero));
+	assert!(!cpu.register_bank.read_bit_flag(BitFlags::Subtraction));
+	assert!(!cpu.register_bank.read_bit_flag(BitFlags::Carry));
+	assert!(!cpu.register_bank.read_bit_flag(BitFlags::HalfCarry));
 }
 
 #[test]
@@ -31,10 +31,10 @@ fn add_hl() {
 
 	assert!(AddHl::new().execute(&mut cpu).is_ok());
 	assert_eq!(cpu.register_bank.read_single_named(ACC_REGISTER), 0x46);
-	assert!(!cpu.register_bank.read_bit_flag(RegisterFlags::Zero));
-	assert!(!cpu.register_bank.read_bit_flag(RegisterFlags::Subtraction));
-	assert!(!cpu.register_bank.read_bit_flag(RegisterFlags::Carry));
-	assert!(!cpu.register_bank.read_bit_flag(RegisterFlags::HalfCarry));
+	assert!(!cpu.register_bank.read_bit_flag(BitFlags::Zero));
+	assert!(!cpu.register_bank.read_bit_flag(BitFlags::Subtraction));
+	assert!(!cpu.register_bank.read_bit_flag(BitFlags::Carry));
+	assert!(!cpu.register_bank.read_bit_flag(BitFlags::HalfCarry));
 }
 
 #[test]
@@ -48,10 +48,10 @@ fn add_immediate() {
 
 	assert!(AddImmediate::new().execute(&mut cpu).is_ok());
 	assert_eq!(cpu.register_bank.read_single_named(ACC_REGISTER), 0x46);
-	assert!(!cpu.register_bank.read_bit_flag(RegisterFlags::Zero));
-	assert!(!cpu.register_bank.read_bit_flag(RegisterFlags::Subtraction));
-	assert!(!cpu.register_bank.read_bit_flag(RegisterFlags::Carry));
-	assert!(!cpu.register_bank.read_bit_flag(RegisterFlags::HalfCarry));
+	assert!(!cpu.register_bank.read_bit_flag(BitFlags::Zero));
+	assert!(!cpu.register_bank.read_bit_flag(BitFlags::Subtraction));
+	assert!(!cpu.register_bank.read_bit_flag(BitFlags::Carry));
+	assert!(!cpu.register_bank.read_bit_flag(BitFlags::HalfCarry));
 }
 
 #[test]
@@ -60,14 +60,14 @@ fn add_with_carry() {
 
 	cpu.register_bank.write_single_named(ACC_REGISTER, 0x80);
 	cpu.register_bank.write_single_named(SingleRegisters::B, 0x7F);
-	cpu.register_bank.write_bit_flag(RegisterFlags::Carry, true);
+	cpu.register_bank.write_bit_flag(BitFlags::Carry, true);
 
 	assert!(AddWithCarry::new(SingleRegisters::B).execute(&mut cpu).is_ok());
 	assert_eq!(cpu.register_bank.read_single_named(ACC_REGISTER), 0x00);
-	assert!(cpu.register_bank.read_bit_flag(RegisterFlags::Zero));
-	assert!(!cpu.register_bank.read_bit_flag(RegisterFlags::Subtraction));
-	assert!(cpu.register_bank.read_bit_flag(RegisterFlags::Carry));
-	assert!(cpu.register_bank.read_bit_flag(RegisterFlags::HalfCarry));
+	assert!(cpu.register_bank.read_bit_flag(BitFlags::Zero));
+	assert!(!cpu.register_bank.read_bit_flag(BitFlags::Subtraction));
+	assert!(cpu.register_bank.read_bit_flag(BitFlags::Carry));
+	assert!(cpu.register_bank.read_bit_flag(BitFlags::HalfCarry));
 }
 
 #[test]
@@ -79,10 +79,10 @@ fn sub() {
 	assert!(Sub::new(SingleRegisters::B).execute(&mut cpu).is_ok());
 
 	assert_eq!(cpu.register_bank.read_single_named(ACC_REGISTER), 0x22);
-	assert!(!cpu.register_bank.read_bit_flag(RegisterFlags::Zero));
-	assert!(cpu.register_bank.read_bit_flag(RegisterFlags::Subtraction));
-	assert!(!cpu.register_bank.read_bit_flag(RegisterFlags::Carry));
-	assert!(!cpu.register_bank.read_bit_flag(RegisterFlags::HalfCarry));
+	assert!(!cpu.register_bank.read_bit_flag(BitFlags::Zero));
+	assert!(cpu.register_bank.read_bit_flag(BitFlags::Subtraction));
+	assert!(!cpu.register_bank.read_bit_flag(BitFlags::Carry));
+	assert!(!cpu.register_bank.read_bit_flag(BitFlags::HalfCarry));
 }
 
 #[test]
@@ -90,15 +90,15 @@ fn sub_with_carry() {
 	let mut cpu = Cpu::new();
 	cpu.register_bank.write_single_named(ACC_REGISTER, 0x34);
 	cpu.register_bank.write_single_named(SingleRegisters::B, 0x24);
-	cpu.register_bank.write_bit_flag(RegisterFlags::Carry, true);
+	cpu.register_bank.write_bit_flag(BitFlags::Carry, true);
 
 	assert!(SubWithCarry::new(SingleRegisters::B).execute(&mut cpu).is_ok());
 
 	assert_eq!(cpu.register_bank.read_single_named(ACC_REGISTER), 0x0F);
-	assert!(!cpu.register_bank.read_bit_flag(RegisterFlags::Zero));
-	assert!(cpu.register_bank.read_bit_flag(RegisterFlags::Subtraction));
-	assert!(cpu.register_bank.read_bit_flag(RegisterFlags::HalfCarry));
-	assert!(!cpu.register_bank.read_bit_flag(RegisterFlags::Carry));
+	assert!(!cpu.register_bank.read_bit_flag(BitFlags::Zero));
+	assert!(cpu.register_bank.read_bit_flag(BitFlags::Subtraction));
+	assert!(cpu.register_bank.read_bit_flag(BitFlags::HalfCarry));
+	assert!(!cpu.register_bank.read_bit_flag(BitFlags::Carry));
 }
 
 #[test]
@@ -108,10 +108,10 @@ fn compare() {
 	cpu.register_bank.write_single_named(SingleRegisters::B, 0x34);
 
 	let mut expected = cpu.clone();
-	expected.register_bank.write_bit_flag(RegisterFlags::Zero, false);
-	expected.register_bank.write_bit_flag(RegisterFlags::Carry, true);
-	expected.register_bank.write_bit_flag(RegisterFlags::HalfCarry, true);
-	expected.register_bank.write_bit_flag(RegisterFlags::Subtraction, true);
+	expected.register_bank.write_bit_flag(BitFlags::Zero, false);
+	expected.register_bank.write_bit_flag(BitFlags::Carry, true);
+	expected.register_bank.write_bit_flag(BitFlags::HalfCarry, true);
+	expected.register_bank.write_bit_flag(BitFlags::Subtraction, true);
 
 	assert!(Compare::new(SingleRegisters::B).execute(&mut cpu).is_ok());
 	assert_eq!(cpu, expected);
@@ -124,10 +124,10 @@ fn increment() {
 
 	let mut expected = cpu.clone();
 	expected.register_bank.write_single_named(ACC_REGISTER, 0x80);
-	expected.register_bank.write_bit_flag(RegisterFlags::Zero, false);
-	expected.register_bank.write_bit_flag(RegisterFlags::Carry, false);
-	expected.register_bank.write_bit_flag(RegisterFlags::HalfCarry, true);
-	expected.register_bank.write_bit_flag(RegisterFlags::Subtraction, false);
+	expected.register_bank.write_bit_flag(BitFlags::Zero, false);
+	expected.register_bank.write_bit_flag(BitFlags::Carry, false);
+	expected.register_bank.write_bit_flag(BitFlags::HalfCarry, true);
+	expected.register_bank.write_bit_flag(BitFlags::Subtraction, false);
 
 	assert!(Increment::new().execute(&mut cpu).is_ok());
 	assert_eq!(cpu, expected);
@@ -140,10 +140,10 @@ fn decrement() {
 
 	let mut expected = cpu.clone();
 	expected.register_bank.write_single_named(ACC_REGISTER, 0x7F);
-	expected.register_bank.write_bit_flag(RegisterFlags::Zero, false);
-	expected.register_bank.write_bit_flag(RegisterFlags::Carry, false);
-	expected.register_bank.write_bit_flag(RegisterFlags::HalfCarry, true);
-	expected.register_bank.write_bit_flag(RegisterFlags::Subtraction, true);
+	expected.register_bank.write_bit_flag(BitFlags::Zero, false);
+	expected.register_bank.write_bit_flag(BitFlags::Carry, false);
+	expected.register_bank.write_bit_flag(BitFlags::HalfCarry, true);
+	expected.register_bank.write_bit_flag(BitFlags::Subtraction, true);
 
 	assert!(Decrement::new().execute(&mut cpu).is_ok());
 	assert_eq!(cpu, expected);

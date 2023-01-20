@@ -1,6 +1,7 @@
 use crate::hardware::cpu::Cpu;
-use crate::hardware::register_bank::{RegisterFlags, SingleRegisters};
+use crate::hardware::register_bank::{BitFlags, SingleRegisters};
 use crate::instructions::{ACC_REGISTER, ExecutionError, Instruction};
+use crate::instructions::changeset::{BitFlagsChangeset, Change, ChangeList, SingleRegisterChange};
 
 #[derive(Copy, Clone)]
 pub(super) enum ShiftDirection {
@@ -27,7 +28,7 @@ pub(super) enum ShiftType {
 
 impl ShiftType {
 	pub(super) fn rotate_with_carry_for_cpu(cpu: &Cpu) -> Self {
-		Self::RotateWithCarry { old_carry: cpu.register_bank.read_bit_flag(RegisterFlags::Carry) }
+		Self::RotateWithCarry { old_carry: cpu.register_bank.read_bit_flag(BitFlags::Carry) }
 	}
 }
 
@@ -129,13 +130,28 @@ pub(super) struct ShiftOperationResult {
 	new_zero: bool,
 }
 
+impl Into<ChangeList> for &ShiftOperationResult {
+	fn into(self) -> ChangeList {
+		ChangeList::new(vec![
+			Box::new(SingleRegisterChange::new(
+				self.destination.as_single_named_register(), self.result,
+			)),
+			Box::new(
+				BitFlagsChangeset::zero_all()
+					.with_carry_flag(self.new_carry)
+					.with_zero_flag(self.new_zero)
+			),
+		])
+	}
+}
+
 impl ShiftOperationResult {
 	fn commit(&self, cpu: &mut Cpu) {
 		cpu.register_bank.write_single_named(self.destination.as_single_named_register(), self.result);
-		cpu.register_bank.write_bit_flag(RegisterFlags::Carry, self.new_carry);
-		cpu.register_bank.write_bit_flag(RegisterFlags::Zero, self.new_zero);
-		cpu.register_bank.write_bit_flag(RegisterFlags::HalfCarry, false);
-		cpu.register_bank.write_bit_flag(RegisterFlags::Subtraction, false);
+		cpu.register_bank.write_bit_flag(BitFlags::Carry, self.new_carry);
+		cpu.register_bank.write_bit_flag(BitFlags::Zero, self.new_zero);
+		cpu.register_bank.write_bit_flag(BitFlags::HalfCarry, false);
+		cpu.register_bank.write_bit_flag(BitFlags::Subtraction, false);
 	}
 }
 
@@ -143,6 +159,7 @@ pub(super) trait AsShiftOperation {
 	fn as_shift_operation(&self, cpu: &mut Cpu) -> ShiftOperation;
 }
 
+/*
 impl<T> Instruction for T
 	where T: AsShiftOperation
 {
@@ -154,6 +171,7 @@ impl<T> Instruction for T
 		Ok(())
 	}
 }
+*/
 
 #[test]
 fn zero_flag() {

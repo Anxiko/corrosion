@@ -6,7 +6,7 @@ mod tests;
 pub const SINGLE_REGISTER_BANK_SIZE: usize = 8;
 pub const DOUBLE_REGISTER_BANK_SIZE: usize = SINGLE_REGISTER_BANK_SIZE / 2;
 
-#[derive(IntoPrimitive, Copy, Clone, Debug, PartialEq)]
+#[derive(IntoPrimitive, Copy, Clone, Debug, PartialEq, Eq)]
 #[repr(u8)]
 pub enum SingleRegisters {
 	A = 0,
@@ -19,7 +19,7 @@ pub enum SingleRegisters {
 	L,
 }
 
-#[derive(IntoPrimitive, Copy, Clone)]
+#[derive(IntoPrimitive, Copy, Clone, Debug, PartialEq, Eq)]
 #[repr(u8)]
 pub enum DoubleRegisters {
 	AF = 0,
@@ -43,7 +43,7 @@ const FLAG_REGISTER: usize = 6;
 
 #[derive(IntoPrimitive, Copy, Clone)]
 #[repr(u8)]
-pub enum RegisterFlags {
+pub enum BitFlags {
 	Zero = 7,
 	Subtraction = 6,
 	HalfCarry = 5,
@@ -108,7 +108,7 @@ impl RegisterBank {
 		Ok(())
 	}
 
-	pub fn read_bit_flag(&self, flag: RegisterFlags) -> bool {
+	pub fn read_bit_flag(&self, flag: BitFlags) -> bool {
 		let flag: u8 = flag.into();
 		let bitmask: u8 = 1u8 << flag;
 
@@ -117,7 +117,7 @@ impl RegisterBank {
 		flag_register & bitmask != 0
 	}
 
-	pub fn write_bit_flag(&mut self, flag: RegisterFlags, bit: bool) {
+	pub fn write_bit_flag(&mut self, flag: BitFlags, bit: bool) {
 		let flag: u8 = flag.into();
 		let bitmask: u8 = 1u8 << flag;
 		let shifted_bit: u8 =

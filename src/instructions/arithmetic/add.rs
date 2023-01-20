@@ -1,6 +1,6 @@
 use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::Ram;
-use crate::hardware::register_bank::{DoubleRegisters, RegisterFlags, SingleRegisters};
+use crate::hardware::register_bank::{DoubleRegisters, BitFlags, SingleRegisters};
 use crate::instructions::{ExecutionError, Instruction};
 use crate::instructions::ACC_REGISTER;
 use crate::instructions::arithmetic::operation::ArithmeticOperation;
@@ -62,7 +62,7 @@ impl AddWithCarry {
 impl Instruction for AddWithCarry {
 	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
 		let src_val = cpu.register_bank.read_single_named(self.src);
-		let carry_bit = cpu.register_bank.read_bit_flag(RegisterFlags::Carry);
+		let carry_bit = cpu.register_bank.read_bit_flag(BitFlags::Carry);
 		let dst_val = cpu.register_bank.read_single_named(ACC_REGISTER);
 
 		ArithmeticOperation::add_with_carry(dst_val, src_val, carry_bit).commit(cpu);

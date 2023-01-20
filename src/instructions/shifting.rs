@@ -1,9 +1,11 @@
+use std::assert_matches::assert_matches;
 use operation::{AsShiftOperation, ShiftDestination, ShiftDirection, ShiftOperation, ShiftType};
 
 use crate::hardware::cpu::Cpu;
-use crate::hardware::register_bank::{RegisterFlags, SingleRegisters};
+use crate::hardware::register_bank::{BitFlags, SingleRegisters};
 use crate::instructions::{ExecutionError, Instruction};
 use crate::instructions::ACC_REGISTER;
+use crate::instructions::changeset::{Change, ChangeList, ChangesetInstruction};
 
 mod operation;
 
@@ -12,14 +14,14 @@ enum ShiftSource {
 	SingleRegister(SingleRegisters),
 }
 
-struct GenericShift {
+struct ShiftInstruction {
 	source: ShiftSource,
 	destination: ShiftDestination,
 	direction: ShiftDirection,
 	type_: ShiftType,
 }
 
-impl GenericShift {
+impl ShiftInstruction {
 	fn new(source: ShiftSource, destination: ShiftDestination, direction: ShiftDirection, type_: ShiftType) -> Self {
 		Self { source, destination, direction, type_ }
 	}
@@ -32,9 +34,7 @@ impl GenericShift {
 
 		cpu.register_bank.read_single_named(reg)
 	}
-}
 
-impl AsShiftOperation for GenericShift {
 	fn as_shift_operation(&self, cpu: &mut Cpu) -> ShiftOperation {
 		ShiftOperation::new(
 			self.read_source(cpu),
@@ -45,4 +45,32 @@ impl AsShiftOperation for GenericShift {
 	}
 }
 
-// TODO: Implement proper testing system for shift operations
+impl ChangesetInstruction<ChangeList> for ShiftInstruction {
+	fn compute_change(&self, cpu: &mut Cpu) -> ChangeList {
+		let operation = self.as_shift_operation(cpu);
+		let operation_result = &operation.calculate();
+		operation_result.into()
+	}
+}
+
+#[test]
+fn shift_instruction() {
+	let mut cpu = Cpu::new();
+	let old_carry = true;
+	cpu.register_bank.write_single_named(ACC_REGISTER, 0b0011_0101);
+	cpu.register_bank.write_bit_flag(BitFlags::Carry, old_carry);
+
+	let mut expected = cpu.clone();
+	expected.register_bank.write_single_named(ACC_REGISTER, 0b0110_1011);
+	expected.register_bank.write_bit_flag(BitFlags::Carry, false);
+
+	let instruction = ShiftInstruction::new(
+		ShiftSource::Acc,
+		ShiftDestination::Acc,
+		ShiftDirection::Left,
+		ShiftType::RotateWithCarry { old_carry },
+	);
+
+	assert_matches!(instruction.execute(&mut cpu), Ok(()));
+	assert_eq!(cpu, expected);
+}

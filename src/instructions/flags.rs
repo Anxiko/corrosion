@@ -1,5 +1,5 @@
 use crate::hardware::cpu::Cpu;
-use crate::hardware::register_bank::RegisterFlags;
+use crate::hardware::register_bank::BitFlags;
 use crate::instructions::{ExecutionError, Instruction};
 
 pub(crate) struct ToggleCarry {}
@@ -12,9 +12,9 @@ impl ToggleCarry {
 
 impl Instruction for ToggleCarry {
 	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
-		let carry = cpu.register_bank.read_bit_flag(RegisterFlags::Carry);
+		let carry = cpu.register_bank.read_bit_flag(BitFlags::Carry);
 
-		cpu.register_bank.write_bit_flag(RegisterFlags::Carry, !carry);
+		cpu.register_bank.write_bit_flag(BitFlags::Carry, !carry);
 
 		Ok(())
 	}
@@ -31,7 +31,7 @@ impl SetCarry {
 
 impl Instruction for SetCarry {
 	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
-		cpu.register_bank.write_bit_flag(RegisterFlags::Carry, true);
+		cpu.register_bank.write_bit_flag(BitFlags::Carry, true);
 		Ok(())
 	}
 }
@@ -39,10 +39,10 @@ impl Instruction for SetCarry {
 #[test]
 fn toggle_carry() {
 	let mut cpu = Cpu::new();
-	cpu.register_bank.write_bit_flag(RegisterFlags::Carry, true);
+	cpu.register_bank.write_bit_flag(BitFlags::Carry, true);
 
 	let mut expected = cpu.clone();
-	expected.register_bank.write_bit_flag(RegisterFlags::Carry, false);
+	expected.register_bank.write_bit_flag(BitFlags::Carry, false);
 
 	assert!(ToggleCarry::new().execute(&mut cpu).is_ok());
 	assert_eq!(cpu, expected);
@@ -53,7 +53,7 @@ fn set_carry() {
 	let mut cpu = Cpu::new();
 
 	let mut expected = cpu.clone();
-	expected.register_bank.write_bit_flag(RegisterFlags::Carry, true);
+	expected.register_bank.write_bit_flag(BitFlags::Carry, true);
 
 	assert!(SetCarry::new().execute(&mut cpu).is_ok());
 	assert_eq!(cpu, expected);

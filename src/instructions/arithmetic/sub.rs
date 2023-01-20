@@ -1,5 +1,5 @@
 use crate::hardware::cpu::Cpu;
-use crate::hardware::register_bank::{RegisterFlags, SingleRegisters};
+use crate::hardware::register_bank::{BitFlags, SingleRegisters};
 use crate::instructions::{ExecutionError, Instruction};
 use crate::instructions::ACC_REGISTER;
 use crate::instructions::arithmetic::operation::ArithmeticOperation;
@@ -39,7 +39,7 @@ impl Instruction for SubWithCarry {
 	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
 		let src_val = cpu.register_bank.read_single_named(self.src);
 		let dst_val = cpu.register_bank.read_single_named(ACC_REGISTER);
-		let carry_flag = cpu.register_bank.read_bit_flag(RegisterFlags::Carry);
+		let carry_flag = cpu.register_bank.read_bit_flag(BitFlags::Carry);
 
 		ArithmeticOperation::sub_with_carry(dst_val, src_val, carry_flag).commit(cpu);
 

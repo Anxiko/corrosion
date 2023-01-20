@@ -6,6 +6,8 @@ pub(crate) mod arithmetic;
 pub(crate) mod logical;
 pub(crate) mod flags;
 pub(crate) mod shifting;
+pub(crate) mod base;
+pub(crate) mod changeset;
 
 trait Instruction {
 	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError>;

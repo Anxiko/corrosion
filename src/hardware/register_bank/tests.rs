@@ -1,5 +1,5 @@
 use crate::hardware::register_bank::{
-	DOUBLE_REGISTER_BANK_SIZE, RegisterBank, RegisterBankError, RegisterFlags, SINGLE_REGISTER_BANK_SIZE,
+	DOUBLE_REGISTER_BANK_SIZE, RegisterBank, RegisterBankError, BitFlags, SINGLE_REGISTER_BANK_SIZE,
 	SingleRegisters, DoubleRegisters,
 };
 
@@ -57,7 +57,7 @@ fn double_register() {
 fn bit_flags() {
 	let mut register_bank = RegisterBank::new();
 	for bit_flag in [
-		RegisterFlags::Carry, RegisterFlags::HalfCarry, RegisterFlags::Subtraction, RegisterFlags::Zero
+		BitFlags::Carry, BitFlags::HalfCarry, BitFlags::Subtraction, BitFlags::Zero
 	] {
 		assert!(!register_bank.read_bit_flag(bit_flag));
 		register_bank.write_bit_flag(bit_flag, true);
