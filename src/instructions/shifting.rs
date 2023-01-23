@@ -45,11 +45,13 @@ impl ShiftInstruction {
 	}
 }
 
-impl ChangesetInstruction<ChangeList> for ShiftInstruction {
-	fn compute_change(&self, cpu: &mut Cpu) -> ChangeList {
+impl ChangesetInstruction for ShiftInstruction {
+	type C = ChangeList;
+
+	fn compute_change(&self, cpu: &mut Cpu) -> Result<Self::C, ExecutionError> {
 		let operation = self.as_shift_operation(cpu);
 		let operation_result = &operation.calculate();
-		operation_result.into()
+		Ok(operation_result.into())
 	}
 }
 

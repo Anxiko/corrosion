@@ -118,14 +118,18 @@ impl Change for ChangeList {
 	}
 }
 
-pub(super) trait ChangesetInstruction<T: Change> {
-	fn compute_change(&self, cpu: &mut Cpu) -> T;
+pub(super) trait ChangesetInstruction {
+	type C: Change;
+
+	fn compute_change(&self, cpu: &mut Cpu) -> Result<Self::C, ExecutionError>;
 }
 
 impl<T> Instruction for T where
-	T: ChangesetInstruction<ChangeList>,
+	T: ChangesetInstruction,
 {
 	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
-		self.compute_change(cpu).commit_change(cpu)
+		let change = self.compute_change(cpu)?;
+		change.commit_change(cpu)?;
+		Ok(())
 	}
 }

@@ -1,16 +1,18 @@
 use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::Ram;
 use crate::hardware::register_bank::{DoubleRegisters, SingleRegisters};
+use crate::instructions::changeset::{Change, ChangesetInstruction};
+
 use super::{ACC_REGISTER, ExecutionError};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-enum InstructionByteSource {
+enum ByteSource {
 	Acc,
 	SingleRegister { single_reg: SingleRegisters },
 	Memory { address_register: DoubleRegisters },
 }
 
-impl InstructionByteSource {
+impl ByteSource {
 	fn read_from_acc() -> Self {
 		Self::Acc
 	}
@@ -37,12 +39,12 @@ impl InstructionByteSource {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-enum InstructionByteDestination {
+enum ByteDestination {
 	Acc,
 	SingleRegister { single_reg: SingleRegisters },
 }
 
-impl InstructionByteDestination {
+impl ByteDestination {
 	fn write_to_acc() -> Self {
 		Self::Acc
 	}
@@ -61,6 +63,32 @@ impl InstructionByteDestination {
 	}
 }
 
-struct BaseByteInstruction {
+trait ByteOperation {
+	type C: Change;
 
+	fn execute(&self, src: &ByteSource, dst: &ByteDestination) -> Result<Self::C, ExecutionError>;
+}
+
+struct BaseByteInstruction<O> where
+	O: ByteOperation,
+{
+	src: ByteSource,
+	dst: ByteDestination,
+	op: O,
+}
+
+impl<O> BaseByteInstruction<O> where
+	O: ByteOperation {
+	fn new(src: ByteSource, dst: ByteDestination, op: O) -> Self {
+		Self { src, dst, op }
+	}
+}
+
+impl<O> ChangesetInstruction for BaseByteInstruction<O> where
+	O: ByteOperation {
+	type C = O::C;
+
+	fn compute_change(&self, cpu: &mut Cpu) -> Result<Self::C, ExecutionError> {
+		self.op.execute(&self.src, &self.dst)
+	}
 }
