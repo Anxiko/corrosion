@@ -1,6 +1,7 @@
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::{BitFlags, SingleRegisters};
 use crate::instructions::{ACC_REGISTER, ExecutionError, Instruction};
+use crate::instructions::base::{ByteDestination, ByteOperation, ByteSource};
 use crate::instructions::changeset::{BitFlagsChangeset, Change, ChangeList, SingleRegisterChange};
 
 #[derive(Copy, Clone)]
@@ -21,15 +22,9 @@ impl ShiftDirection {
 #[derive(Copy, Clone)]
 pub(super) enum ShiftType {
 	Rotate,
-	RotateWithCarry { old_carry: bool },
+	RotateWithCarry,
 	LogicalShift,
 	ArithmeticShift,
-}
-
-impl ShiftType {
-	pub(super) fn rotate_with_carry_for_cpu(cpu: &Cpu) -> Self {
-		Self::RotateWithCarry { old_carry: cpu.register_bank.read_bit_flag(BitFlags::Carry) }
-	}
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -49,15 +44,17 @@ impl ShiftDestination {
 
 pub(super) struct ShiftOperation {
 	value: u8,
+	old_carry: bool,
 	destination: ShiftDestination,
 	direction: ShiftDirection,
 	type_: ShiftType,
 }
 
 impl ShiftOperation {
-	pub(super) fn new(value: u8, destination: ShiftDestination, direction: ShiftDirection, type_: ShiftType) -> Self {
+	pub(super) fn new(value: u8, old_carry: bool, destination: ShiftDestination, direction: ShiftDirection, type_: ShiftType) -> Self {
 		Self {
 			value,
+			old_carry,
 			destination,
 			direction,
 			type_,
@@ -110,8 +107,8 @@ impl ShiftOperation {
 			ShiftType::Rotate => {
 				Some(shifted_out)
 			}
-			ShiftType::RotateWithCarry { old_carry } => {
-				Some(old_carry)
+			ShiftType::RotateWithCarry => {
+				Some(self.old_carry)
 			}
 			_ => None
 		}
@@ -173,11 +170,87 @@ impl<T> Instruction for T
 }
 */
 
+struct ByteShiftOperation {
+	direction: ShiftDirection,
+	type_: ShiftType,
+}
+
+impl ByteShiftOperation {
+	fn shift_result(&self, value: u8) -> (u8, bool) {
+		match self.direction {
+			ShiftDirection::Left => {
+				(value << 1, value & 0x80 != 0)
+			}
+			ShiftDirection::Right => {
+				(value >> 1, value & 0x01 != 0)
+			}
+		}
+	}
+
+	fn shift_in(&self, shifted_out: bool, old_carry: bool) -> Option<bool> {
+		match self.type_ {
+			ShiftType::Rotate => {
+				Some(shifted_out)
+			}
+			ShiftType::RotateWithCarry => {
+				Some(old_carry)
+			}
+			_ => None
+		}
+	}
+
+	fn preserve_sign_bit(&self) -> bool {
+		matches!((self.type_, self.direction), (ShiftType::ArithmeticShift, ShiftDirection::Right))
+	}
+
+	fn zero_flag_for_result(&self, destination: &ByteDestination, result: u8) -> bool {
+		match destination {
+			ByteDestination::Acc => false,
+			_ => result == 0
+		}
+	}
+}
+
+impl ByteOperation for ByteShiftOperation {
+	type C = ChangeList;
+
+	fn execute(&self, cpu: &Cpu, src: &ByteSource, dst: &ByteDestination) -> Result<Self::C, ExecutionError> {
+		let value = src.read(cpu)?;
+
+		let old_sign = value & 80 != 0;
+		let old_carry = cpu.register_bank.read_bit_flag(BitFlags::Carry);
+		let (mut result, shifted_out) = self.shift_result(value);
+
+		let shift_in_bit = self.shift_in(shifted_out, old_carry).unwrap_or(false);
+		if shift_in_bit {
+			result |= self.direction.shift_in_mask();
+		}
+
+		if self.preserve_sign_bit() {
+			result = (result & 0x7F) | u8::from(old_sign) << 7;
+		}
+
+		let new_carry = shifted_out;
+		let new_zero = self.zero_flag_for_result(dst, result);
+
+		let single_register_change = dst.change_destination(result);
+		let bit_flags_change = BitFlagsChangeset::zero_all()
+			.with_carry_flag(new_carry)
+			.with_zero_flag(new_zero);
+
+		Ok(ChangeList::new(vec![
+			Box::new(single_register_change),
+			Box::new(bit_flags_change),
+		]))
+	}
+}
+
 #[test]
 fn zero_flag() {
 	assert_eq!(
 		ShiftOperation {
 			value: 0,
+			old_carry: false,
 			destination: ShiftDestination::Acc,
 			direction: ShiftDirection::Right,
 			type_: ShiftType::Rotate,
@@ -193,6 +266,7 @@ fn zero_flag() {
 	assert_eq!(
 		ShiftOperation {
 			value: 0,
+			old_carry: false,
 			destination: ShiftDestination::Single(SingleRegisters::B),
 			direction: ShiftDirection::Right,
 			type_: ShiftType::Rotate,
@@ -211,6 +285,7 @@ fn rotate() {
 	assert_eq!(
 		ShiftOperation {
 			value: 0b1100_1010,
+			old_carry: false,
 			destination: ShiftDestination::Acc,
 			direction: ShiftDirection::Right,
 			type_: ShiftType::Rotate,
@@ -226,6 +301,7 @@ fn rotate() {
 	assert_eq!(
 		ShiftOperation {
 			value: 0b1100_1010,
+			old_carry: false,
 			destination: ShiftDestination::Acc,
 			direction: ShiftDirection::Left,
 			type_: ShiftType::Rotate,
@@ -244,8 +320,9 @@ fn rotate_with_carry() {
 	assert_eq!(
 		ShiftOperation {
 			value: 0b0011_1010,
+			old_carry: true,
 			destination: ShiftDestination::Acc,
-			type_: ShiftType::RotateWithCarry { old_carry: true },
+			type_: ShiftType::RotateWithCarry,
 			direction: ShiftDirection::Right,
 		}.calculate(),
 		ShiftOperationResult {
@@ -259,8 +336,9 @@ fn rotate_with_carry() {
 	assert_eq!(
 		ShiftOperation {
 			value: 0b1001_1101,
+			old_carry: false,
 			destination: ShiftDestination::Acc,
-			type_: ShiftType::RotateWithCarry { old_carry: false },
+			type_: ShiftType::RotateWithCarry,
 			direction: ShiftDirection::Left,
 		}.calculate(),
 		ShiftOperationResult {
@@ -277,6 +355,7 @@ fn shift_logical() {
 	assert_eq!(
 		ShiftOperation {
 			value: 0b0011_1010,
+			old_carry: false,
 			destination: ShiftDestination::Acc,
 			type_: ShiftType::LogicalShift,
 			direction: ShiftDirection::Right,
@@ -292,6 +371,7 @@ fn shift_logical() {
 	assert_eq!(
 		ShiftOperation {
 			value: 0b1001_1101,
+			old_carry: false,
 			destination: ShiftDestination::Acc,
 			type_: ShiftType::LogicalShift,
 			direction: ShiftDirection::Left,
@@ -310,6 +390,7 @@ fn shift_arithmetic() {
 	assert_eq!(
 		ShiftOperation {
 			value: 0b1100_1010,
+			old_carry: false,
 			destination: ShiftDestination::Acc,
 			type_: ShiftType::ArithmeticShift,
 			direction: ShiftDirection::Right,
@@ -325,6 +406,7 @@ fn shift_arithmetic() {
 	assert_eq!(
 		ShiftOperation {
 			value: 0b1000_1101,
+			old_carry: false,
 			destination: ShiftDestination::Acc,
 			type_: ShiftType::ArithmeticShift,
 			direction: ShiftDirection::Left,

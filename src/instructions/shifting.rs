@@ -1,11 +1,11 @@
 use std::assert_matches::assert_matches;
-use operation::{AsShiftOperation, ShiftDestination, ShiftDirection, ShiftOperation, ShiftType};
+use operation::{ShiftDestination, ShiftDirection, ShiftOperation, ShiftType};
 
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::{BitFlags, SingleRegisters};
 use crate::instructions::{ExecutionError, Instruction};
 use crate::instructions::ACC_REGISTER;
-use crate::instructions::changeset::{Change, ChangeList, ChangesetInstruction};
+use crate::instructions::changeset::{ChangeList, ChangesetInstruction};
 
 mod operation;
 
@@ -26,7 +26,7 @@ impl ShiftInstruction {
 		Self { source, destination, direction, type_ }
 	}
 
-	fn read_source(&self, cpu: &mut Cpu) -> u8 {
+	fn read_source(&self, cpu: &Cpu) -> u8 {
 		let reg = match self.source {
 			ShiftSource::Acc => ACC_REGISTER,
 			ShiftSource::SingleRegister(reg) => reg
@@ -35,9 +35,14 @@ impl ShiftInstruction {
 		cpu.register_bank.read_single_named(reg)
 	}
 
-	fn as_shift_operation(&self, cpu: &mut Cpu) -> ShiftOperation {
+	fn read_carry(&self, cpu: &Cpu) -> bool {
+		cpu.register_bank.read_bit_flag(BitFlags::Carry)
+	}
+
+	fn as_shift_operation(&self, cpu: &Cpu) -> ShiftOperation {
 		ShiftOperation::new(
 			self.read_source(cpu),
+			self.read_carry(cpu),
 			self.destination,
 			self.direction,
 			self.type_,
@@ -48,7 +53,7 @@ impl ShiftInstruction {
 impl ChangesetInstruction for ShiftInstruction {
 	type C = ChangeList;
 
-	fn compute_change(&self, cpu: &mut Cpu) -> Result<Self::C, ExecutionError> {
+	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError> {
 		let operation = self.as_shift_operation(cpu);
 		let operation_result = &operation.calculate();
 		Ok(operation_result.into())
@@ -70,7 +75,7 @@ fn shift_instruction() {
 		ShiftSource::Acc,
 		ShiftDestination::Acc,
 		ShiftDirection::Left,
-		ShiftType::RotateWithCarry { old_carry },
+		ShiftType::RotateWithCarry,
 	);
 
 	assert_matches!(instruction.execute(&mut cpu), Ok(()));

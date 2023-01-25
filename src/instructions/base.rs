@@ -1,12 +1,12 @@
 use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::Ram;
 use crate::hardware::register_bank::{DoubleRegisters, SingleRegisters};
-use crate::instructions::changeset::{Change, ChangesetInstruction};
+use crate::instructions::changeset::{Change, ChangesetInstruction, SingleRegisterChange};
 
 use super::{ACC_REGISTER, ExecutionError};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-enum ByteSource {
+pub(super) enum ByteSource {
 	Acc,
 	SingleRegister { single_reg: SingleRegisters },
 	Memory { address_register: DoubleRegisters },
@@ -25,7 +25,7 @@ impl ByteSource {
 		Self::Memory { address_register: DoubleRegisters::HL }
 	}
 
-	fn read(&self, cpu: &Cpu) -> Result<u8, ExecutionError> {
+	pub(super) fn read(&self, cpu: &Cpu) -> Result<u8, ExecutionError> {
 		match self {
 			Self::Acc => Ok(cpu.register_bank.read_single_named(ACC_REGISTER)),
 			Self::SingleRegister { single_reg } => Ok(cpu.register_bank.read_single_named(*single_reg)),
@@ -39,7 +39,7 @@ impl ByteSource {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-enum ByteDestination {
+pub(super) enum ByteDestination {
 	Acc,
 	SingleRegister { single_reg: SingleRegisters },
 }
@@ -53,20 +53,20 @@ impl ByteDestination {
 		Self::SingleRegister { single_reg }
 	}
 
-	fn write(&self, cpu: &mut Cpu, value: u8) {
+	pub(super) fn change_destination(&self, value: u8) -> SingleRegisterChange {
 		let reg = match self {
 			Self::Acc => ACC_REGISTER,
 			Self::SingleRegister { single_reg } => *single_reg
 		};
 
-		cpu.register_bank.write_single_named(reg, value);
+		SingleRegisterChange::new(reg, value)
 	}
 }
 
-trait ByteOperation {
+pub(super) trait ByteOperation {
 	type C: Change;
 
-	fn execute(&self, src: &ByteSource, dst: &ByteDestination) -> Result<Self::C, ExecutionError>;
+	fn execute(&self, cpu: &Cpu, src: &ByteSource, dst: &ByteDestination) -> Result<Self::C, ExecutionError>;
 }
 
 struct BaseByteInstruction<O> where
@@ -88,7 +88,7 @@ impl<O> ChangesetInstruction for BaseByteInstruction<O> where
 	O: ByteOperation {
 	type C = O::C;
 
-	fn compute_change(&self, cpu: &mut Cpu) -> Result<Self::C, ExecutionError> {
-		self.op.execute(&self.src, &self.dst)
+	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError> {
+		self.op.execute(cpu, &self.src, &self.dst)
 	}
 }

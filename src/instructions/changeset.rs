@@ -121,7 +121,7 @@ impl Change for ChangeList {
 pub(super) trait ChangesetInstruction {
 	type C: Change;
 
-	fn compute_change(&self, cpu: &mut Cpu) -> Result<Self::C, ExecutionError>;
+	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError>;
 }
 
 impl<T> Instruction for T where
