@@ -156,26 +156,16 @@ pub(super) trait AsShiftOperation {
 	fn as_shift_operation(&self, cpu: &mut Cpu) -> ShiftOperation;
 }
 
-/*
-impl<T> Instruction for T
-	where T: AsShiftOperation
-{
-	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
-		let shift_operation = self.as_shift_operation(cpu);
-		let operation_result = shift_operation.calculate();
-		operation_result.commit(cpu);
-
-		Ok(())
-	}
-}
-*/
-
 struct ByteShiftOperation {
 	direction: ShiftDirection,
 	type_: ShiftType,
 }
 
 impl ByteShiftOperation {
+	fn new(direction: ShiftDirection, type_: ShiftType) -> Self {
+		Self { direction, type_ }
+	}
+
 	fn shift_result(&self, value: u8) -> (u8, bool) {
 		match self.direction {
 			ShiftDirection::Left => {
@@ -209,16 +199,9 @@ impl ByteShiftOperation {
 			_ => result == 0
 		}
 	}
-}
 
-impl ByteOperation for ByteShiftOperation {
-	type C = ChangeList;
-
-	fn execute(&self, cpu: &Cpu, src: &ByteSource, dst: &ByteDestination) -> Result<Self::C, ExecutionError> {
-		let value = src.read(cpu)?;
-
+	pub(super) fn compute_changes(&self, value: u8, old_carry: bool, dst: &ByteDestination) -> ChangeList {
 		let old_sign = value & 80 != 0;
-		let old_carry = cpu.register_bank.read_bit_flag(BitFlags::Carry);
 		let (mut result, shifted_out) = self.shift_result(value);
 
 		let shift_in_bit = self.shift_in(shifted_out, old_carry).unwrap_or(false);
@@ -238,10 +221,22 @@ impl ByteOperation for ByteShiftOperation {
 			.with_carry_flag(new_carry)
 			.with_zero_flag(new_zero);
 
-		Ok(ChangeList::new(vec![
+		ChangeList::new(vec![
 			Box::new(single_register_change),
 			Box::new(bit_flags_change),
-		]))
+		])
+	}
+}
+
+impl ByteOperation for ByteShiftOperation {
+	type C = ChangeList;
+
+	fn execute(&self, cpu: &Cpu, src: &ByteSource, dst: &ByteDestination) -> Result<Self::C, ExecutionError> {
+		let value = src.read(cpu)?;
+		let old_carry = cpu.register_bank.read_bit_flag(BitFlags::Carry);
+
+		let changes = self.compute_changes(value, old_carry, dst);
+		Ok(changes)
 	}
 }
 
