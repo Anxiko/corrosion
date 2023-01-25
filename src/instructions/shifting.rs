@@ -1,4 +1,5 @@
 use std::assert_matches::assert_matches;
+
 use operation::{ShiftDestination, ShiftDirection, ShiftOperation, ShiftType};
 
 use crate::hardware::cpu::Cpu;
@@ -22,14 +23,24 @@ struct ShiftInstruction {
 }
 
 impl ShiftInstruction {
-	fn new(source: ShiftSource, destination: ShiftDestination, direction: ShiftDirection, type_: ShiftType) -> Self {
-		Self { source, destination, direction, type_ }
+	fn new(
+		source: ShiftSource,
+		destination: ShiftDestination,
+		direction: ShiftDirection,
+		type_: ShiftType,
+	) -> Self {
+		Self {
+			source,
+			destination,
+			direction,
+			type_,
+		}
 	}
 
 	fn read_source(&self, cpu: &Cpu) -> u8 {
 		let reg = match self.source {
 			ShiftSource::Acc => ACC_REGISTER,
-			ShiftSource::SingleRegister(reg) => reg
+			ShiftSource::SingleRegister(reg) => reg,
 		};
 
 		cpu.register_bank.read_single_named(reg)
@@ -64,12 +75,17 @@ impl ChangesetInstruction for ShiftInstruction {
 fn shift_instruction() {
 	let mut cpu = Cpu::new();
 	let old_carry = true;
-	cpu.register_bank.write_single_named(ACC_REGISTER, 0b0011_0101);
+	cpu.register_bank
+		.write_single_named(ACC_REGISTER, 0b0011_0101);
 	cpu.register_bank.write_bit_flag(BitFlags::Carry, old_carry);
 
 	let mut expected = cpu.clone();
-	expected.register_bank.write_single_named(ACC_REGISTER, 0b0110_1011);
-	expected.register_bank.write_bit_flag(BitFlags::Carry, false);
+	expected
+		.register_bank
+		.write_single_named(ACC_REGISTER, 0b0110_1011);
+	expected
+		.register_bank
+		.write_bit_flag(BitFlags::Carry, false);
 
 	let instruction = ShiftInstruction::new(
 		ShiftSource::Acc,

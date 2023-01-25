@@ -34,7 +34,7 @@ impl DoubleRegisters {
 			Self::AF => (SingleRegisters::A, SingleRegisters::F),
 			Self::BC => (SingleRegisters::B, SingleRegisters::C),
 			Self::DE => (SingleRegisters::D, SingleRegisters::E),
-			Self::HL => (SingleRegisters::H, SingleRegisters::L)
+			Self::HL => (SingleRegisters::H, SingleRegisters::L),
 		}
 	}
 }
@@ -58,17 +58,21 @@ pub struct RegisterBank {
 impl RegisterBank {
 	pub fn new() -> Self {
 		Self {
-			register_bank: [0u8; SINGLE_REGISTER_BANK_SIZE]
+			register_bank: [0u8; SINGLE_REGISTER_BANK_SIZE],
 		}
 	}
 
 	pub fn read_single(&self, address: usize) -> Result<u8, RegisterBankError> {
-		self.register_bank.get(address).copied()
+		self.register_bank
+			.get(address)
+			.copied()
 			.ok_or(RegisterBankError::AddressOutOfRange { address })
 	}
 
 	pub fn write_single(&mut self, address: usize, value: u8) -> Result<(), RegisterBankError> {
-		let register = self.register_bank.get_mut(address)
+		let register = self
+			.register_bank
+			.get_mut(address)
 			.ok_or(RegisterBankError::AddressOutOfRange { address })?;
 		*register = value;
 		Ok(())
@@ -80,7 +84,7 @@ impl RegisterBank {
 			1 => Some((1, 2)),
 			2 => Some((3, 4)),
 			3 => Some((6, 7)),
-			_ => None
+			_ => None,
 		}
 	}
 
@@ -97,12 +101,18 @@ impl RegisterBank {
 			.ok_or(RegisterBankError::InvalidDoubleRegister { address })?;
 		let [high, low] = value.to_be_bytes();
 
-		let high_register = self.register_bank.get_mut(high_address)
-			.ok_or(RegisterBankError::AddressOutOfRange { address: high_address })?;
+		let high_register = self.register_bank.get_mut(high_address).ok_or(
+			RegisterBankError::AddressOutOfRange {
+				address: high_address,
+			},
+		)?;
 		*high_register = high;
 
-		let low_register = self.register_bank.get_mut(low_address)
-			.ok_or(RegisterBankError::AddressOutOfRange { address: low_address })?;
+		let low_register = self.register_bank.get_mut(low_address).ok_or(
+			RegisterBankError::AddressOutOfRange {
+				address: low_address,
+			},
+		)?;
 		*low_register = low;
 
 		Ok(())
@@ -120,12 +130,7 @@ impl RegisterBank {
 	pub fn write_bit_flag(&mut self, flag: BitFlags, bit: bool) {
 		let flag: u8 = flag.into();
 		let bitmask: u8 = 1u8 << flag;
-		let shifted_bit: u8 =
-			if bit {
-				bitmask
-			} else {
-				0
-			};
+		let shifted_bit: u8 = if bit { bitmask } else { 0 };
 
 		let flag_register: u8 = self.read_single(FLAG_REGISTER).unwrap();
 		let new_flag_register = (flag_register & (!bitmask)) | shifted_bit;
@@ -142,7 +147,6 @@ impl RegisterBank {
 		let address: u8 = single_register.into();
 		self.write_single(address as usize, value).unwrap();
 	}
-
 
 	pub fn read_double_named(&self, double_register: DoubleRegisters) -> u16 {
 		let address: u8 = double_register.into();

@@ -22,13 +22,17 @@ impl ByteSource {
 	}
 
 	fn read_from_hl_address() -> Self {
-		Self::Memory { address_register: DoubleRegisters::HL }
+		Self::Memory {
+			address_register: DoubleRegisters::HL,
+		}
 	}
 
 	pub(super) fn read(&self, cpu: &Cpu) -> Result<u8, ExecutionError> {
 		match self {
 			Self::Acc => Ok(cpu.register_bank.read_single_named(ACC_REGISTER)),
-			Self::SingleRegister { single_reg } => Ok(cpu.register_bank.read_single_named(*single_reg)),
+			Self::SingleRegister { single_reg } => {
+				Ok(cpu.register_bank.read_single_named(*single_reg))
+			}
 			Self::Memory { address_register } => {
 				let address = cpu.register_bank.read_double_named(*address_register);
 				let result = cpu.mapped_ram.read(address)?;
@@ -56,7 +60,7 @@ impl ByteDestination {
 	pub(super) fn change_destination(&self, value: u8) -> SingleRegisterChange {
 		let reg = match self {
 			Self::Acc => ACC_REGISTER,
-			Self::SingleRegister { single_reg } => *single_reg
+			Self::SingleRegister { single_reg } => *single_reg,
 		};
 
 		SingleRegisterChange::new(reg, value)
@@ -66,26 +70,36 @@ impl ByteDestination {
 pub(super) trait ByteOperation {
 	type C: Change;
 
-	fn execute(&self, cpu: &Cpu, src: &ByteSource, dst: &ByteDestination) -> Result<Self::C, ExecutionError>;
+	fn execute(
+		&self,
+		cpu: &Cpu,
+		src: &ByteSource,
+		dst: &ByteDestination,
+	) -> Result<Self::C, ExecutionError>;
 }
 
-struct BaseByteInstruction<O> where
-	O: ByteOperation,
+struct BaseByteInstruction<O>
+	where
+		O: ByteOperation,
 {
 	src: ByteSource,
 	dst: ByteDestination,
 	op: O,
 }
 
-impl<O> BaseByteInstruction<O> where
-	O: ByteOperation {
+impl<O> BaseByteInstruction<O>
+	where
+		O: ByteOperation,
+{
 	fn new(src: ByteSource, dst: ByteDestination, op: O) -> Self {
 		Self { src, dst, op }
 	}
 }
 
-impl<O> ChangesetInstruction for BaseByteInstruction<O> where
-	O: ByteOperation {
+impl<O> ChangesetInstruction for BaseByteInstruction<O>
+	where
+		O: ByteOperation,
+{
 	type C = O::C;
 
 	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError> {

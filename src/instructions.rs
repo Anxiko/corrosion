@@ -3,11 +3,11 @@ use crate::hardware::ram::RamError;
 use crate::hardware::register_bank::SingleRegisters;
 
 pub(crate) mod arithmetic;
-pub(crate) mod logical;
-pub(crate) mod flags;
-pub(crate) mod shifting;
 pub(crate) mod base;
 pub(crate) mod changeset;
+pub(crate) mod flags;
+pub(crate) mod logical;
+pub(crate) mod shifting;
 
 trait Instruction {
 	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError>;
@@ -15,7 +15,7 @@ trait Instruction {
 
 #[derive(Debug)]
 pub(crate) enum ExecutionError {
-	RamError(RamError)
+	RamError(RamError),
 }
 
 impl From<RamError> for ExecutionError {

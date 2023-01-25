@@ -1,3 +1,3 @@
-pub mod register_bank;
-pub(crate) mod ram;
 pub mod cpu;
+pub(crate) mod ram;
+pub mod register_bank;

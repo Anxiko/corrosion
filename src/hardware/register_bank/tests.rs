@@ -1,6 +1,6 @@
 use crate::hardware::register_bank::{
-	DOUBLE_REGISTER_BANK_SIZE, RegisterBank, RegisterBankError, BitFlags, SINGLE_REGISTER_BANK_SIZE,
-	SingleRegisters, DoubleRegisters,
+	BitFlags, DOUBLE_REGISTER_BANK_SIZE, DoubleRegisters, RegisterBank, RegisterBankError,
+	SINGLE_REGISTER_BANK_SIZE, SingleRegisters,
 };
 
 #[test]
@@ -14,17 +14,24 @@ fn single_register() {
 
 	for register in 0..SINGLE_REGISTER_BANK_SIZE {
 		let expected_register_value = 0x12u8 + register as u8;
-		assert_eq!(register_bank.read_single(register), Ok(expected_register_value));
+		assert_eq!(
+			register_bank.read_single(register),
+			Ok(expected_register_value)
+		);
 	}
 
 	assert_eq!(
 		register_bank.read_single(SINGLE_REGISTER_BANK_SIZE),
-		Err(RegisterBankError::AddressOutOfRange { address: SINGLE_REGISTER_BANK_SIZE })
+		Err(RegisterBankError::AddressOutOfRange {
+			address: SINGLE_REGISTER_BANK_SIZE
+		})
 	);
 
 	assert_eq!(
 		register_bank.write_single(SINGLE_REGISTER_BANK_SIZE, 0x12),
-		Err(RegisterBankError::AddressOutOfRange { address: SINGLE_REGISTER_BANK_SIZE })
+		Err(RegisterBankError::AddressOutOfRange {
+			address: SINGLE_REGISTER_BANK_SIZE
+		})
 	);
 }
 
@@ -39,17 +46,24 @@ fn double_register() {
 
 	for register in 0..DOUBLE_REGISTER_BANK_SIZE {
 		let expected_register_value = 0xab12u16 + register as u16;
-		assert_eq!(register_bank.read_double(register), Ok(expected_register_value));
+		assert_eq!(
+			register_bank.read_double(register),
+			Ok(expected_register_value)
+		);
 	}
 
 	assert_eq!(
 		register_bank.read_double(DOUBLE_REGISTER_BANK_SIZE),
-		Err(RegisterBankError::InvalidDoubleRegister { address: DOUBLE_REGISTER_BANK_SIZE })
+		Err(RegisterBankError::InvalidDoubleRegister {
+			address: DOUBLE_REGISTER_BANK_SIZE
+		})
 	);
 
 	assert_eq!(
 		register_bank.write_double(DOUBLE_REGISTER_BANK_SIZE, 0xab12),
-		Err(RegisterBankError::InvalidDoubleRegister { address: DOUBLE_REGISTER_BANK_SIZE })
+		Err(RegisterBankError::InvalidDoubleRegister {
+			address: DOUBLE_REGISTER_BANK_SIZE
+		})
 	);
 }
 
@@ -57,7 +71,10 @@ fn double_register() {
 fn bit_flags() {
 	let mut register_bank = RegisterBank::new();
 	for bit_flag in [
-		BitFlags::Carry, BitFlags::HalfCarry, BitFlags::Subtraction, BitFlags::Zero
+		BitFlags::Carry,
+		BitFlags::HalfCarry,
+		BitFlags::Subtraction,
+		BitFlags::Zero,
 	] {
 		assert!(!register_bank.read_bit_flag(bit_flag));
 		register_bank.write_bit_flag(bit_flag, true);

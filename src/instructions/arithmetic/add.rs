@@ -1,6 +1,6 @@
 use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::Ram;
-use crate::hardware::register_bank::{DoubleRegisters, BitFlags, SingleRegisters};
+use crate::hardware::register_bank::{BitFlags, DoubleRegisters, SingleRegisters};
 use crate::instructions::{ExecutionError, Instruction};
 use crate::instructions::ACC_REGISTER;
 use crate::instructions::arithmetic::operation::ArithmeticOperation;
@@ -53,9 +53,7 @@ pub(crate) struct AddWithCarry {
 
 impl AddWithCarry {
 	pub(super) fn new(src: SingleRegisters) -> Self {
-		Self {
-			src
-		}
+		Self { src }
 	}
 }
 
@@ -90,7 +88,6 @@ impl Instruction for AddHl {
 		Ok(())
 	}
 }
-
 
 pub(crate) struct Increment {}
 

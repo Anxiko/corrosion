@@ -51,12 +51,16 @@ impl ArithmeticOperation {
 	}
 
 	pub(super) fn commit(&self, cpu: &mut Cpu) {
-		cpu.register_bank.write_single_named(ACC_REGISTER, self.result);
+		cpu.register_bank
+			.write_single_named(ACC_REGISTER, self.result);
 
 		cpu.register_bank.write_bit_flag(BitFlags::Zero, self.zero);
-		cpu.register_bank.write_bit_flag(BitFlags::Subtraction, self.subtraction);
-		cpu.register_bank.write_bit_flag(BitFlags::Carry, self.carry);
-		cpu.register_bank.write_bit_flag(BitFlags::HalfCarry, self.half_carry);
+		cpu.register_bank
+			.write_bit_flag(BitFlags::Subtraction, self.subtraction);
+		cpu.register_bank
+			.write_bit_flag(BitFlags::Carry, self.carry);
+		cpu.register_bank
+			.write_bit_flag(BitFlags::HalfCarry, self.half_carry);
 	}
 
 	fn add_half_carry_flag(left: u8, right: u8, carry: bool) -> bool {
@@ -209,9 +213,15 @@ fn test_commit_config(result: u8, zero: bool, subtraction: bool, half_carry: boo
 
 	assert_eq!(cpu.register_bank.read_single_named(ACC_REGISTER), result);
 	assert_eq!(cpu.register_bank.read_bit_flag(BitFlags::Zero), zero);
-	assert_eq!(cpu.register_bank.read_bit_flag(BitFlags::Subtraction), subtraction);
+	assert_eq!(
+		cpu.register_bank.read_bit_flag(BitFlags::Subtraction),
+		subtraction
+	);
 	assert_eq!(cpu.register_bank.read_bit_flag(BitFlags::Carry), carry);
-	assert_eq!(cpu.register_bank.read_bit_flag(BitFlags::HalfCarry), half_carry);
+	assert_eq!(
+		cpu.register_bank.read_bit_flag(BitFlags::HalfCarry),
+		half_carry
+	);
 }
 
 const LOWER_NIBBLE: u8 = 0xF;

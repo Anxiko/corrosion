@@ -1,11 +1,17 @@
+use std::fmt::Debug;
+
+use dyn_partial_eq::{dyn_partial_eq, DynPartialEq};
+
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::{BitFlags, SingleRegisters};
 use crate::instructions::{ExecutionError, Instruction};
 
-pub(super) trait Change {
+#[dyn_partial_eq]
+pub(super) trait Change: Debug {
 	fn commit_change(&self, cpu: &mut Cpu) -> Result<(), ExecutionError>;
 }
 
+#[derive(PartialEq, DynPartialEq, Debug)]
 pub(super) struct SingleRegisterChange {
 	reg: SingleRegisters,
 	value: u8,
@@ -24,6 +30,7 @@ impl Change for SingleRegisterChange {
 	}
 }
 
+#[derive(PartialEq, DynPartialEq, Debug)]
 pub(super) struct BitFlagsChangeset {
 	zero: Option<bool>,
 	subtraction: Option<bool>,
@@ -33,7 +40,10 @@ pub(super) struct BitFlagsChangeset {
 
 impl BitFlagsChangeset {
 	pub(super) fn new(
-		zero: Option<bool>, subtraction: Option<bool>, half_carry: Option<bool>, carry: Option<bool>,
+		zero: Option<bool>,
+		subtraction: Option<bool>,
+		half_carry: Option<bool>,
+		carry: Option<bool>,
 	) -> Self {
 		Self {
 			zero,
@@ -99,6 +109,7 @@ impl Change for BitFlagsChangeset {
 	}
 }
 
+#[derive(PartialEq, DynPartialEq, Debug)]
 pub(super) struct ChangeList {
 	changes: Vec<Box<dyn Change>>,
 }
@@ -124,8 +135,9 @@ pub(super) trait ChangesetInstruction {
 	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError>;
 }
 
-impl<T> Instruction for T where
-	T: ChangesetInstruction,
+impl<T> Instruction for T
+	where
+		T: ChangesetInstruction,
 {
 	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
 		let change = self.compute_change(cpu)?;

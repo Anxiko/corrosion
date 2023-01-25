@@ -20,7 +20,6 @@ impl Instruction for ToggleCarry {
 	}
 }
 
-
 pub(crate) struct SetCarry {}
 
 impl SetCarry {
@@ -42,7 +41,9 @@ fn toggle_carry() {
 	cpu.register_bank.write_bit_flag(BitFlags::Carry, true);
 
 	let mut expected = cpu.clone();
-	expected.register_bank.write_bit_flag(BitFlags::Carry, false);
+	expected
+		.register_bank
+		.write_bit_flag(BitFlags::Carry, false);
 
 	assert!(ToggleCarry::new().execute(&mut cpu).is_ok());
 	assert_eq!(cpu, expected);

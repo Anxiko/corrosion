@@ -4,7 +4,6 @@ pub(crate) const OAM_START: u16 = 0xFE00;
 
 const WORKING_RAM_SIZE: usize = (ECHO_RAM_START - WORKING_RAM_START) as usize;
 
-
 pub(crate) trait Ram {
 	fn read(&self, address: u16) -> Result<u8, RamError>;
 	fn write(&mut self, address: u16, value: u8) -> Result<(), RamError>;
@@ -30,7 +29,6 @@ struct RamMapping {
 	region: RamRegion,
 	offset: u16,
 	size: usize,
-
 }
 
 impl RamMapping {
@@ -39,18 +37,16 @@ impl RamMapping {
 	}
 }
 
-const RAM_MAPPINGS: [RamMapping; 1] = [
-	RamMapping {
-		region: RamRegion::WorkingRam,
-		offset: WORKING_RAM_START,
-		size: WORKING_RAM_SIZE,
-	},
-];
+const RAM_MAPPINGS: [RamMapping; 1] = [RamMapping {
+	region: RamRegion::WorkingRam,
+	offset: WORKING_RAM_START,
+	size: WORKING_RAM_SIZE,
+}];
 
 impl MappedRam {
 	pub(crate) fn new() -> Self {
 		Self {
-			working_ram: WorkingRam::new()
+			working_ram: WorkingRam::new(),
 		}
 	}
 
@@ -68,27 +64,25 @@ impl MappedRam {
 
 	fn get_mapped_ram_mut(&mut self, region: RamRegion) -> &mut impl Ram {
 		match region {
-			RamRegion::WorkingRam => &mut self.working_ram
+			RamRegion::WorkingRam => &mut self.working_ram,
 		}
 	}
 }
 
 impl Ram for MappedRam {
 	fn read(&self, address: u16) -> Result<u8, RamError> {
-		let ram_mapping = MappedRam::mapping_for_address(address)
-			.ok_or(RamError::UnmappedRegion(address))?;
+		let ram_mapping =
+			MappedRam::mapping_for_address(address).ok_or(RamError::UnmappedRegion(address))?;
 		let mapped_ram = self.get_mapped_ram(ram_mapping.region);
-
 
 		let region_address = address - ram_mapping.offset;
 		mapped_ram.read(region_address)
 	}
 
 	fn write(&mut self, address: u16, value: u8) -> Result<(), RamError> {
-		let ram_mapping = MappedRam::mapping_for_address(address)
-			.ok_or(RamError::UnmappedRegion(address))?;
+		let ram_mapping =
+			MappedRam::mapping_for_address(address).ok_or(RamError::UnmappedRegion(address))?;
 		let mapped_ram = self.get_mapped_ram_mut(ram_mapping.region);
-
 
 		let region_address = address - ram_mapping.offset;
 		mapped_ram.write(region_address, value)
@@ -103,7 +97,7 @@ struct WorkingRam {
 impl WorkingRam {
 	fn new() -> Self {
 		Self {
-			memory: Box::new([0; WORKING_RAM_SIZE])
+			memory: Box::new([0; WORKING_RAM_SIZE]),
 		}
 	}
 }
@@ -117,7 +111,8 @@ impl Ram for WorkingRam {
 	}
 
 	fn write(&mut self, address: u16, value: u8) -> Result<(), RamError> {
-		let ptr = self.memory
+		let ptr = self
+			.memory
 			.get_mut(usize::from(address))
 			.ok_or(RamError::InvalidAddress(address))?;
 

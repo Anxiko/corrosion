@@ -91,11 +91,15 @@ impl Instruction for Negate {
 #[test]
 fn and_instruction() {
 	let mut cpu = Cpu::new();
-	cpu.register_bank.write_single_named(ACC_REGISTER, 0b0011_1100);
-	cpu.register_bank.write_single_named(SingleRegisters::B, 0b0101_1010);
+	cpu.register_bank
+		.write_single_named(ACC_REGISTER, 0b0011_1100);
+	cpu.register_bank
+		.write_single_named(SingleRegisters::B, 0b0101_1010);
 
 	let mut expected = cpu.clone();
-	expected.register_bank.write_single_named(ACC_REGISTER, 0b0001_1000);
+	expected
+		.register_bank
+		.write_single_named(ACC_REGISTER, 0b0001_1000);
 
 	assert!(And::new(SingleRegisters::B).execute(&mut cpu).is_ok());
 	assert_eq!(cpu, expected);
@@ -104,11 +108,15 @@ fn and_instruction() {
 #[test]
 fn or_instruction() {
 	let mut cpu = Cpu::new();
-	cpu.register_bank.write_single_named(ACC_REGISTER, 0b0011_1100);
-	cpu.register_bank.write_single_named(SingleRegisters::B, 0b0101_1010);
+	cpu.register_bank
+		.write_single_named(ACC_REGISTER, 0b0011_1100);
+	cpu.register_bank
+		.write_single_named(SingleRegisters::B, 0b0101_1010);
 
 	let mut expected = cpu.clone();
-	expected.register_bank.write_single_named(ACC_REGISTER, 0b0111_1110);
+	expected
+		.register_bank
+		.write_single_named(ACC_REGISTER, 0b0111_1110);
 
 	assert!(Or::new(SingleRegisters::B).execute(&mut cpu).is_ok());
 	assert_eq!(cpu, expected);
@@ -117,11 +125,15 @@ fn or_instruction() {
 #[test]
 fn xor_instruction() {
 	let mut cpu = Cpu::new();
-	cpu.register_bank.write_single_named(ACC_REGISTER, 0b0011_1100);
-	cpu.register_bank.write_single_named(SingleRegisters::B, 0b0101_1010);
+	cpu.register_bank
+		.write_single_named(ACC_REGISTER, 0b0011_1100);
+	cpu.register_bank
+		.write_single_named(SingleRegisters::B, 0b0101_1010);
 
 	let mut expected = cpu.clone();
-	expected.register_bank.write_single_named(ACC_REGISTER, 0b0110_0110);
+	expected
+		.register_bank
+		.write_single_named(ACC_REGISTER, 0b0110_0110);
 
 	assert!(Xor::new(SingleRegisters::B).execute(&mut cpu).is_ok());
 	assert_eq!(cpu, expected);
@@ -130,10 +142,13 @@ fn xor_instruction() {
 #[test]
 fn neg_instruction() {
 	let mut cpu = Cpu::new();
-	cpu.register_bank.write_single_named(ACC_REGISTER, 0b1100_1010);
+	cpu.register_bank
+		.write_single_named(ACC_REGISTER, 0b1100_1010);
 
 	let mut expected = cpu.clone();
-	expected.register_bank.write_single_named(ACC_REGISTER, 0b0011_0101);
+	expected
+		.register_bank
+		.write_single_named(ACC_REGISTER, 0b0011_0101);
 
 	assert!(Negate::new().execute(&mut cpu).is_ok());
 	assert_eq!(cpu, expected);
