@@ -372,36 +372,26 @@ fn shift_logical() {
 #[test]
 fn shift_arithmetic() {
 	assert_eq!(
-		ShiftOperation {
-			value: 0b1100_1010,
-			old_carry: false,
-			destination: ShiftDestination::Acc,
-			type_: ShiftType::ArithmeticShift,
-			direction: ShiftDirection::Right,
-		}
-			.calculate(),
-		ShiftOperationResult {
-			result: 0b1110_0101,
-			destination: ShiftDestination::Acc,
-			new_carry: false,
-			new_zero: false,
-		}
+		ByteShiftOperation::new(ShiftDirection::Right, ShiftType::ArithmeticShift).compute_changes(
+			0b1100_1010,
+			false,
+			&ByteDestination::Acc,
+		),
+		ChangeList::new(vec![
+			Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b1110_0101)),
+			Box::new(BitFlagsChangeset::zero_all().with_zero_flag(false).with_carry_flag(false)),
+		])
 	);
 
 	assert_eq!(
-		ShiftOperation {
-			value: 0b1000_1101,
-			old_carry: false,
-			destination: ShiftDestination::Acc,
-			type_: ShiftType::ArithmeticShift,
-			direction: ShiftDirection::Left,
-		}
-			.calculate(),
-		ShiftOperationResult {
-			result: 0b0001_1010,
-			destination: ShiftDestination::Acc,
-			new_carry: true,
-			new_zero: false,
-		}
+		ByteShiftOperation::new(ShiftDirection::Left, ShiftType::ArithmeticShift).compute_changes(
+			0b1000_1101,
+			false,
+			&ByteDestination::Acc,
+		),
+		ChangeList::new(vec![
+			Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b0001_1010)),
+			Box::new(BitFlagsChangeset::zero_all().with_zero_flag(false).with_carry_flag(true)),
+		])
 	);
 }
