@@ -318,37 +318,27 @@ fn rotate() {
 #[test]
 fn rotate_with_carry() {
 	assert_eq!(
-		ShiftOperation {
-			value: 0b0011_1010,
-			old_carry: true,
-			destination: ShiftDestination::Acc,
-			type_: ShiftType::RotateWithCarry,
-			direction: ShiftDirection::Right,
-		}
-			.calculate(),
-		ShiftOperationResult {
-			result: 0b1001_1101,
-			destination: ShiftDestination::Acc,
-			new_carry: false,
-			new_zero: false,
-		}
+		ByteShiftOperation::new(ShiftDirection::Right, ShiftType::RotateWithCarry).compute_changes(
+			0b0011_1010,
+			true,
+			&ByteDestination::Acc,
+		),
+		ChangeList::new(vec![
+			Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b1001_1101)),
+			Box::new(BitFlagsChangeset::zero_all().with_zero_flag(false).with_carry_flag(false)),
+		])
 	);
 
 	assert_eq!(
-		ShiftOperation {
-			value: 0b1001_1101,
-			old_carry: false,
-			destination: ShiftDestination::Acc,
-			type_: ShiftType::RotateWithCarry,
-			direction: ShiftDirection::Left,
-		}
-			.calculate(),
-		ShiftOperationResult {
-			result: 0b0011_1010,
-			destination: ShiftDestination::Acc,
-			new_carry: true,
-			new_zero: false,
-		}
+		ByteShiftOperation::new(ShiftDirection::Left, ShiftType::RotateWithCarry).compute_changes(
+			0b1001_1101,
+			false,
+			&ByteDestination::Acc,
+		),
+		ChangeList::new(vec![
+			Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b0011_1010)),
+			Box::new(BitFlagsChangeset::zero_all().with_zero_flag(false).with_carry_flag(true)),
+		])
 	);
 }
 
