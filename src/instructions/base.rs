@@ -78,7 +78,7 @@ pub(super) trait ByteOperation {
 	) -> Result<Self::C, ExecutionError>;
 }
 
-struct BaseByteInstruction<O>
+pub(super) struct BaseByteInstruction<O>
 	where
 		O: ByteOperation,
 {
@@ -91,7 +91,7 @@ impl<O> BaseByteInstruction<O>
 	where
 		O: ByteOperation,
 {
-	fn new(src: ByteSource, dst: ByteDestination, op: O) -> Self {
+	pub(super) fn new(src: ByteSource, dst: ByteDestination, op: O) -> Self {
 		Self { src, dst, op }
 	}
 }

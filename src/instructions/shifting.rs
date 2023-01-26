@@ -1,75 +1,32 @@
 use std::assert_matches::assert_matches;
 
-use operation::{ShiftDestination, ShiftDirection, ShiftOperation, ShiftType};
-
 use crate::hardware::cpu::Cpu;
-use crate::hardware::register_bank::{BitFlags, SingleRegisters};
-use crate::instructions::{ExecutionError, Instruction};
-use crate::instructions::ACC_REGISTER;
-use crate::instructions::changeset::{ChangeList, ChangesetInstruction};
+use crate::hardware::register_bank::BitFlags;
+use crate::instructions::{ACC_REGISTER, ExecutionError, Instruction};
+use crate::instructions::base::{BaseByteInstruction, ByteDestination, ByteOperation, ByteSource};
+use crate::instructions::changeset::ChangeList;
+use crate::instructions::shifting::operation::{ByteShiftOperation, ShiftDirection, ShiftType};
 
 mod operation;
 
-enum ShiftSource {
-	Acc,
-	SingleRegister(SingleRegisters),
-}
-
-struct ShiftInstruction {
-	source: ShiftSource,
-	destination: ShiftDestination,
-	direction: ShiftDirection,
-	type_: ShiftType,
-}
-
-impl ShiftInstruction {
-	fn new(
-		source: ShiftSource,
-		destination: ShiftDestination,
-		direction: ShiftDirection,
-		type_: ShiftType,
-	) -> Self {
-		Self {
-			source,
-			destination,
-			direction,
-			type_,
-		}
-	}
-
-	fn read_source(&self, cpu: &Cpu) -> u8 {
-		let reg = match self.source {
-			ShiftSource::Acc => ACC_REGISTER,
-			ShiftSource::SingleRegister(reg) => reg,
-		};
-
-		cpu.register_bank.read_single_named(reg)
-	}
-
-	fn read_carry(&self, cpu: &Cpu) -> bool {
-		cpu.register_bank.read_bit_flag(BitFlags::Carry)
-	}
-
-	fn as_shift_operation(&self, cpu: &Cpu) -> ShiftOperation {
-		ShiftOperation::new(
-			self.read_source(cpu),
-			self.read_carry(cpu),
-			self.destination,
-			self.direction,
-			self.type_,
-		)
-	}
-}
-
-impl ChangesetInstruction for ShiftInstruction {
+impl ByteOperation for ByteShiftOperation {
 	type C = ChangeList;
 
-	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError> {
-		let operation = self.as_shift_operation(cpu);
-		let operation_result = &operation.calculate();
-		Ok(operation_result.into())
+	fn execute(
+		&self,
+		cpu: &Cpu,
+		src: &ByteSource,
+		dst: &ByteDestination,
+	) -> Result<Self::C, ExecutionError> {
+		let value = src.read(cpu)?;
+		let old_carry = cpu.register_bank.read_bit_flag(BitFlags::Carry);
+
+		let changes = self.compute_changes(value, old_carry, dst);
+		Ok(changes)
 	}
 }
+
+type ByteShiftInstruction = BaseByteInstruction<ByteShiftOperation>;
 
 #[test]
 fn shift_instruction() {
@@ -87,12 +44,12 @@ fn shift_instruction() {
 		.register_bank
 		.write_bit_flag(BitFlags::Carry, false);
 
-	let instruction = ShiftInstruction::new(
-		ShiftSource::Acc,
-		ShiftDestination::Acc,
-		ShiftDirection::Left,
-		ShiftType::RotateWithCarry,
+	let instruction = ByteShiftInstruction::new(
+		ByteSource::Acc,
+		ByteDestination::Acc,
+		ByteShiftOperation::new(ShiftDirection::Left, ShiftType::RotateWithCarry),
 	);
+
 
 	assert_matches!(instruction.execute(&mut cpu), Ok(()));
 	assert_eq!(cpu, expected);
