@@ -10,6 +10,7 @@ pub(super) enum ByteSource {
 	Acc,
 	SingleRegister { single_reg: SingleRegisters },
 	Memory { address_register: DoubleRegisters },
+	Immediate { value: u8 }
 }
 
 impl ByteSource {
@@ -27,6 +28,10 @@ impl ByteSource {
 		}
 	}
 
+	fn read_from_immediate(value: u8) -> Self {
+		Self::Immediate { value }
+	}
+
 	pub(super) fn read(&self, cpu: &Cpu) -> Result<u8, ExecutionError> {
 		match self {
 			Self::Acc => Ok(cpu.register_bank.read_single_named(ACC_REGISTER)),
@@ -37,7 +42,8 @@ impl ByteSource {
 				let address = cpu.register_bank.read_double_named(*address_register);
 				let result = cpu.mapped_ram.read(address)?;
 				Ok(result)
-			}
+			},
+			Self::Immediate { value } => Ok(*value),
 		}
 	}
 }
