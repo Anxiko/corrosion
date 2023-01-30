@@ -30,10 +30,11 @@ fn load_operation() {
 	let result = LoadByteOperation::new().execute(
 		&cpu, &ByteSource::SingleRegister { single_reg: SingleRegisters::B }, &ByteDestination::Acc,
 	).expect("Operation to execute");
+	let expected: Box<dyn Change> = Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b1111_0000));
 
 	assert_eq!(
 		result,
-		SingleRegisterChange::new(ACC_REGISTER, 0b1111_0000)
+		expected
 	);
 }
 

@@ -113,13 +113,13 @@ impl Change for BitFlagsChange {
 
 impl DynPartialEq for Box<dyn Change> {
 	fn box_eq(&self, other: &dyn Any) -> bool {
-		let boxed_change = &(**self);
-		let other_change: Option<&Self> = other.downcast_ref();
+		let other: Option<&Self> = other.downcast_ref();
+		other.is_some_and(|other| {
+			let boxed_self = &(**self);
+			let boxed_other = &(**other);
 
-		match other_change {
-			None => false,
-			Some(other_change) => boxed_change.box_eq(other_change.as_any())
-		}
+			boxed_self.box_eq(boxed_other.as_any())
+		})
 	}
 
 	fn as_any(&self) -> &dyn Any {
