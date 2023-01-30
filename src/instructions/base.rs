@@ -1,7 +1,7 @@
 use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::Ram;
 use crate::hardware::register_bank::{DoubleRegisters, SingleRegisters};
-use crate::instructions::changeset::{Change, ChangesetInstruction, SingleRegisterChange};
+use crate::instructions::changeset::{Change, ChangesetInstruction, MemoryByteWrite, SingleRegisterChange};
 
 use super::{ACC_REGISTER, ExecutionError};
 
@@ -61,6 +61,7 @@ impl ByteSource {
 pub(super) enum ByteDestination {
 	Acc,
 	SingleRegister { single_reg: SingleRegisters },
+	MemoryImmediate { address_immediate: u16 },
 }
 
 impl ByteDestination {
@@ -72,13 +73,14 @@ impl ByteDestination {
 		Self::SingleRegister { single_reg }
 	}
 
-	pub(super) fn change_destination(&self, value: u8) -> SingleRegisterChange {
-		let reg = match self {
-			Self::Acc => ACC_REGISTER,
-			Self::SingleRegister { single_reg } => *single_reg,
-		};
-
-		SingleRegisterChange::new(reg, value)
+	pub(super) fn change_destination(&self, value: u8) -> Box<dyn Change> {
+		match self {
+			Self::Acc => Box::new(SingleRegisterChange::new(ACC_REGISTER, value)),
+			Self::SingleRegister { single_reg } => Box::new(SingleRegisterChange::new(*single_reg, value)),
+			Self::MemoryImmediate { address_immediate } => {
+				Box::new(MemoryByteWrite::new(*address_immediate, value))
+			}
+		}
 	}
 }
 

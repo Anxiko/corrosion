@@ -1,8 +1,10 @@
-use std::fmt::Debug;
+use std::any::Any;
+use std::fmt::{Debug, Formatter};
 
 use dyn_partial_eq::{dyn_partial_eq, DynPartialEq};
 
 use crate::hardware::cpu::Cpu;
+use crate::hardware::ram::Ram;
 use crate::hardware::register_bank::{BitFlags, SingleRegisters};
 use crate::instructions::{ExecutionError, Instruction};
 
@@ -31,14 +33,14 @@ impl Change for SingleRegisterChange {
 }
 
 #[derive(PartialEq, DynPartialEq, Debug)]
-pub(super) struct BitFlagsChangeset {
+pub(super) struct BitFlagsChange {
 	zero: Option<bool>,
 	subtraction: Option<bool>,
 	half_carry: Option<bool>,
 	carry: Option<bool>,
 }
 
-impl BitFlagsChangeset {
+impl BitFlagsChange {
 	pub(super) fn new(
 		zero: Option<bool>,
 		subtraction: Option<bool>,
@@ -98,13 +100,55 @@ impl BitFlagsChangeset {
 	}
 }
 
-impl Change for BitFlagsChangeset {
+impl Change for BitFlagsChange {
 	fn commit_change(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
-		BitFlagsChangeset::write_to(cpu, BitFlags::Zero, self.zero);
-		BitFlagsChangeset::write_to(cpu, BitFlags::Subtraction, self.subtraction);
-		BitFlagsChangeset::write_to(cpu, BitFlags::HalfCarry, self.half_carry);
-		BitFlagsChangeset::write_to(cpu, BitFlags::Carry, self.carry);
+		BitFlagsChange::write_to(cpu, BitFlags::Zero, self.zero);
+		BitFlagsChange::write_to(cpu, BitFlags::Subtraction, self.subtraction);
+		BitFlagsChange::write_to(cpu, BitFlags::HalfCarry, self.half_carry);
+		BitFlagsChange::write_to(cpu, BitFlags::Carry, self.carry);
 
+		Ok(())
+	}
+}
+
+impl DynPartialEq for Box<dyn Change> {
+	fn box_eq(&self, other: &dyn Any) -> bool {
+		let boxed_change = &(**self);
+		let other_change: Option<&Self> = other.downcast_ref();
+
+		match other_change {
+			None => false,
+			Some(other_change) => boxed_change.box_eq(other_change.as_any())
+		}
+	}
+
+	fn as_any(&self) -> &dyn Any {
+		self
+	}
+}
+
+impl Change for Box<dyn Change> {
+	fn commit_change(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
+		let boxed_change = &(**self);
+		boxed_change.commit_change(cpu)
+	}
+}
+
+#[derive(Debug, PartialEq, DynPartialEq)]
+pub(super) struct MemoryByteWrite {
+	address: u16,
+	value: u8,
+}
+
+impl MemoryByteWrite {
+	pub(super) fn new(address: u16, value: u8) -> Self {
+		Self { address, value }
+	}
+}
+
+impl Change for MemoryByteWrite {
+	fn commit_change(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
+		cpu.mapped_ram.write(self.address, self.value)?;
 		Ok(())
 	}
 }

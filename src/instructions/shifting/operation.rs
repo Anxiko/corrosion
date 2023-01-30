@@ -2,7 +2,7 @@ use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::{BitFlags, SingleRegisters};
 use crate::instructions::{ACC_REGISTER, ExecutionError, Instruction};
 use crate::instructions::base::{ByteDestination, ByteOperation, ByteSource};
-use crate::instructions::changeset::{BitFlagsChangeset, Change, ChangeList, SingleRegisterChange};
+use crate::instructions::changeset::{BitFlagsChange, Change, ChangeList, SingleRegisterChange};
 
 #[derive(Copy, Clone)]
 pub(super) enum ShiftDirection {
@@ -102,13 +102,13 @@ impl ByteShiftOperation {
 		let new_carry = shifted_out;
 		let new_zero = self.zero_flag_for_result(dst, result);
 
-		let single_register_change = dst.change_destination(result);
-		let bit_flags_change = BitFlagsChangeset::zero_all()
+		let result_change = dst.change_destination(result);
+		let bit_flags_change = BitFlagsChange::zero_all()
 			.with_carry_flag(new_carry)
 			.with_zero_flag(new_zero);
 
 		ChangeList::new(vec![
-			Box::new(single_register_change),
+			result_change,
 			Box::new(bit_flags_change),
 		])
 	}
@@ -125,7 +125,7 @@ fn zero_flag() {
 		ChangeList::new(vec![
 			Box::new(SingleRegisterChange::new(ACC_REGISTER, 0)),
 			Box::new(
-				BitFlagsChangeset::zero_all()
+				BitFlagsChange::zero_all()
 					.with_zero_flag(false)
 					.with_carry_flag(false)
 			),
@@ -143,7 +143,7 @@ fn zero_flag() {
 		ChangeList::new(vec![
 			Box::new(SingleRegisterChange::new(SingleRegisters::B, 0)),
 			Box::new(
-				BitFlagsChangeset::zero_all()
+				BitFlagsChange::zero_all()
 					.with_zero_flag(true)
 					.with_carry_flag(false)
 			),
@@ -161,7 +161,7 @@ fn rotate() {
 		),
 		ChangeList::new(vec![
 			Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b0110_0101)),
-			Box::new(BitFlagsChangeset::zero_all().with_zero_flag(false).with_carry_flag(false)),
+			Box::new(BitFlagsChange::zero_all().with_zero_flag(false).with_carry_flag(false)),
 		])
 	);
 
@@ -173,7 +173,7 @@ fn rotate() {
 		),
 		ChangeList::new(vec![
 			Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b1001_0101)),
-			Box::new(BitFlagsChangeset::zero_all().with_zero_flag(false).with_carry_flag(true)),
+			Box::new(BitFlagsChange::zero_all().with_zero_flag(false).with_carry_flag(true)),
 		])
 	);
 }
@@ -188,7 +188,7 @@ fn rotate_with_carry() {
 		),
 		ChangeList::new(vec![
 			Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b1001_1101)),
-			Box::new(BitFlagsChangeset::zero_all().with_zero_flag(false).with_carry_flag(false)),
+			Box::new(BitFlagsChange::zero_all().with_zero_flag(false).with_carry_flag(false)),
 		])
 	);
 
@@ -200,7 +200,7 @@ fn rotate_with_carry() {
 		),
 		ChangeList::new(vec![
 			Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b0011_1010)),
-			Box::new(BitFlagsChangeset::zero_all().with_zero_flag(false).with_carry_flag(true)),
+			Box::new(BitFlagsChange::zero_all().with_zero_flag(false).with_carry_flag(true)),
 		])
 	);
 }
@@ -215,7 +215,7 @@ fn shift_logical() {
 		),
 		ChangeList::new(vec![
 			Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b0001_1101)),
-			Box::new(BitFlagsChangeset::zero_all().with_zero_flag(false).with_carry_flag(false)),
+			Box::new(BitFlagsChange::zero_all().with_zero_flag(false).with_carry_flag(false)),
 		])
 	);
 
@@ -227,7 +227,7 @@ fn shift_logical() {
 		),
 		ChangeList::new(vec![
 			Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b0011_1010)),
-			Box::new(BitFlagsChangeset::zero_all().with_zero_flag(false).with_carry_flag(true)),
+			Box::new(BitFlagsChange::zero_all().with_zero_flag(false).with_carry_flag(true)),
 		])
 	);
 }
@@ -242,7 +242,7 @@ fn shift_arithmetic() {
 		),
 		ChangeList::new(vec![
 			Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b1110_0101)),
-			Box::new(BitFlagsChangeset::zero_all().with_zero_flag(false).with_carry_flag(false)),
+			Box::new(BitFlagsChange::zero_all().with_zero_flag(false).with_carry_flag(false)),
 		])
 	);
 
@@ -254,7 +254,7 @@ fn shift_arithmetic() {
 		),
 		ChangeList::new(vec![
 			Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b0001_1010)),
-			Box::new(BitFlagsChangeset::zero_all().with_zero_flag(false).with_carry_flag(true)),
+			Box::new(BitFlagsChange::zero_all().with_zero_flag(false).with_carry_flag(true)),
 		])
 	);
 }

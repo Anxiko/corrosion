@@ -4,7 +4,7 @@ use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::SingleRegisters;
 use crate::instructions::{ACC_REGISTER, ExecutionError, Instruction};
 use crate::instructions::base::{BaseByteInstruction, ByteDestination, ByteOperation, ByteSource};
-use crate::instructions::changeset::SingleRegisterChange;
+use crate::instructions::changeset::{Change, SingleRegisterChange};
 
 struct LoadByteOperation;
 
@@ -13,7 +13,7 @@ impl LoadByteOperation {
 }
 
 impl ByteOperation for LoadByteOperation {
-	type C = SingleRegisterChange;
+	type C = Box<dyn Change>;
 
 	fn execute(&self, cpu: &Cpu, src: &ByteSource, dst: &ByteDestination) -> Result<Self::C, ExecutionError> {
 		let value = src.read(cpu)?;
