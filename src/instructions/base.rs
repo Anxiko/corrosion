@@ -62,6 +62,7 @@ pub(super) enum ByteDestination {
 	Acc,
 	SingleRegister { single_reg: SingleRegisters },
 	MemoryImmediate { address_immediate: u16 },
+	MemoryRegister { double_reg: DoubleRegisters }
 }
 
 impl ByteDestination {
@@ -73,12 +74,19 @@ impl ByteDestination {
 		Self::SingleRegister { single_reg }
 	}
 
+	fn write_to_address_register(double_reg: DoubleRegisters) -> Self {
+		Self::MemoryRegister { double_reg }
+	}
+
 	pub(super) fn change_destination(&self, value: u8) -> Box<dyn Change> {
 		match self {
 			Self::Acc => Box::new(SingleRegisterChange::new(ACC_REGISTER, value)),
 			Self::SingleRegister { single_reg } => Box::new(SingleRegisterChange::new(*single_reg, value)),
 			Self::MemoryImmediate { address_immediate } => {
-				Box::new(MemoryByteWrite::new(*address_immediate, value))
+				Box::new(MemoryByteWrite::write_to_immediate(*address_immediate, value))
+			},
+			Self::MemoryRegister { double_reg } => {
+				Box::new(MemoryByteWrite::write_to_register(*double_reg, value))
 			}
 		}
 	}

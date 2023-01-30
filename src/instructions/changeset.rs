@@ -5,7 +5,7 @@ use dyn_partial_eq::{dyn_partial_eq, DynPartialEq};
 
 use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::Ram;
-use crate::hardware::register_bank::{BitFlags, SingleRegisters};
+use crate::hardware::register_bank::{BitFlags, DoubleRegisters, SingleRegisters};
 use crate::instructions::{ExecutionError, Instruction};
 
 #[dyn_partial_eq]
@@ -134,21 +134,42 @@ impl Change for Box<dyn Change> {
 	}
 }
 
+#[derive(Debug, PartialEq)]
+enum MemoryByteWriteAddress {
+	Immediate(u16),
+	Register(DoubleRegisters),
+}
+
+impl MemoryByteWriteAddress {
+	fn resolve(&self, cpu: &Cpu) -> u16 {
+		match self {
+			Self::Immediate(address) => *address,
+			Self::Register(double_register) => {
+				cpu.register_bank.read_double_named(*double_register)
+			}
+		}
+	}
+}
+
 #[derive(Debug, PartialEq, DynPartialEq)]
 pub(super) struct MemoryByteWrite {
-	address: u16,
+	address: MemoryByteWriteAddress,
 	value: u8,
 }
 
 impl MemoryByteWrite {
-	pub(super) fn new(address: u16, value: u8) -> Self {
-		Self { address, value }
+	pub(super) fn write_to_immediate(address: u16, value: u8) -> Self {
+		Self { address: MemoryByteWriteAddress::Immediate(address), value }
+	}
+
+	pub(super) fn write_to_register(double_register: DoubleRegisters, value: u8) -> Self {
+		Self { address: MemoryByteWriteAddress::Register(double_register), value }
 	}
 }
 
 impl Change for MemoryByteWrite {
 	fn commit_change(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
-		cpu.mapped_ram.write(self.address, self.value)?;
+		cpu.mapped_ram.write(self.address.resolve(cpu), self.value)?;
 		Ok(())
 	}
 }
