@@ -9,8 +9,9 @@ use super::{ACC_REGISTER, ExecutionError};
 pub(super) enum ByteSource {
 	Acc,
 	SingleRegister { single_reg: SingleRegisters },
-	Memory { address_register: DoubleRegisters },
-	Immediate { value: u8 }
+	MemoryRegister { address_register: DoubleRegisters },
+	MemoryImmediate { address_immediate: u16 },
+	Immediate { value: u8 },
 }
 
 impl ByteSource {
@@ -22,10 +23,14 @@ impl ByteSource {
 		Self::SingleRegister { single_reg }
 	}
 
-	fn read_from_hl_address() -> Self {
-		Self::Memory {
-			address_register: DoubleRegisters::HL,
+	fn read_from_register_address(address_register: DoubleRegisters) -> Self {
+		Self::MemoryRegister {
+			address_register,
 		}
+	}
+
+	fn read_from_immediate_address(address_immediate: u16) -> Self {
+		Self::MemoryImmediate { address_immediate }
 	}
 
 	fn read_from_immediate(value: u8) -> Self {
@@ -38,9 +43,13 @@ impl ByteSource {
 			Self::SingleRegister { single_reg } => {
 				Ok(cpu.register_bank.read_single_named(*single_reg))
 			}
-			Self::Memory { address_register } => {
+			Self::MemoryRegister { address_register } => {
 				let address = cpu.register_bank.read_double_named(*address_register);
 				let result = cpu.mapped_ram.read(address)?;
+				Ok(result)
+			},
+			Self::MemoryImmediate { address_immediate } => {
+				let result = cpu.mapped_ram.read(*address_immediate)?;
 				Ok(result)
 			},
 			Self::Immediate { value } => Ok(*value),
