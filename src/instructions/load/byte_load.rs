@@ -87,7 +87,7 @@ impl LoadAndUpdateInstruction {
 		}
 	}
 
-	fn write(&self, value: u8, cpu: &Cpu) -> Box<dyn Change> {
+	fn write(&self, value: u8) -> Box<dyn Change> {
 		match self.reg {
 			LoadAndUpdateRegister::Destination(reg) => {
 				Box::new(MemoryByteWriteChange::write_to_register(reg, value))
@@ -111,7 +111,7 @@ impl ChangesetInstruction for LoadAndUpdateInstruction {
 
 	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError> {
 		let value = self.read(cpu)?;
-		let write_change = self.write(value, cpu);
+		let write_change = self.write(value);
 
 		let (register, address) = self.register_and_address(cpu);
 		let address = self.update.update(address);
