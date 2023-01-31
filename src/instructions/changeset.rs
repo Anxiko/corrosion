@@ -33,6 +33,25 @@ impl Change for SingleRegisterChange {
 }
 
 #[derive(PartialEq, DynPartialEq, Debug)]
+pub(super) struct DoubleRegisterChange {
+	reg: DoubleRegisters,
+	value: u16,
+}
+
+impl DoubleRegisterChange {
+	pub(super) fn new(reg: DoubleRegisters, value: u16) -> Self {
+		Self { reg, value }
+	}
+}
+
+impl Change for DoubleRegisterChange {
+	fn commit_change(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
+		cpu.register_bank.write_double_named(self.reg, self.value);
+		Ok(())
+	}
+}
+
+#[derive(PartialEq, DynPartialEq, Debug)]
 pub(super) struct BitFlagsChange {
 	zero: Option<bool>,
 	subtraction: Option<bool>,
@@ -152,12 +171,12 @@ impl MemoryByteWriteAddress {
 }
 
 #[derive(Debug, PartialEq, DynPartialEq)]
-pub(super) struct MemoryByteWrite {
+pub(super) struct MemoryByteWriteChange {
 	address: MemoryByteWriteAddress,
 	value: u8,
 }
 
-impl MemoryByteWrite {
+impl MemoryByteWriteChange {
 	pub(super) fn write_to_immediate(address: u16, value: u8) -> Self {
 		Self { address: MemoryByteWriteAddress::Immediate(address), value }
 	}
@@ -167,7 +186,7 @@ impl MemoryByteWrite {
 	}
 }
 
-impl Change for MemoryByteWrite {
+impl Change for MemoryByteWriteChange {
 	fn commit_change(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
 		cpu.mapped_ram.write(self.address.resolve(cpu), self.value)?;
 		Ok(())

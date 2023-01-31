@@ -1,7 +1,7 @@
 use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::Ram;
 use crate::hardware::register_bank::{DoubleRegisters, SingleRegisters};
-use crate::instructions::changeset::{Change, ChangesetInstruction, MemoryByteWrite, SingleRegisterChange};
+use crate::instructions::changeset::{Change, ChangesetInstruction, MemoryByteWriteChange, SingleRegisterChange};
 
 use super::{ACC_REGISTER, ExecutionError};
 
@@ -83,10 +83,10 @@ impl ByteDestination {
 			Self::Acc => Box::new(SingleRegisterChange::new(ACC_REGISTER, value)),
 			Self::SingleRegister { single_reg } => Box::new(SingleRegisterChange::new(*single_reg, value)),
 			Self::MemoryImmediate { address_immediate } => {
-				Box::new(MemoryByteWrite::write_to_immediate(*address_immediate, value))
+				Box::new(MemoryByteWriteChange::write_to_immediate(*address_immediate, value))
 			},
 			Self::MemoryRegister { double_reg } => {
-				Box::new(MemoryByteWrite::write_to_register(*double_reg, value))
+				Box::new(MemoryByteWriteChange::write_to_register(*double_reg, value))
 			}
 		}
 	}
