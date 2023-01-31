@@ -1,4 +1,4 @@
-use crate::hardware::register_bank::ProgramCounter;
+use crate::hardware::register_bank::{ProgramCounter, StackPointer};
 
 use super::ram::MappedRam;
 use super::register_bank::RegisterBank;
@@ -8,6 +8,7 @@ pub struct Cpu {
 	pub register_bank: RegisterBank,
 	pub mapped_ram: MappedRam,
 	pub(crate) pc: ProgramCounter,
+	pub(crate) sp: StackPointer,
 }
 
 impl Cpu {
@@ -16,6 +17,7 @@ impl Cpu {
 			register_bank: RegisterBank::new(),
 			mapped_ram: MappedRam::new(),
 			pc: ProgramCounter::new(),
+			sp: StackPointer::new(),
 		}
 	}
 

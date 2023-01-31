@@ -131,3 +131,38 @@ impl<O> ChangesetInstruction for BaseByteInstruction<O>
 		self.op.execute(cpu, &self.src, &self.dst)
 	}
 }
+
+#[derive(Debug, PartialEq, Copy, Clone)]
+enum DoubleByteSource {
+	DoubleRegister(DoubleRegisters),
+	Immediate(u16),
+	StackPointer,
+}
+
+impl DoubleByteSource {
+	fn read_from_double_register(double_register: DoubleRegisters) -> Self {
+		Self::DoubleRegister(double_register)
+	}
+
+	fn read_from_immediate(immediate: u16) -> Self {
+		Self::Immediate(immediate)
+	}
+
+	fn read_from_sp() -> Self {
+		Self::StackPointer
+	}
+
+	fn read(&self, cpu: &Cpu) -> Result<u16, ExecutionError> {
+		match self {
+			Self::DoubleRegister(double_register) => {
+				Ok(cpu.register_bank.read_double_named(*double_register))
+			},
+			Self::Immediate(immediate) => {
+				Ok(*immediate)
+			},
+			Self::StackPointer => {
+				Ok(cpu.sp.read())
+			}
+		}
+	}
+}

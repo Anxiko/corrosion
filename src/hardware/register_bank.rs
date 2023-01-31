@@ -190,3 +190,24 @@ impl ProgramCounter {
 		self.pc = result;
 	}
 }
+
+const SP_START: u16 = 0; // TODO: double check initial SP value
+
+#[derive(Debug, PartialEq, Copy, Clone)]
+pub(crate) struct StackPointer {
+	sp: u16,
+}
+
+impl StackPointer {
+	pub(super) fn new() -> Self {
+		Self { sp: SP_START }
+	}
+
+	pub(crate) fn read(&self) -> u16 {
+		self.sp
+	}
+
+	pub(crate) fn write(&mut self, value: u16) {
+		self.sp = value;
+	}
+}
