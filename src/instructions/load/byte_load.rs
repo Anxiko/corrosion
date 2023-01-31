@@ -1,7 +1,7 @@
 use std::assert_matches::assert_matches;
 
 use crate::hardware::cpu::Cpu;
-use crate::hardware::ram::Ram;
+use crate::hardware::ram::{Ram, WORKING_RAM_START};
 use crate::hardware::register_bank::{DoubleRegisters, SingleRegisters};
 use crate::instructions::{ACC_REGISTER, ExecutionError, Instruction};
 use crate::instructions::base::{BaseByteInstruction, ByteDestination, ByteOperation, ByteSource};
@@ -24,6 +24,7 @@ impl ByteOperation for LoadByteOperation {
 
 type LoadByteInstruction = BaseByteInstruction<LoadByteOperation>;
 
+#[derive(Copy, Clone, Debug, PartialEq)]
 enum LoadAndUpdateRegister {
 	Source(DoubleRegisters),
 	Destination(DoubleRegisters),
@@ -38,6 +39,7 @@ impl LoadAndUpdateRegister {
 	}
 }
 
+#[derive(Copy, Clone, Debug, PartialEq)]
 enum CounterUpdate {
 	Increment,
 	Decrement,
@@ -57,6 +59,7 @@ impl CounterUpdate {
 	}
 }
 
+#[derive(Copy, Clone, Debug, PartialEq)]
 struct LoadAndUpdateInstruction {
 	reg: LoadAndUpdateRegister,
 	update: CounterUpdate,
@@ -155,4 +158,49 @@ fn load_instruction() {
 
 	assert!(instruction.execute(&mut cpu).is_ok());
 	assert_eq!(cpu, expected);
+}
+
+#[test]
+fn load_and_update_instruction() {
+	let address = WORKING_RAM_START + 10;
+	let register = DoubleRegisters::HL;
+	let value = 0x12u8;
+
+	let mut cpu = Cpu::new();
+
+	cpu.register_bank.write_double_named(register, address);
+	cpu.mapped_ram.write(address, value).expect("Write to mapped RAM");
+
+
+	let instruction = LoadAndUpdateInstruction::load_from_register(
+		register, CounterUpdate::Increment,
+	);
+
+	let result = instruction.compute_change(&cpu).expect("Instruction to execute");
+	assert_eq!(
+		result,
+		ChangeList::new(vec![
+			Box::new(SingleRegisterChange::new(ACC_REGISTER, value)),
+			Box::new(DoubleRegisterChange::new(register, address + 1)),
+		])
+	);
+
+	let mut cpu = Cpu::new();
+
+	cpu.register_bank.write_double_named(register, address);
+	cpu.register_bank.write_single_named(ACC_REGISTER, value);
+
+
+	let instruction = LoadAndUpdateInstruction::load_to_register(
+		register, CounterUpdate::Decrement,
+	);
+
+	let result = instruction.compute_change(&cpu).expect("Instruction to execute");
+	assert_eq!(
+		result,
+		ChangeList::new(vec![
+			Box::new(MemoryByteWriteChange::write_to_register(register, value)),
+			Box::new(DoubleRegisterChange::new(register, address - 1)),
+		])
+	);
 }
