@@ -133,7 +133,7 @@ impl<O> ChangesetInstruction for BaseByteInstruction<O>
 }
 
 #[derive(Debug, PartialEq, Copy, Clone)]
-enum DoubleByteSource {
+pub(super) enum DoubleByteSource {
 	DoubleRegister(DoubleRegisters),
 	Immediate(u16),
 	StackPointer,
@@ -168,7 +168,7 @@ impl DoubleByteSource {
 }
 
 #[derive(Debug, PartialEq, Copy, Clone)]
-enum DoubleByteDestination {
+pub(super) enum DoubleByteDestination {
 	DoubleRegister(DoubleRegisters),
 	StackPointer,
 	MemoryImmediate(u16),
@@ -189,5 +189,38 @@ impl DoubleByteDestination {
 
 	fn change_destination(&self, value: u16) -> Result<Box<dyn Change>, ExecutionError> {
 		todo!()
+	}
+}
+
+pub(super) trait DoubleByteOperation {
+	type C: Change;
+
+	fn execute(
+		&self,
+		cpu: &Cpu,
+		src: &DoubleByteSource,
+		dst: &DoubleByteDestination,
+	) -> Result<Self::C, ExecutionError>;
+}
+
+pub(super) struct BaseDoubleByteInstruction<O>
+	where O: DoubleByteOperation {
+	src: DoubleByteSource,
+	dst: DoubleByteDestination,
+	op: O,
+}
+
+impl<O> BaseDoubleByteInstruction<O> where O: DoubleByteOperation {
+	fn new(src: DoubleByteSource, dst: DoubleByteDestination, op: O) -> Self {
+		Self { src, dst, op }
+	}
+}
+
+impl<O> ChangesetInstruction for BaseDoubleByteInstruction<O>
+	where O: DoubleByteOperation {
+	type C = O::C;
+
+	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError> {
+		self.op.execute(cpu, &self.src, &self.dst)
 	}
 }
