@@ -45,11 +45,11 @@ impl ByteSource {
 			}
 			Self::MemoryRegister { address_register } => {
 				let address = cpu.register_bank.read_double_named(*address_register);
-				let result = cpu.mapped_ram.read(address)?;
+				let result = cpu.mapped_ram.read_byte(address)?;
 				Ok(result)
 			},
 			Self::MemoryImmediate { address_immediate } => {
-				let result = cpu.mapped_ram.read(*address_immediate)?;
+				let result = cpu.mapped_ram.read_byte(*address_immediate)?;
 				Ok(result)
 			},
 			Self::Immediate { value } => Ok(*value),
@@ -164,5 +164,30 @@ impl DoubleByteSource {
 				Ok(cpu.sp.read())
 			}
 		}
+	}
+}
+
+#[derive(Debug, PartialEq, Copy, Clone)]
+enum DoubleByteDestination {
+	DoubleRegister(DoubleRegisters),
+	StackPointer,
+	MemoryImmediate(u16),
+}
+
+impl DoubleByteDestination {
+	fn write_to_double_register(double_register: DoubleRegisters) -> Self {
+		Self::DoubleRegister(double_register)
+	}
+
+	fn write_to_sp() -> Self {
+		Self::StackPointer
+	}
+
+	fn write_to_memory_immediate_address(address: u16) -> Self {
+		Self::MemoryImmediate(address)
+	}
+
+	fn change_destination(&self, value: u16) -> Result<Box<dyn Change>, ExecutionError> {
+		todo!()
 	}
 }

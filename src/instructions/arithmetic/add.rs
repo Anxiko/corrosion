@@ -38,7 +38,7 @@ impl AddImmediate {
 impl Instruction for AddImmediate {
 	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
 		let src_address = cpu.next_pc();
-		let src_val = cpu.mapped_ram.read(src_address)?;
+		let src_val = cpu.mapped_ram.read_byte(src_address)?;
 		let dst_val = cpu.register_bank.read_single_named(ACC_REGISTER);
 
 		ArithmeticOperation::add(dst_val, src_val).commit(cpu);
@@ -80,7 +80,7 @@ impl AddHl {
 impl Instruction for AddHl {
 	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
 		let src_address = cpu.register_bank.read_double_named(DoubleRegisters::HL);
-		let src_val = cpu.mapped_ram.read(src_address)?;
+		let src_val = cpu.mapped_ram.read_byte(src_address)?;
 		let dst_val = cpu.register_bank.read_single_named(ACC_REGISTER);
 
 		ArithmeticOperation::add(dst_val, src_val).commit(cpu);

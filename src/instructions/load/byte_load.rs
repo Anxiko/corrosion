@@ -78,7 +78,7 @@ impl LoadAndUpdateInstruction {
 		match self.reg {
 			LoadAndUpdateRegister::Source(reg) => {
 				let address = cpu.register_bank.read_double_named(reg);
-				let value = cpu.mapped_ram.read(address)?;
+				let value = cpu.mapped_ram.read_byte(address)?;
 				Ok(value)
 			},
 			LoadAndUpdateRegister::Destination(_) => {
@@ -169,7 +169,7 @@ fn load_and_update_instruction() {
 	let mut cpu = Cpu::new();
 
 	cpu.register_bank.write_double_named(register, address);
-	cpu.mapped_ram.write(address, value).expect("Write to mapped RAM");
+	cpu.mapped_ram.write_byte(address, value).expect("Write to mapped RAM");
 
 
 	let instruction = LoadAndUpdateInstruction::load_from_register(

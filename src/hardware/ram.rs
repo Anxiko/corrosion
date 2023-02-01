@@ -5,8 +5,21 @@ pub(crate) const OAM_START: u16 = 0xFE00;
 const WORKING_RAM_SIZE: usize = (ECHO_RAM_START - WORKING_RAM_START) as usize;
 
 pub(crate) trait Ram {
-	fn read(&self, address: u16) -> Result<u8, RamError>;
-	fn write(&mut self, address: u16, value: u8) -> Result<(), RamError>;
+	fn read_byte(&self, address: u16) -> Result<u8, RamError>;
+	fn write_byte(&mut self, address: u16, value: u8) -> Result<(), RamError>;
+	fn write_double_byte(&mut self, address: u16, value: u16) -> Result<(), RamError> {
+		let [high, low] = value.to_be_bytes();
+		self.write_byte(address, low)?;
+		self.write_byte(address.wrapping_add(1), high)?;
+
+		Ok(())
+	}
+	fn read_double_byte(&mut self, address: u16) -> Result<u16, RamError> {
+		let low = self.read_byte(address)?;
+		let high = self.read_byte(address.wrapping_add(1))?;
+
+		Ok(u16::from_be_bytes([high, low]))
+	}
 }
 
 #[derive(Debug)]
@@ -70,22 +83,22 @@ impl MappedRam {
 }
 
 impl Ram for MappedRam {
-	fn read(&self, address: u16) -> Result<u8, RamError> {
+	fn read_byte(&self, address: u16) -> Result<u8, RamError> {
 		let ram_mapping =
 			MappedRam::mapping_for_address(address).ok_or(RamError::UnmappedRegion(address))?;
 		let mapped_ram = self.get_mapped_ram(ram_mapping.region);
 
 		let region_address = address - ram_mapping.offset;
-		mapped_ram.read(region_address)
+		mapped_ram.read_byte(region_address)
 	}
 
-	fn write(&mut self, address: u16, value: u8) -> Result<(), RamError> {
+	fn write_byte(&mut self, address: u16, value: u8) -> Result<(), RamError> {
 		let ram_mapping =
 			MappedRam::mapping_for_address(address).ok_or(RamError::UnmappedRegion(address))?;
 		let mapped_ram = self.get_mapped_ram_mut(ram_mapping.region);
 
 		let region_address = address - ram_mapping.offset;
-		mapped_ram.write(region_address, value)
+		mapped_ram.write_byte(region_address, value)
 	}
 }
 
@@ -103,14 +116,14 @@ impl WorkingRam {
 }
 
 impl Ram for WorkingRam {
-	fn read(&self, address: u16) -> Result<u8, RamError> {
+	fn read_byte(&self, address: u16) -> Result<u8, RamError> {
 		self.memory
 			.get(usize::from(address))
 			.copied()
 			.ok_or(RamError::InvalidAddress(address))
 	}
 
-	fn write(&mut self, address: u16, value: u8) -> Result<(), RamError> {
+	fn write_byte(&mut self, address: u16, value: u8) -> Result<(), RamError> {
 		let ptr = self
 			.memory
 			.get_mut(usize::from(address))

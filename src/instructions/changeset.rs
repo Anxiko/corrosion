@@ -188,7 +188,26 @@ impl MemoryByteWriteChange {
 
 impl Change for MemoryByteWriteChange {
 	fn commit_change(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
-		cpu.mapped_ram.write(self.address.resolve(cpu), self.value)?;
+		cpu.mapped_ram.write_byte(self.address.resolve(cpu), self.value)?;
+		Ok(())
+	}
+}
+
+#[derive(Debug, PartialEq, DynPartialEq)]
+pub(super) struct MemoryDoubleByteWriteChange {
+	address: u16,
+	value: u16,
+}
+
+impl MemoryDoubleByteWriteChange {
+	pub(super) fn write_to_immediate_address(address: u16, value: u16) -> Self {
+		Self { address, value }
+	}
+}
+
+impl Change for MemoryDoubleByteWriteChange {
+	fn commit_change(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
+		cpu.mapped_ram.write_double_byte(self.address, self.value)?;
 		Ok(())
 	}
 }

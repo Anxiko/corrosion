@@ -28,7 +28,7 @@ fn add_hl() {
 	cpu.register_bank.write_single_named(ACC_REGISTER, 0x12);
 	let mem_address = 0xC123;
 	cpu.mapped_ram
-		.write(mem_address, 0x34)
+		.write_byte(mem_address, 0x34)
 		.expect("Write to working RAM");
 	cpu.register_bank
 		.write_double_named(DoubleRegisters::HL, mem_address);
@@ -48,7 +48,7 @@ fn add_immediate() {
 	let src_address = WORKING_RAM_START;
 	cpu.pc.write(WORKING_RAM_START);
 	cpu.mapped_ram
-		.write(src_address, 0x34)
+		.write_byte(src_address, 0x34)
 		.expect("Write to working RAM");
 	cpu.register_bank.write_single_named(ACC_REGISTER, 0x12);
 
