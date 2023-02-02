@@ -52,6 +52,24 @@ impl Change for DoubleRegisterChange {
 }
 
 #[derive(PartialEq, DynPartialEq, Debug)]
+pub(super) struct SpChange {
+	value: u16,
+}
+
+impl SpChange {
+	pub(super) fn new(value: u16) -> Self {
+		Self { value }
+	}
+}
+
+impl Change for SpChange {
+	fn commit_change(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
+		cpu.sp.write(self.value);
+		Ok(())
+	}
+}
+
+#[derive(PartialEq, DynPartialEq, Debug)]
 pub(super) struct BitFlagsChange {
 	zero: Option<bool>,
 	subtraction: Option<bool>,

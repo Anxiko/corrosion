@@ -152,7 +152,7 @@ impl DoubleByteSource {
 		Self::StackPointer
 	}
 
-	fn read(&self, cpu: &Cpu) -> Result<u16, ExecutionError> {
+	pub(super) fn read(&self, cpu: &Cpu) -> Result<u16, ExecutionError> {
 		match self {
 			Self::DoubleRegister(double_register) => {
 				Ok(cpu.register_bank.read_double_named(*double_register))
@@ -187,7 +187,7 @@ impl DoubleByteDestination {
 		Self::MemoryImmediate(address)
 	}
 
-	fn change_destination(&self, value: u16) -> Result<Box<dyn Change>, ExecutionError> {
+	pub(super) fn change_destination(&self, value: u16) -> Result<Box<dyn Change>, ExecutionError> {
 		todo!()
 	}
 }

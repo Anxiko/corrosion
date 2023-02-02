@@ -14,7 +14,7 @@ pub(crate) trait Ram {
 
 		Ok(())
 	}
-	fn read_double_byte(&mut self, address: u16) -> Result<u16, RamError> {
+	fn read_double_byte(&self, address: u16) -> Result<u16, RamError> {
 		let low = self.read_byte(address)?;
 		let high = self.read_byte(address.wrapping_add(1))?;
 
