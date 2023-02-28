@@ -1,6 +1,6 @@
 use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::{Ram, WORKING_RAM_START};
-use crate::hardware::register_bank::{DoubleRegisters, SingleRegisters};
+use crate::hardware::register_bank::{BitFlags, DoubleRegisters, SingleRegisters};
 use crate::instructions::changeset::{BitFlagsChange, Change, ChangeList, ChangesetInstruction, MemoryByteWriteChange, SingleRegisterChange};
 use crate::instructions::ExecutionError;
 
@@ -100,6 +100,40 @@ impl ChangesetInstruction for SingleBitInstruction {
 	}
 }
 
+enum CarryFlagOperation {
+	Toggle,
+	Set,
+}
+
+impl CarryFlagOperation {
+	fn new_carry(&self, old_carry: bool) -> bool {
+		match self {
+			Self::Toggle => !old_carry,
+			Self::Set => true
+		}
+	}
+}
+
+struct CarryFlagInstruction {
+	operation: CarryFlagOperation,
+}
+
+impl ChangesetInstruction for CarryFlagInstruction {
+	type C = BitFlagsChange;
+
+	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError> {
+		let old_carry = cpu.register_bank.read_bit_flag(BitFlags::Carry);
+		let new_carry = self.operation.new_carry(old_carry);
+
+		Ok(
+			BitFlagsChange::keep_all()
+				.with_subtraction_flag(false)
+				.with_half_carry_flag(false)
+				.with_carry_flag(new_carry)
+		)
+	}
+}
+
 #[test]
 fn test_bit() {
 	let mut cpu = Cpu::new();
@@ -108,7 +142,7 @@ fn test_bit() {
 	cpu.register_bank.write_double_named(DoubleRegisters::HL, WORKING_RAM_START);
 	cpu.mapped_ram.write_byte(WORKING_RAM_START, 0b11001010).expect("Write to RAM");
 
-	let cpu =  cpu;
+	let cpu = cpu;
 
 	let instruction = SingleBitInstruction::new(
 		SingleBitOperand::SingleRegister(SingleRegisters::B),
