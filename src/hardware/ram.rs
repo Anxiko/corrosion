@@ -30,17 +30,26 @@ pub(crate) trait Ram {
 	}
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub(crate) enum RamError {
 	InvalidAddress(u16),
 	UnmappedRegion(u16),
+}
+
+impl RamError {
+	fn adjust_for_offset(self, offset: u16) -> Self {
+		match self {
+			Self::InvalidAddress(address) => Self::InvalidAddress(address + offset),
+			Self::UnmappedRegion(address) => Self::UnmappedRegion(address + offset)
+		}
+	}
 }
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct MappedRam {
 	working_ram: RamChip<WORKING_RAM_SIZE>,
 	video_ram: RamChip<VIDEO_RAM_SIZE>,
-	mapped_io_registers: MappedIoRegisters
+	mapped_io_registers: MappedIoRegisters,
 }
 
 #[derive(Copy, Clone)]
@@ -115,6 +124,7 @@ impl Ram for MappedRam {
 
 		let region_address = address - ram_mapping.offset;
 		mapped_ram.read_byte(region_address)
+			.map_err(|ram_error| ram_error.adjust_for_offset(ram_mapping.offset))
 	}
 
 	fn write_byte(&mut self, address: u16, value: u8) -> Result<(), RamError> {
@@ -124,6 +134,7 @@ impl Ram for MappedRam {
 
 		let region_address = address - ram_mapping.offset;
 		mapped_ram.write_byte(region_address, value)
+			.map_err(|ram_error| ram_error.adjust_for_offset(ram_mapping.offset))
 	}
 }
 
