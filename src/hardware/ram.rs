@@ -1,10 +1,16 @@
+pub(crate) const VIDEO_RAM_START: u16 = 0x8000;
+pub(crate) const VRAM_TILE_DATA_START: u16 = 0x800;
+
 pub(crate) const WORKING_RAM_START: u16 = 0xC000;
 pub(crate) const ECHO_RAM_START: u16 = 0xE000;
-pub(crate) const VIDEO_RAM_START: u16 = 0x8000;
+
 pub(crate) const OAM_START: u16 = 0xFE00;
+
+pub(crate) const IO_REGISTERS_MAPPING_START: u16 = 0xFF80;
 
 const WORKING_RAM_SIZE: usize = (ECHO_RAM_START - WORKING_RAM_START) as usize;
 const VIDEO_RAM_SIZE: usize = 8 * 1024;
+const IO_REGISTERS_MAPPING_SIZE: usize = 0x80;
 
 pub(crate) trait Ram {
 	fn read_byte(&self, address: u16) -> Result<u8, RamError>;
@@ -34,12 +40,14 @@ pub(crate) enum RamError {
 pub struct MappedRam {
 	working_ram: RamChip<WORKING_RAM_SIZE>,
 	video_ram: RamChip<VIDEO_RAM_SIZE>,
+	mapped_io_registers: MappedIoRegisters
 }
 
 #[derive(Copy, Clone)]
 enum RamRegion {
 	WorkingRam,
 	VideoRam,
+	IoRegisters
 }
 
 struct RamMapping {
@@ -72,6 +80,7 @@ impl MappedRam {
 		Self {
 			working_ram: RamChip::new(),
 			video_ram: RamChip::new(),
+			mapped_io_registers: MappedIoRegisters::new()
 		}
 	}
 
@@ -81,17 +90,19 @@ impl MappedRam {
 			.find(|mapping| mapping.mapped_here(address))
 	}
 
-	fn get_mapped_ram(&self, region: RamRegion) -> &impl Ram {
+	fn get_mapped_ram(&self, region: RamRegion) -> &dyn Ram {
 		match region {
 			RamRegion::WorkingRam => &self.working_ram,
-			RamRegion::VideoRam => &self.video_ram
+			RamRegion::VideoRam => &self.video_ram,
+			RamRegion::IoRegisters => &self.mapped_io_registers
 		}
 	}
 
-	fn get_mapped_ram_mut(&mut self, region: RamRegion) -> &mut impl Ram {
+	fn get_mapped_ram_mut(&mut self, region: RamRegion) -> &mut dyn Ram {
 		match region {
 			RamRegion::WorkingRam => &mut self.working_ram,
-			RamRegion::VideoRam => &mut self.video_ram
+			RamRegion::VideoRam => &mut self.video_ram,
+			RamRegion::IoRegisters => &mut self.mapped_io_registers
 		}
 	}
 }
@@ -145,5 +156,56 @@ impl<const S: usize> Ram for RamChip<S> {
 
 		*ptr = value;
 		Ok(())
+	}
+}
+
+#[derive(Copy, Clone)]
+enum IoRegisters {
+	LcdControl
+}
+
+#[derive(Default, Debug, PartialEq, Clone)]
+struct MappedIoRegisters {
+	lcd_control: u8,
+}
+
+impl MappedIoRegisters {
+	fn new() -> Self {
+		Self::default()
+	}
+
+	fn resolve_address(address: u16) -> Result<IoRegisters, RamError> {
+		match address {
+			0x40 => Ok(IoRegisters::LcdControl),
+			address if address < 0x80 => Err(RamError::UnmappedRegion(address)),
+			_ => Err(RamError::InvalidAddress(address))
+		}
+	}
+
+	fn get_io_register(&self, io_register: IoRegisters) -> &u8 {
+		match io_register {
+			IoRegisters::LcdControl => &self.lcd_control
+		}
+	}
+
+	fn get_io_register_mut(&mut self, io_register: IoRegisters) -> &mut u8 {
+		match io_register {
+			IoRegisters::LcdControl => &mut self.lcd_control
+		}
+	}
+}
+
+impl Ram for MappedIoRegisters {
+	fn read_byte(&self, address: u16) -> Result<u8, RamError> {
+		MappedIoRegisters::resolve_address(address)
+			.map(|io_register| *self.get_io_register(io_register))
+	}
+
+	fn write_byte(&mut self, address: u16, value: u8) -> Result<(), RamError> {
+		MappedIoRegisters::resolve_address(address)
+			.map(|io_register| self.get_io_register_mut(io_register))
+			.map(|ptr| {
+				*ptr = value;
+			})
 	}
 }
