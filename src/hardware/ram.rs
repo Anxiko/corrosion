@@ -11,6 +11,7 @@ pub(crate) const IO_REGISTERS_MAPPING_START: u16 = 0xFF80;
 const WORKING_RAM_SIZE: usize = (ECHO_RAM_START - WORKING_RAM_START) as usize;
 const VIDEO_RAM_SIZE: usize = 8 * 1024;
 const IO_REGISTERS_MAPPING_SIZE: usize = 0x80;
+const OAM_SIZE: usize = 0xA0;
 
 pub(crate) trait Ram {
 	fn read_byte(&self, address: u16) -> Result<u8, RamError>;
@@ -50,13 +51,15 @@ pub struct MappedRam {
 	working_ram: RamChip<WORKING_RAM_SIZE>,
 	video_ram: RamChip<VIDEO_RAM_SIZE>,
 	mapped_io_registers: MappedIoRegisters,
+	oam: RamChip<OAM_SIZE>
 }
 
 #[derive(Copy, Clone)]
 enum RamRegion {
 	WorkingRam,
 	VideoRam,
-	IoRegisters
+	IoRegisters,
+	Oam,
 }
 
 struct RamMapping {
@@ -71,7 +74,7 @@ impl RamMapping {
 	}
 }
 
-const RAM_MAPPINGS: [RamMapping; 2] = [
+const RAM_MAPPINGS: [RamMapping; 4] = [
 	RamMapping {
 		region: RamRegion::WorkingRam,
 		offset: WORKING_RAM_START,
@@ -81,6 +84,16 @@ const RAM_MAPPINGS: [RamMapping; 2] = [
 		region: RamRegion::VideoRam,
 		offset: VIDEO_RAM_START,
 		size: VIDEO_RAM_SIZE,
+	},
+	RamMapping {
+		region: RamRegion::IoRegisters,
+		offset: IO_REGISTERS_MAPPING_START,
+		size: IO_REGISTERS_MAPPING_SIZE,
+	},
+	RamMapping {
+		region: RamRegion::Oam,
+		offset: OAM_START,
+		size: OAM_SIZE,
 	}
 ];
 
@@ -89,7 +102,8 @@ impl MappedRam {
 		Self {
 			working_ram: RamChip::new(),
 			video_ram: RamChip::new(),
-			mapped_io_registers: MappedIoRegisters::new()
+			mapped_io_registers: MappedIoRegisters::new(),
+			oam: RamChip::new(),
 		}
 	}
 
@@ -103,7 +117,8 @@ impl MappedRam {
 		match region {
 			RamRegion::WorkingRam => &self.working_ram,
 			RamRegion::VideoRam => &self.video_ram,
-			RamRegion::IoRegisters => &self.mapped_io_registers
+			RamRegion::IoRegisters => &self.mapped_io_registers,
+			RamRegion::Oam => &self.oam,
 		}
 	}
 
@@ -111,7 +126,8 @@ impl MappedRam {
 		match region {
 			RamRegion::WorkingRam => &mut self.working_ram,
 			RamRegion::VideoRam => &mut self.video_ram,
-			RamRegion::IoRegisters => &mut self.mapped_io_registers
+			RamRegion::IoRegisters => &mut self.mapped_io_registers,
+			RamRegion::Oam => &mut self.oam,
 		}
 	}
 }
