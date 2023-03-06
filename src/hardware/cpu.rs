@@ -1,4 +1,6 @@
+use crate::hardware::ram::Ram;
 use crate::hardware::register_bank::{ProgramCounter, StackPointer};
+use crate::instructions::ExecutionError;
 
 use super::ram::MappedRam;
 use super::register_bank::RegisterBank;
@@ -26,6 +28,12 @@ impl Cpu {
 		self.pc.increment();
 
 		result
+	}
+
+	pub(crate) fn next_byte(&mut self) -> Result<u8, ExecutionError> {
+		let pc = self.next_pc();
+		let byte = self.mapped_ram.read_byte(pc)?;
+		Ok(byte)
 	}
 }
 

@@ -13,7 +13,7 @@ pub(crate) mod single_bit;
 pub(crate) mod control;
 pub(crate) mod jump;
 
-trait Instruction {
+pub(crate) trait Instruction {
 	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError>;
 }
 
