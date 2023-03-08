@@ -249,7 +249,7 @@ impl Change for MemoryDoubleByteWriteChange {
 }
 
 #[derive(PartialEq, DynPartialEq, Debug)]
-pub(super) struct ChangeList {
+pub(crate) struct ChangeList {
 	changes: Vec<Box<dyn Change>>,
 }
 

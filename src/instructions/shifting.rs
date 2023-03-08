@@ -5,7 +5,7 @@ use crate::hardware::register_bank::{BitFlags, SingleRegisters};
 use crate::instructions::{ACC_REGISTER, ExecutionError, Instruction};
 use crate::instructions::base::{BaseByteInstruction, ByteDestination, ByteOperation, ByteSource};
 use crate::instructions::changeset::{Change, ChangeList, SingleRegisterChange};
-use crate::instructions::shifting::operation::{ByteShiftOperation, ShiftDirection, ShiftType};
+pub(crate) use crate::instructions::shifting::operation::{ByteShiftOperation, ShiftDirection, ShiftType};
 
 mod operation;
 
@@ -26,7 +26,7 @@ impl ByteOperation for ByteShiftOperation {
 	}
 }
 
-type ByteShiftInstruction = BaseByteInstruction<ByteShiftOperation>;
+pub(crate) type ByteShiftInstruction = BaseByteInstruction<ByteShiftOperation>;
 
 pub(crate) struct ByteSwapOperation {}
 

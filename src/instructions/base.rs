@@ -24,7 +24,7 @@ impl ByteSource {
 		Self::SingleRegister { single_reg }
 	}
 
-	fn read_from_register_address(address_register: DoubleRegisters) -> Self {
+	pub(crate) fn read_from_register_address(address_register: DoubleRegisters) -> Self {
 		Self::MemoryRegister {
 			address_register,
 		}
@@ -117,7 +117,7 @@ impl<O> BaseByteInstruction<O>
 	where
 		O: ByteOperation,
 {
-	pub(super) fn new(src: ByteSource, dst: ByteDestination, op: O) -> Self {
+	pub(crate) fn new(src: ByteSource, dst: ByteDestination, op: O) -> Self {
 		Self { src, dst, op }
 	}
 }

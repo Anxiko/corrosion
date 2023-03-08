@@ -4,3 +4,4 @@
 pub mod hardware;
 pub mod instructions;
 mod decoder;
+mod bytes;

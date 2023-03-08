@@ -5,7 +5,7 @@ use crate::instructions::base::{ByteDestination, ByteOperation, ByteSource};
 use crate::instructions::changeset::{BitFlagsChange, Change, ChangeList, SingleRegisterChange};
 
 #[derive(Copy, Clone)]
-pub(super) enum ShiftDirection {
+pub enum ShiftDirection {
 	Left,
 	Right,
 }
@@ -20,7 +20,7 @@ impl ShiftDirection {
 }
 
 #[derive(Copy, Clone)]
-pub(super) enum ShiftType {
+pub enum ShiftType {
 	Rotate,
 	RotateWithCarry,
 	LogicalShift,
@@ -42,13 +42,13 @@ impl ShiftDestination {
 	}
 }
 
-pub(super) struct ByteShiftOperation {
+pub struct ByteShiftOperation {
 	direction: ShiftDirection,
 	type_: ShiftType,
 }
 
 impl ByteShiftOperation {
-	pub(super) fn new(direction: ShiftDirection, type_: ShiftType) -> Self {
+	pub(crate) fn new(direction: ShiftDirection, type_: ShiftType) -> Self {
 		Self { direction, type_ }
 	}
 
