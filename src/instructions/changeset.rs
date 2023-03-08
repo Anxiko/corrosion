@@ -9,7 +9,7 @@ use crate::hardware::register_bank::{BitFlags, DoubleRegisters, SingleRegisters}
 use crate::instructions::{ExecutionError, Instruction};
 
 #[dyn_partial_eq]
-pub(super) trait Change: Debug {
+pub(crate) trait Change: Debug {
 	fn commit_change(&self, cpu: &mut Cpu) -> Result<(), ExecutionError>;
 }
 

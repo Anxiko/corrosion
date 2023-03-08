@@ -1,10 +1,10 @@
-use std::assert_matches::assert_matches;
+﻿use std::assert_matches::assert_matches;
 
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::BitFlags;
 use crate::instructions::{ACC_REGISTER, ExecutionError, Instruction};
 use crate::instructions::base::{BaseByteInstruction, ByteDestination, ByteOperation, ByteSource};
-use crate::instructions::changeset::ChangeList;
+use crate::instructions::changeset::{Change, ChangeList};
 use crate::instructions::shifting::operation::{ByteShiftOperation, ShiftDirection, ShiftType};
 
 mod operation;
@@ -27,6 +27,27 @@ impl ByteOperation for ByteShiftOperation {
 }
 
 type ByteShiftInstruction = BaseByteInstruction<ByteShiftOperation>;
+
+pub(crate) struct ByteSwapOperation {}
+
+impl ByteSwapOperation {
+	pub(crate) fn new() -> Self { Self {} }
+}
+
+impl ByteOperation for ByteSwapOperation {
+	type C = Box<dyn Change>;
+
+	fn execute(&self, cpu: &Cpu, src: &ByteSource, dst: &ByteDestination) -> Result<Self::C, ExecutionError> {
+		let byte = src.read(cpu)?;
+		let high = byte & 0xF0;
+		let low = byte & 0x0F;
+
+		let result = (high >> 4) | (low << 4);
+		Ok(dst.change_destination(result))
+	}
+}
+
+pub(crate) type ByteSwapInstruction = BaseByteInstruction<ByteSwapOperation>;
 
 #[test]
 fn shift_instruction() {

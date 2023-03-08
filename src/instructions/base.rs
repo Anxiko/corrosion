@@ -6,7 +6,7 @@ use crate::instructions::changeset::{Change, ChangesetInstruction, MemoryByteWri
 use super::{ACC_REGISTER, ExecutionError};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub(super) enum ByteSource {
+pub(crate) enum ByteSource {
 	Acc,
 	SingleRegister { single_reg: SingleRegisters },
 	MemoryRegister { address_register: DoubleRegisters },
@@ -58,7 +58,7 @@ impl ByteSource {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub(super) enum ByteDestination {
+pub(crate) enum ByteDestination {
 	Acc,
 	SingleRegister { single_reg: SingleRegisters },
 	MemoryImmediate { address_immediate: u16 },
@@ -92,7 +92,7 @@ impl ByteDestination {
 	}
 }
 
-pub(super) trait ByteOperation {
+pub(crate) trait ByteOperation {
 	type C: Change;
 
 	fn execute(
@@ -103,7 +103,7 @@ pub(super) trait ByteOperation {
 	) -> Result<Self::C, ExecutionError>;
 }
 
-pub(super) struct BaseByteInstruction<O>
+pub(crate) struct BaseByteInstruction<O>
 	where
 		O: ByteOperation,
 {
