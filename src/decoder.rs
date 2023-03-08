@@ -1,9 +1,12 @@
 use crate::bits::byte_to_bits;
+use crate::decoder::prefixed_shifting::decode_prefixed_shifting;
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::{DoubleRegisters, SingleRegisters};
 use crate::instructions::{ExecutionError, Instruction};
 use crate::instructions::base::{ByteDestination, ByteSource};
 use crate::instructions::shifting::{ByteShiftInstruction, ByteShiftOperation, ByteSwapInstruction, ByteSwapOperation, ShiftDirection, ShiftType};
+
+mod prefixed_shifting;
 
 enum DecoderError {
 	ExecutionError(ExecutionError)
@@ -51,60 +54,7 @@ fn decode_opcode(
 	match prefix {
 		Some(DecodedInstructionPrefix::CB) => {
 			match x {
-				[false, false] /* x = 0 */ => {
-					match y {
-						[y0, y1, false] => /* 0 <= y < 4 */{
-							let shift_direction = match y0 {
-								false => ShiftDirection::Left,
-								true => ShiftDirection::Right
-							};
-							let shift_type = match y1 {
-								false => ShiftType::Rotate,
-								true => ShiftType::RotateWithCarry
-							};
-
-							let source = decode_byte_source(z);
-
-							Ok(Box::new(ByteShiftInstruction::new(
-								source,
-								ByteDestination::Acc,
-								ByteShiftOperation::new(shift_direction, shift_type),
-							)))
-						},
-						[y0, false, true] => /* 4 <= y < 6 */ {
-							let shift_direction = match y0 {
-								false => ShiftDirection::Left,
-								true => ShiftDirection::Right
-							};
-
-							let source = decode_byte_source(z);
-
-							Ok(Box::new(ByteShiftInstruction::new(
-								source,
-								ByteDestination::Acc,
-								ByteShiftOperation::new(shift_direction, ShiftType::ArithmeticShift),
-							)))
-						},
-						[false, true, true] => /* y = 6 */ {
-							let source = decode_byte_source(z);
-
-							Ok(Box::new(ByteSwapInstruction::new(
-								source,
-								ByteDestination::Acc,
-								ByteSwapOperation::new(),
-							)))
-						},
-						[true, true, true] => /* y = 7 */ {
-							let source = decode_byte_source(z);
-
-							Ok(Box::new(ByteShiftInstruction::new(
-								source,
-								ByteDestination::Acc,
-								ByteShiftOperation::new(ShiftDirection::Right, ShiftType::LogicalShift),
-							)))
-						},
-					}
-				},
+				[false, false] /* x = 0 */ => Ok(decode_prefixed_shifting(y, z)),
 				[true, false] /* x = 1 */ => todo!(),
 				[false, true] /* x = 2 */ => todo!(),
 				[true, true] /* x = 3 */ => todo!(),
