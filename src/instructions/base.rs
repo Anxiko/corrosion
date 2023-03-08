@@ -19,7 +19,7 @@ impl ByteSource {
 		Self::Acc
 	}
 
-	fn read_from_single(single_reg: SingleRegisters) -> Self {
+	pub(crate) fn read_from_single(single_reg: SingleRegisters) -> Self {
 		Self::SingleRegister { single_reg }
 	}
 

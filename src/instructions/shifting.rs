@@ -1,10 +1,10 @@
 ﻿use std::assert_matches::assert_matches;
 
 use crate::hardware::cpu::Cpu;
-use crate::hardware::register_bank::BitFlags;
+use crate::hardware::register_bank::{BitFlags, SingleRegisters};
 use crate::instructions::{ACC_REGISTER, ExecutionError, Instruction};
 use crate::instructions::base::{BaseByteInstruction, ByteDestination, ByteOperation, ByteSource};
-use crate::instructions::changeset::{Change, ChangeList};
+use crate::instructions::changeset::{Change, ChangeList, SingleRegisterChange};
 use crate::instructions::shifting::operation::{ByteShiftOperation, ShiftDirection, ShiftType};
 
 mod operation;
@@ -74,4 +74,22 @@ fn shift_instruction() {
 
 	assert_matches!(instruction.execute(&mut cpu), Ok(()));
 	assert_eq!(cpu, expected);
+}
+
+#[test]
+fn swap_operation() {
+	let mut cpu = Cpu::new();
+	cpu.register_bank.write_single_named(SingleRegisters::B, 0b0011_0101);
+
+	let operation = ByteSwapOperation::new();
+
+	let actual = operation.execute(
+		&cpu,
+		&ByteSource::read_from_single(SingleRegisters::B),
+		&ByteDestination::Acc,
+	).expect("Operation to execute");
+
+	let expected: Box<dyn Change> = Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b0101_0011));
+
+	assert_eq!(actual, expected);
 }
