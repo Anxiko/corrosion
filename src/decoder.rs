@@ -1,9 +1,9 @@
-use crate::bytes::byte_to_bits;
+use crate::bits::byte_to_bits;
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::{DoubleRegisters, SingleRegisters};
 use crate::instructions::{ExecutionError, Instruction};
 use crate::instructions::base::{ByteDestination, ByteSource};
-use crate::instructions::shifting::{ByteShiftInstruction, ByteShiftOperation, ShiftDirection, ShiftType};
+use crate::instructions::shifting::{ByteShiftInstruction, ByteShiftOperation, ByteSwapInstruction, ByteSwapOperation, ShiftDirection, ShiftType};
 
 enum DecoderError {
 	ExecutionError(ExecutionError)
@@ -68,13 +68,41 @@ fn decode_opcode(
 							Ok(Box::new(ByteShiftInstruction::new(
 								source,
 								ByteDestination::Acc,
-								ByteShiftOperation::new(ShiftDirection::Left, ShiftType::Rotate),
+								ByteShiftOperation::new(shift_direction, shift_type),
 							)))
 						},
-						[false, false, true] => /* y = 4 */ todo!(),
-						[true, false, true] => /* y = 5 */ todo!(),
-						[false, true, true] => /* y = 6 */ todo!(),
-						[true, true, true] => /* y = 7 */ todo!(),
+						[y0, false, true] => /* 4 <= y < 6 */ {
+							let shift_direction = match y0 {
+								false => ShiftDirection::Left,
+								true => ShiftDirection::Right
+							};
+
+							let source = decode_byte_source(z);
+
+							Ok(Box::new(ByteShiftInstruction::new(
+								source,
+								ByteDestination::Acc,
+								ByteShiftOperation::new(shift_direction, ShiftType::ArithmeticShift),
+							)))
+						},
+						[false, true, true] => /* y = 6 */ {
+							let source = decode_byte_source(z);
+
+							Ok(Box::new(ByteSwapInstruction::new(
+								source,
+								ByteDestination::Acc,
+								ByteSwapOperation::new(),
+							)))
+						},
+						[true, true, true] => /* y = 7 */ {
+							let source = decode_byte_source(z);
+
+							Ok(Box::new(ByteShiftInstruction::new(
+								source,
+								ByteDestination::Acc,
+								ByteShiftOperation::new(ShiftDirection::Right, ShiftType::LogicalShift),
+							)))
+						},
 					}
 				},
 				[true, false] /* x = 1 */ => todo!(),
