@@ -1,10 +1,11 @@
 use crate::bits::byte_to_bits;
 use crate::decoder::prefixed::{decode_prefixed_shifting, decode_prefixed_single_bit};
 use crate::hardware::cpu::Cpu;
-use crate::hardware::register_bank::{DoubleRegisters, SingleRegisters};
+use crate::hardware::register_bank::{BitFlags, DoubleRegisters, SingleRegisters};
 use crate::instructions::{ExecutionError, Instruction};
 use crate::instructions::base::{ByteSource, DoubleByteDestination, DoubleByteSource};
 use crate::instructions::control::{NopInstruction, StopInstruction};
+use crate::instructions::jump::{JumpInstruction, JumpInstructionCondition, JumpInstructionDestination};
 use crate::instructions::load::double_byte_load::{DoubleByteLoadInstruction, DoubleByteLoadOperation};
 use crate::instructions::single_bit::SingleBitOperation;
 
@@ -90,9 +91,26 @@ fn decode_opcode(
 									Ok(Box::new(StopInstruction::new()))
 								},
 								[true, true, false] /* y = 3 */ => {
-									todo!()
+									let delta = load_delta(cpu)?;
+
+									Ok(Box::new(JumpInstruction::new(
+										JumpInstructionDestination::Relative(delta),
+										JumpInstructionCondition::Unconditional,
+									)))
 								}
-								_ => todo!()
+								[y0, y1, true]/* 4 <= y < 8 */ => {
+									let flag = match y1 {
+										false => BitFlags::Zero,
+										true => BitFlags::Carry
+									};
+									let branch_if_equals = y0;
+									let delta = load_delta(cpu)?;
+
+									Ok(Box::new(JumpInstruction::new(
+										JumpInstructionDestination::Relative(delta),
+										JumpInstructionCondition::TestFlag { flag, branch_if_equals },
+									)))
+								}
 							}
 						}
 						_ => todo!()
@@ -109,6 +127,13 @@ fn load_address(cpu: &mut Cpu) -> Result<u16, ExecutionError> {
 	let address_high = cpu.next_byte()?;
 
 	Ok(u16::from_be_bytes([address_low, address_high]))
+}
+
+fn load_delta(cpu: &mut Cpu) -> Result<i8, ExecutionError> {
+	let delta = cpu.next_byte()?;
+	let delta = delta as i8;
+
+	Ok(delta)
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
