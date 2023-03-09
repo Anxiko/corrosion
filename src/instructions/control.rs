@@ -14,3 +14,17 @@ impl Instruction for NopInstruction {
 		Ok(())
 	}
 }
+
+pub(crate) struct StopInstruction {}
+
+impl StopInstruction {
+	pub(crate) fn new() -> Self {
+		Self {}
+	}
+}
+
+impl Instruction for StopInstruction {
+	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
+		todo!("Implement STOP instruction")
+	}
+}
