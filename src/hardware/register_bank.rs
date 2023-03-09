@@ -41,7 +41,7 @@ impl DoubleRegisters {
 
 const FLAG_REGISTER: usize = 6;
 
-#[derive(IntoPrimitive, Copy, Clone)]
+#[derive(IntoPrimitive, Copy, Clone, PartialEq, Debug)]
 #[repr(u8)]
 pub enum BitFlags {
 	Zero = 7,

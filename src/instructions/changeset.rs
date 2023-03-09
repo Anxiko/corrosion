@@ -70,6 +70,24 @@ impl Change for SpChange {
 }
 
 #[derive(PartialEq, DynPartialEq, Debug)]
+pub(super) struct PcChange {
+	value: u16,
+}
+
+impl PcChange {
+	pub(super) fn new(value: u16) -> Self {
+		Self { value }
+	}
+}
+
+impl Change for PcChange {
+	fn commit_change(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
+		cpu.pc.write(self.value);
+		Ok(())
+	}
+}
+
+#[derive(PartialEq, DynPartialEq, Debug)]
 pub(super) struct BitFlagsChange {
 	zero: Option<bool>,
 	subtraction: Option<bool>,
@@ -246,6 +264,21 @@ impl Change for ChangeList {
 		for change in self.changes.iter() {
 			change.commit_change(cpu)?;
 		}
+		Ok(())
+	}
+}
+
+#[derive(PartialEq, DynPartialEq, Debug)]
+pub(crate) struct NoChange {}
+
+impl NoChange {
+	pub(crate) fn new() -> Self {
+		Self {}
+	}
+}
+
+impl Change for NoChange {
+	fn commit_change(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
 		Ok(())
 	}
 }
