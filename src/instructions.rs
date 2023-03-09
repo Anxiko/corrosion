@@ -10,6 +10,7 @@ pub(crate) mod logical;
 pub(crate) mod shifting;
 pub(crate) mod load;
 pub(crate) mod single_bit;
+pub(crate) mod control;
 
 trait Instruction {
 	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError>;
