@@ -79,7 +79,7 @@ fn decode_opcode(
 									Ok(Box::new(NopInstruction::new()))
 								}
 								[true, false, false] /* y = 1 */ => {
-									let address = load_address(cpu)?;
+									let address = load_next_u16(cpu)?;
 
 									Ok(Box::new(DoubleByteLoadInstruction::new(
 										DoubleByteSource::Immediate(address),
@@ -91,7 +91,7 @@ fn decode_opcode(
 									Ok(Box::new(StopInstruction::new()))
 								},
 								[true, true, false] /* y = 3 */ => {
-									let delta = load_delta(cpu)?;
+									let delta = load_i8(cpu)?;
 
 									Ok(Box::new(JumpInstruction::new(
 										JumpInstructionDestination::Relative(delta),
@@ -104,12 +104,35 @@ fn decode_opcode(
 										true => BitFlags::Carry
 									};
 									let branch_if_equals = y0;
-									let delta = load_delta(cpu)?;
+									let delta = load_i8(cpu)?;
 
 									Ok(Box::new(JumpInstruction::new(
 										JumpInstructionDestination::Relative(delta),
 										JumpInstructionCondition::TestFlag { flag, branch_if_equals },
 									)))
+								}
+							}
+						}
+						[true, false, false] /* z = 1 */ => {
+							let [y0, y1, y2] = y;
+							let q = y0;
+							let p = [y1, y2];
+
+							let double_register_operand =
+								DecodedInstructionDoubleRegister::from_opcode_part_double_or_sp(p);
+
+							match q {
+								false => {
+									let immediate = load_next_u16(cpu)?;
+
+									Ok(Box::new(DoubleByteLoadInstruction::new(
+										DoubleByteSource::Immediate(immediate),
+										double_register_operand.into(),
+										DoubleByteLoadOperation::new(),
+									)))
+								},
+								true => {
+									todo!("Implement ADD HL, rr")
 								}
 							}
 						}
@@ -122,14 +145,14 @@ fn decode_opcode(
 	}
 }
 
-fn load_address(cpu: &mut Cpu) -> Result<u16, ExecutionError> {
-	let address_low = cpu.next_byte()?;
-	let address_high = cpu.next_byte()?;
+fn load_next_u16(cpu: &mut Cpu) -> Result<u16, ExecutionError> {
+	let low = cpu.next_byte()?;
+	let high = cpu.next_byte()?;
 
-	Ok(u16::from_be_bytes([address_low, address_high]))
+	Ok(u16::from_be_bytes([low, high]))
 }
 
-fn load_delta(cpu: &mut Cpu) -> Result<i8, ExecutionError> {
+fn load_i8(cpu: &mut Cpu) -> Result<i8, ExecutionError> {
 	let delta = cpu.next_byte()?;
 	let delta = delta as i8;
 
@@ -163,6 +186,54 @@ impl From<DecodedInstructionOperand> for ByteSource {
 		match value {
 			DecodedInstructionOperand::SingleRegister(single_reg) => Self::read_from_single(single_reg),
 			DecodedInstructionOperand::HlMemoryAddress => Self::read_from_register_address(DoubleRegisters::HL)
+		}
+	}
+}
+
+#[derive(Copy, Clone, PartialEq, Debug)]
+enum DecodedInstructionDoubleRegister {
+	DoubleRegister(DoubleRegisters),
+	Sp,
+	Af,
+}
+
+impl DecodedInstructionDoubleRegister {
+	fn from_opcode_maybe_double(opcode_part: [bool; 2]) -> Option<DoubleRegisters> {
+		match opcode_part {
+			[false, false] => Some(DoubleRegisters::BC),
+			[true, false] => Some(DoubleRegisters::DE),
+			[false, true] => Some(DoubleRegisters::HL),
+			[true, true] => None
+		}
+	}
+
+	fn from_opcode_part_double_or_sp(opcode_part: [bool; 2]) -> Self {
+		Self::from_opcode_maybe_double(opcode_part)
+			.map_or(Self::Sp, |double_register| Self::DoubleRegister(double_register))
+	}
+
+	fn from_opcode_part_double_or_af(opcode_part: [bool; 2]) -> Self {
+		Self::from_opcode_maybe_double(opcode_part)
+			.map_or(Self::Af, |double_register| Self::DoubleRegister(double_register))
+	}
+}
+
+impl From<DecodedInstructionDoubleRegister> for DoubleByteSource {
+	fn from(value: DecodedInstructionDoubleRegister) -> Self {
+		match value {
+			DecodedInstructionDoubleRegister::DoubleRegister(double_reg) => Self::DoubleRegister(double_reg),
+			DecodedInstructionDoubleRegister::Af => Self::DoubleRegister(DoubleRegisters::AF),
+			DecodedInstructionDoubleRegister::Sp => Self::StackPointer
+		}
+	}
+}
+
+impl From<DecodedInstructionDoubleRegister> for DoubleByteDestination {
+	fn from(value: DecodedInstructionDoubleRegister) -> Self {
+		match value {
+			DecodedInstructionDoubleRegister::DoubleRegister(double_reg) => Self::DoubleRegister(double_reg),
+			DecodedInstructionDoubleRegister::Af => Self::DoubleRegister(DoubleRegisters::AF),
+			DecodedInstructionDoubleRegister::Sp => Self::StackPointer
 		}
 	}
 }
