@@ -3,7 +3,9 @@ use crate::decoder::prefixed::{decode_prefixed_shifting, decode_prefixed_single_
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::{DoubleRegisters, SingleRegisters};
 use crate::instructions::{ExecutionError, Instruction};
-use crate::instructions::base::ByteSource;
+use crate::instructions::base::{ByteSource, DoubleByteDestination, DoubleByteSource};
+use crate::instructions::control::{NopInstruction, StopInstruction};
+use crate::instructions::load::double_byte_load::{DoubleByteLoadInstruction, DoubleByteLoadOperation};
 use crate::instructions::single_bit::SingleBitOperation;
 
 mod prefixed;
@@ -66,8 +68,47 @@ fn decode_opcode(
 				)),
 			}
 		},
-		None => todo!()
+		None => {
+			match x {
+				[false, false] /* x = 0 */ => {
+					match z {
+						[false, false, false] /* z = 0 */ => {
+							match y {
+								[false, false, false] /* y = 0 */ => {
+									Ok(Box::new(NopInstruction::new()))
+								}
+								[true, false, false] /* y = 1 */ => {
+									let address = load_address(cpu)?;
+
+									Ok(Box::new(DoubleByteLoadInstruction::new(
+										DoubleByteSource::Immediate(address),
+										DoubleByteDestination::StackPointer,
+										DoubleByteLoadOperation,
+									)))
+								},
+								[false, true, false] /* y = 2 */ => {
+									Ok(Box::new(StopInstruction::new()))
+								},
+								[true, true, false] /* y = 3 */ => {
+									todo!()
+								}
+								_ => todo!()
+							}
+						}
+						_ => todo!()
+					}
+				}
+				_ => todo!()
+			}
+		}
 	}
+}
+
+fn load_address(cpu: &mut Cpu) -> Result<u16, ExecutionError> {
+	let address_low = cpu.next_byte()?;
+	let address_high = cpu.next_byte()?;
+
+	Ok(u16::from_be_bytes([address_low, address_high]))
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]

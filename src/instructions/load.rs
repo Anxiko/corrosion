@@ -1,3 +1,3 @@
 mod byte_load;
-mod double_byte_load;
+pub(crate) mod double_byte_load;
 

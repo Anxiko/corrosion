@@ -134,7 +134,7 @@ impl<O> ChangesetInstruction for BaseByteInstruction<O>
 }
 
 #[derive(Debug, PartialEq, Copy, Clone)]
-pub(super) enum DoubleByteSource {
+pub(crate) enum DoubleByteSource {
 	DoubleRegister(DoubleRegisters),
 	Immediate(u16),
 	StackPointer,
@@ -169,7 +169,7 @@ impl DoubleByteSource {
 }
 
 #[derive(Debug, PartialEq, Copy, Clone)]
-pub(super) enum DoubleByteDestination {
+pub(crate) enum DoubleByteDestination {
 	DoubleRegister(DoubleRegisters),
 	StackPointer,
 	MemoryImmediate(u16),
@@ -193,7 +193,7 @@ impl DoubleByteDestination {
 	}
 }
 
-pub(super) trait DoubleByteOperation {
+pub(crate) trait DoubleByteOperation {
 	type C: Change;
 
 	fn execute(
@@ -204,7 +204,7 @@ pub(super) trait DoubleByteOperation {
 	) -> Result<Self::C, ExecutionError>;
 }
 
-pub(super) struct BaseDoubleByteInstruction<O>
+pub(crate) struct BaseDoubleByteInstruction<O>
 	where O: DoubleByteOperation {
 	src: DoubleByteSource,
 	dst: DoubleByteDestination,
@@ -212,7 +212,7 @@ pub(super) struct BaseDoubleByteInstruction<O>
 }
 
 impl<O> BaseDoubleByteInstruction<O> where O: DoubleByteOperation {
-	fn new(src: DoubleByteSource, dst: DoubleByteDestination, op: O) -> Self {
+	pub(crate) fn new(src: DoubleByteSource, dst: DoubleByteDestination, op: O) -> Self {
 		Self { src, dst, op }
 	}
 }

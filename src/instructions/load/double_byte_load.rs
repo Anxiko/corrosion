@@ -5,7 +5,13 @@ use crate::instructions::base::{BaseDoubleByteInstruction, DoubleByteDestination
 use crate::instructions::changeset::{Change, ChangeList, ChangesetInstruction, DoubleRegisterChange, MemoryDoubleByteWriteChange, SpChange};
 use crate::instructions::ExecutionError;
 
-struct DoubleByteLoadOperation;
+pub(crate) struct DoubleByteLoadOperation;
+
+impl DoubleByteLoadOperation {
+	pub(crate) fn new() -> Self {
+		Self {}
+	}
+}
 
 impl DoubleByteOperation for DoubleByteLoadOperation {
 	type C = Box<dyn Change>;
@@ -16,7 +22,7 @@ impl DoubleByteOperation for DoubleByteLoadOperation {
 	}
 }
 
-type DoubleByteLoadInstruction = BaseDoubleByteInstruction<DoubleByteLoadOperation>;
+pub(crate) type DoubleByteLoadInstruction = BaseDoubleByteInstruction<DoubleByteLoadOperation>;
 
 struct PushInstruction {
 	source: DoubleRegisters,

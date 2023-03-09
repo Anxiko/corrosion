@@ -1,5 +1,5 @@
 use crate::bits::bits_to_byte;
-use crate::decoder::{decode_byte_source, DecodedInstructionOperand};
+use crate::decoder::DecodedInstructionOperand;
 use crate::instructions::base::ByteDestination;
 use crate::instructions::Instruction;
 use crate::instructions::shifting::{ByteShiftInstruction, ByteShiftOperation, ByteSwapInstruction, ByteSwapOperation, ShiftDirection, ShiftType};
