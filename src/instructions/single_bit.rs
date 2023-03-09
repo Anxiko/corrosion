@@ -5,7 +5,7 @@ use crate::instructions::changeset::{BitFlagsChange, Change, ChangeList, Changes
 use crate::instructions::ExecutionError;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-enum SingleBitOperand {
+pub(crate) enum SingleBitOperand {
 	SingleRegister(SingleRegisters),
 	MemoryAddress,
 }
@@ -41,7 +41,7 @@ impl SingleBitOperand {
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-enum SingleBitOperation {
+pub(crate) enum SingleBitOperation {
 	Test,
 	Write(bool),
 }
@@ -73,14 +73,14 @@ impl SingleBitOperation {
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-struct SingleBitInstruction {
+pub(crate) struct SingleBitInstruction {
 	operand: SingleBitOperand,
 	operation: SingleBitOperation,
 	bit_shift: u8,
 }
 
 impl SingleBitInstruction {
-	fn new(operand: SingleBitOperand, operation: SingleBitOperation, bit_shift: u8) -> Self {
+	pub(crate) fn new(operand: SingleBitOperand, operation: SingleBitOperation, bit_shift: u8) -> Self {
 		Self { operand, operation, bit_shift: bit_shift & 0x07 }
 	}
 

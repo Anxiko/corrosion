@@ -1,10 +1,12 @@
-use crate::decoder::decode_byte_source;
+use crate::bits::bits_to_byte;
+use crate::decoder::{decode_byte_source, DecodedInstructionOperand};
 use crate::instructions::base::ByteDestination;
 use crate::instructions::Instruction;
 use crate::instructions::shifting::{ByteShiftInstruction, ByteShiftOperation, ByteSwapInstruction, ByteSwapOperation, ShiftDirection, ShiftType};
+use crate::instructions::single_bit::{SingleBitInstruction, SingleBitOperand, SingleBitOperation};
 
 pub(super) fn decode_prefixed_shifting(y: [bool; 3], z: [bool; 3]) -> Box<dyn Instruction> {
-	let source = decode_byte_source(z);
+	let source = DecodedInstructionOperand::from_opcode_part(z).into();
 
 	let shift_direction = match y[0] {
 		false => ShiftDirection::Left,
@@ -26,4 +28,20 @@ pub(super) fn decode_prefixed_shifting(y: [bool; 3], z: [bool; 3]) -> Box<dyn In
 			source, ByteDestination::Acc, ByteShiftOperation::new(shift_direction, shift_type),
 		))
 	}
+}
+
+impl From<DecodedInstructionOperand> for SingleBitOperand {
+	fn from(value: DecodedInstructionOperand) -> Self {
+		match value {
+			DecodedInstructionOperand::SingleRegister(reg) => SingleBitOperand::SingleRegister(reg),
+			DecodedInstructionOperand::HlMemoryAddress => SingleBitOperand::MemoryAddress
+		}
+	}
+}
+
+pub(super) fn decode_prefixed_single_bit(operation: SingleBitOperation, y: [bool; 3], z: [bool; 3]) -> Box<dyn Instruction> {
+	let bitshift = bits_to_byte(&y);
+	let z = DecodedInstructionOperand::from_opcode_part(z);
+
+	Box::new(SingleBitInstruction::new(z.into(), operation, bitshift))
 }

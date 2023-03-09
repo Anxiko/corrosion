@@ -1,12 +1,12 @@
 use crate::bits::byte_to_bits;
-use crate::decoder::prefixed_shifting::decode_prefixed_shifting;
+use crate::decoder::prefixed::{decode_prefixed_shifting, decode_prefixed_single_bit};
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::{DoubleRegisters, SingleRegisters};
 use crate::instructions::{ExecutionError, Instruction};
-use crate::instructions::base::{ByteDestination, ByteSource};
-use crate::instructions::shifting::{ByteShiftInstruction, ByteShiftOperation, ByteSwapInstruction, ByteSwapOperation, ShiftDirection, ShiftType};
+use crate::instructions::base::ByteSource;
+use crate::instructions::single_bit::SingleBitOperation;
 
-mod prefixed_shifting;
+mod prefixed;
 
 enum DecoderError {
 	ExecutionError(ExecutionError)
@@ -55,25 +55,49 @@ fn decode_opcode(
 		Some(DecodedInstructionPrefix::CB) => {
 			match x {
 				[false, false] /* x = 0 */ => Ok(decode_prefixed_shifting(y, z)),
-				[true, false] /* x = 1 */ => todo!(),
-				[false, true] /* x = 2 */ => todo!(),
-				[true, true] /* x = 3 */ => todo!(),
+				[true, false] /* x = 1 */ => Ok(decode_prefixed_single_bit(
+					SingleBitOperation::Test, y, z,
+				)),
+				[false, true] /* x = 2 */ => Ok(decode_prefixed_single_bit(
+					SingleBitOperation::Write(false), y, z,
+				)),
+				[true, true] /* x = 3 */ => Ok(decode_prefixed_single_bit(
+					SingleBitOperation::Write(true), y, z,
+				)),
 			}
 		},
 		None => todo!()
 	}
 }
 
-fn decode_byte_source(opcode_part: [bool; 3]) -> ByteSource {
-	match opcode_part {
-		[false, false, false] => ByteSource::read_from_single(SingleRegisters::B), // 0 => B
-		[true, false, false] => ByteSource::read_from_single(SingleRegisters::C), // 1 => C
-		[false, true, false] => ByteSource::read_from_single(SingleRegisters::D), // 2 => D
-		[true, true, false] => ByteSource::read_from_single(SingleRegisters::E), // 3 => E
-		[false, false, true] => ByteSource::read_from_single(SingleRegisters::H), // 4 => H
-		[true, false, true] => ByteSource::read_from_single(SingleRegisters::L), // 5 => L
-		[false, true, true] => ByteSource::read_from_register_address(DoubleRegisters::HL), // 6 => (HL)
-		[true, true, true] => ByteSource::read_from_single(SingleRegisters::A),
+#[derive(Copy, Clone, Debug, PartialEq)]
+enum DecodedInstructionOperand {
+	SingleRegister(SingleRegisters),
+	HlMemoryAddress,
+}
+
+impl DecodedInstructionOperand {
+	fn from_opcode_part(opcode_part: [bool; 3]) -> Self {
+		match opcode_part {
+			[false, false, false] => Self::SingleRegister(SingleRegisters::B), // 0 => B
+			[true, false, false] => Self::SingleRegister(SingleRegisters::C), // 1 => C
+			[false, true, false] => Self::SingleRegister(SingleRegisters::D), // 2 => D
+			[true, true, false] => Self::SingleRegister(SingleRegisters::E), // 3 => E
+			[false, false, true] => Self::SingleRegister(SingleRegisters::H), // 4 => H
+			[true, false, true] => Self::SingleRegister(SingleRegisters::L), // 5 => L
+			[false, true, true] => Self::HlMemoryAddress, // 6 => (HL)
+			[true, true, true] => Self::SingleRegister(SingleRegisters::A), // 7 => A
+		}
+	}
+}
+
+
+impl From<DecodedInstructionOperand> for ByteSource {
+	fn from(value: DecodedInstructionOperand) -> Self {
+		match value {
+			DecodedInstructionOperand::SingleRegister(single_reg) => Self::read_from_single(single_reg),
+			DecodedInstructionOperand::HlMemoryAddress => Self::read_from_register_address(DoubleRegisters::HL)
+		}
 	}
 }
 
