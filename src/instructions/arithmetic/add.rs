@@ -4,6 +4,7 @@ use crate::hardware::register_bank::{BitFlags, DoubleRegisters, SingleRegisters}
 use crate::instructions::{ExecutionError, Instruction};
 use crate::instructions::ACC_REGISTER;
 use crate::instructions::arithmetic::operation::ArithmeticOperation;
+use crate::instructions::base::{BinaryDoubleOperation, DoubleByteDestination, DoubleByteSource};
 
 pub(crate) struct Add {
 	src: SingleRegisters,
@@ -106,3 +107,5 @@ impl Instruction for Increment {
 		Ok(())
 	}
 }
+
+struct AddDoubleInstruction;
