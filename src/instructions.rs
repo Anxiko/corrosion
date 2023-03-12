@@ -12,6 +12,7 @@ pub(crate) mod load;
 pub(crate) mod single_bit;
 pub(crate) mod control;
 pub(crate) mod jump;
+pub(crate) mod double_arithmetic;
 
 pub(crate) trait Instruction {
 	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError>;

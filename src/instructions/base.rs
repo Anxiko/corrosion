@@ -226,58 +226,10 @@ impl<O> ChangesetInstruction for BaseDoubleByteInstruction<O>
 	}
 }
 
-pub(super) trait BinaryDoubleOperation {
+pub(crate) trait BinaryDoubleOperation {
 	type C: Change;
 
 	fn compute_changes(
 		&self, cpu: &Cpu, left: &DoubleByteSource, right: &DoubleByteSource, dst: &DoubleByteDestination,
 	) -> Result<Self::C, ExecutionError>;
 }
-
-pub(super) struct BinaryDoubleAddOperation;
-
-impl BinaryDoubleOperation for BinaryDoubleAddOperation {
-	type C = Box<dyn Change>;
-
-	fn compute_changes(
-		&self, cpu: &Cpu, left: &DoubleByteSource, right: &DoubleByteSource, dst: &DoubleByteDestination,
-	) -> Result<Self::C, ExecutionError> {
-		let left_value = left.read(cpu)?;
-		let right_value = right.read(cpu)?;
-
-		let high_left_value = left_value.to_le_bytes()[1];
-		let high_right_value = left_value.to_le_bytes()[1];
-
-		let (result, _overflow) = left_value.overflowing_add(right_value);
-
-		let high_alu_result = add_u8(high_left_value, high_right_value);
-
-		Ok(Box::new(ChangeList::new(vec![
-			dst.change_destination(result)?,
-			Box::new(
-				BitFlagsChange::keep_all()
-					.with_subtraction_flag(false)
-					.with_half_carry_flag(high_alu_result.half_carry)
-					.with_carry_flag(high_alu_result.carry)
-			),
-		])))
-	}
-}
-
-pub(super) struct BinaryDoubleInstruction<O: BinaryDoubleOperation> {
-	left: DoubleByteSource,
-	right: DoubleByteSource,
-	dst: DoubleByteDestination,
-	op: O,
-}
-
-impl<O> ChangesetInstruction for BinaryDoubleInstruction<O> where
-	O: BinaryDoubleOperation {
-	type C = O::C;
-
-	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError> {
-		self.op.compute_changes(cpu, &self.left, &self.right, &self.dst)
-	}
-}
-
-pub(super) type BinaryDoubleAddInstruction = BinaryDoubleInstruction<BinaryDoubleAddOperation>;

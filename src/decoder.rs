@@ -5,6 +5,7 @@ use crate::hardware::register_bank::{BitFlags, DoubleRegisters, SingleRegisters}
 use crate::instructions::{ExecutionError, Instruction};
 use crate::instructions::base::{ByteSource, DoubleByteDestination, DoubleByteSource};
 use crate::instructions::control::{NopInstruction, StopInstruction};
+use crate::instructions::double_arithmetic::{BinaryDoubleAddInstruction, BinaryDoubleAddOperation};
 use crate::instructions::jump::{JumpInstruction, JumpInstructionCondition, JumpInstructionDestination};
 use crate::instructions::load::double_byte_load::{DoubleByteLoadInstruction, DoubleByteLoadOperation};
 use crate::instructions::single_bit::SingleBitOperation;
@@ -132,7 +133,12 @@ fn decode_opcode(
 									)))
 								},
 								true => {
-									todo!("Implement ADD HL, rr")
+									Ok(Box::new(BinaryDoubleAddInstruction::new(
+										DoubleByteSource::DoubleRegister(DoubleRegisters::HL),
+										double_register_operand.into(),
+										DoubleByteDestination::DoubleRegister(DoubleRegisters::HL),
+										BinaryDoubleAddOperation,
+									)))
 								}
 							}
 						}
