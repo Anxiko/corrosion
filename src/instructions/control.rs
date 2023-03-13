@@ -28,3 +28,17 @@ impl Instruction for StopInstruction {
 		todo!("Implement STOP instruction")
 	}
 }
+
+pub(crate) struct HaltInstruction;
+
+impl HaltInstruction {
+	pub(crate) fn new() -> Self {
+		Self
+	}
+}
+
+impl Instruction for HaltInstruction {
+	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
+		todo!("Implement HALT instruction")
+	}
+}

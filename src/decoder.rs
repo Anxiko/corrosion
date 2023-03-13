@@ -5,7 +5,7 @@ use crate::hardware::register_bank::{BitFlags, DoubleRegisters, SingleRegisters}
 use crate::instructions::{ExecutionError, Instruction};
 use crate::instructions::arithmetic::{DecimalAdjust, IncOrDecInstruction, IncOrDecOperation, IncOrDecOperationType};
 use crate::instructions::base::{ByteDestination, ByteSource, DoubleByteDestination, DoubleByteSource};
-use crate::instructions::control::{NopInstruction, StopInstruction};
+use crate::instructions::control::{HaltInstruction, NopInstruction, StopInstruction};
 use crate::instructions::double_arithmetic::{BinaryDoubleAddInstruction, BinaryDoubleAddOperation, IncOrDecDoubleInstruction, IncOrDecDoubleOperation, IncOrDecDoubleType};
 use crate::instructions::flags::ChangeCarryFlag;
 use crate::instructions::jump::{JumpInstruction, JumpInstructionCondition, JumpInstructionDestination};
@@ -297,7 +297,21 @@ fn decode_opcode(
 							}
 						}
 					}
-				}
+				},
+				[true, false] /* x = 1 */ => {
+					if y == [false, true, true] && z == [false, true, true] /* y = z = 6 */ {
+						Ok(Box::new(HaltInstruction::new()))
+					} else {
+						let src_operand = DecodedInstructionOperand::from_opcode_part(z);
+						let dst_operand = DecodedInstructionOperand::from_opcode_part(y);
+
+						Ok(Box::new(ByteLoadInstruction::new(
+							src_operand.into(),
+							dst_operand.into(),
+							ByteLoadOperation::no_update(),
+						)))
+					}
+				},
 				_ => todo!()
 			}
 		}
