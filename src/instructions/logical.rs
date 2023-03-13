@@ -80,9 +80,9 @@ impl Negate {
 impl Instruction for Negate {
 	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
 		let dst_val = cpu.register_bank.read_single_named(ACC_REGISTER);
-		let resutl = !dst_val;
+		let result = !dst_val;
 
-		cpu.register_bank.write_single_named(ACC_REGISTER, resutl);
+		cpu.register_bank.write_single_named(ACC_REGISTER, result);
 
 		Ok(())
 	}

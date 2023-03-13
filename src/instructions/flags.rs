@@ -20,17 +20,27 @@ impl Instruction for ToggleCarry {
 	}
 }
 
-pub(crate) struct SetCarry {}
+pub(crate) struct ChangeCarryFlag {
+	value: bool,
+}
 
-impl SetCarry {
-	pub(crate) fn new() -> Self {
-		Self {}
+impl ChangeCarryFlag {
+	pub(crate) fn new(value: bool) -> Self {
+		Self { value }
+	}
+
+	pub(crate) fn set() -> Self {
+		Self::new(true)
+	}
+
+	pub(crate) fn clear() -> Self {
+		Self::new(false)
 	}
 }
 
-impl Instruction for SetCarry {
+impl Instruction for ChangeCarryFlag {
 	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
-		cpu.register_bank.write_bit_flag(BitFlags::Carry, true);
+		cpu.register_bank.write_bit_flag(BitFlags::Carry, self.value);
 		Ok(())
 	}
 }
@@ -56,6 +66,6 @@ fn set_carry() {
 	let mut expected = cpu.clone();
 	expected.register_bank.write_bit_flag(BitFlags::Carry, true);
 
-	assert!(SetCarry::new().execute(&mut cpu).is_ok());
+	assert!(ChangeCarryFlag::set().execute(&mut cpu).is_ok());
 	assert_eq!(cpu, expected);
 }

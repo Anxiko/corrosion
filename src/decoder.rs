@@ -7,9 +7,11 @@ use crate::instructions::arithmetic::{DecimalAdjust, IncOrDecInstruction, IncOrD
 use crate::instructions::base::{ByteDestination, ByteSource, DoubleByteDestination, DoubleByteSource};
 use crate::instructions::control::{NopInstruction, StopInstruction};
 use crate::instructions::double_arithmetic::{BinaryDoubleAddInstruction, BinaryDoubleAddOperation, IncOrDecDoubleInstruction, IncOrDecDoubleOperation, IncOrDecDoubleType};
+use crate::instructions::flags::ChangeCarryFlag;
 use crate::instructions::jump::{JumpInstruction, JumpInstructionCondition, JumpInstructionDestination};
 use crate::instructions::load::byte_load::{ByteLoadIndex, ByteLoadInstruction, ByteLoadOperation, ByteLoadUpdate, ByteLoadUpdateType};
 use crate::instructions::load::double_byte_load::{DoubleByteLoadInstruction, DoubleByteLoadOperation};
+use crate::instructions::logical::Negate;
 use crate::instructions::shifting::{ByteShiftInstruction, ByteShiftOperation, ShiftDirection, ShiftType};
 use crate::instructions::single_bit::SingleBitOperation;
 
@@ -286,9 +288,12 @@ fn decode_opcode(
 									Ok(Box::new(DecimalAdjust::new()))
 								},
 								[true, false, true] /* z = 5 */ => {
-									
+									Ok(Box::new(Negate::new()))
+								},
+								[y0, true, true] /* 6 <= z < 8 */ => {
+									let carry_flag_value = y0;
+									Ok(Box::new(ChangeCarryFlag::new(carry_flag_value)))
 								}
-								_ => todo!()
 							}
 						}
 					}
