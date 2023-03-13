@@ -1,6 +1,8 @@
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::BitFlags;
 use crate::instructions::ACC_REGISTER;
+use crate::instructions::base::{ByteDestination, ByteSource};
+use crate::instructions::changeset::{BitFlagsChange, Change, ChangeList};
 
 #[derive(PartialEq, Debug)]
 pub(super) struct ArithmeticOperation {
@@ -61,6 +63,26 @@ impl ArithmeticOperation {
 			.write_bit_flag(BitFlags::Carry, self.carry);
 		cpu.register_bank
 			.write_bit_flag(BitFlags::HalfCarry, self.half_carry);
+	}
+
+	pub(super) fn change_flags(&self) -> BitFlagsChange {
+		BitFlagsChange::new(
+			Some(self.zero),
+			Some(self.subtraction),
+			Some(self.half_carry),
+			Some(self.carry),
+		)
+	}
+
+	pub(super) fn change_result(&self, dst: &ByteDestination) -> Box<dyn Change> {
+		dst.change_destination(self.result)
+	}
+
+	pub(super) fn change(&self, dst: &ByteDestination) -> ChangeList {
+		ChangeList::new(vec![
+			Box::new(self.change_flags()),
+			self.change_result(dst),
+		])
 	}
 
 	fn add_half_carry_flag(left: u8, right: u8, carry: bool) -> bool {

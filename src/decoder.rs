@@ -1,9 +1,13 @@
+use sdl2::log::log;
+
 use crate::bits::byte_to_bits;
 use crate::decoder::prefixed::{decode_prefixed_shifting, decode_prefixed_single_bit};
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::{BitFlags, DoubleRegisters, SingleRegisters};
 use crate::instructions::{ExecutionError, Instruction};
 use crate::instructions::arithmetic::{DecimalAdjust, IncOrDecInstruction, IncOrDecOperation, IncOrDecOperationType};
+use crate::instructions::arithmetic::add::{Add, BinaryArithmeticInstruction, BinaryArithmeticOperation, BinaryArithmeticOperationType};
+use crate::instructions::arithmetic::sub::CompareInstruction;
 use crate::instructions::base::{ByteDestination, ByteSource, DoubleByteDestination, DoubleByteSource};
 use crate::instructions::control::{HaltInstruction, NopInstruction, StopInstruction};
 use crate::instructions::double_arithmetic::{BinaryDoubleAddInstruction, BinaryDoubleAddOperation, IncOrDecDoubleInstruction, IncOrDecDoubleOperation, IncOrDecDoubleType};
@@ -11,7 +15,7 @@ use crate::instructions::flags::ChangeCarryFlag;
 use crate::instructions::jump::{JumpInstruction, JumpInstructionCondition, JumpInstructionDestination};
 use crate::instructions::load::byte_load::{ByteLoadIndex, ByteLoadInstruction, ByteLoadOperation, ByteLoadUpdate, ByteLoadUpdateType};
 use crate::instructions::load::double_byte_load::{DoubleByteLoadInstruction, DoubleByteLoadOperation};
-use crate::instructions::logical::Negate;
+use crate::instructions::logical::{BinaryLogicalInstruction, BinaryLogicalOperation, BinaryLogicalOperationType, Negate};
 use crate::instructions::shifting::{ByteShiftInstruction, ByteShiftOperation, ShiftDirection, ShiftType};
 use crate::instructions::single_bit::SingleBitOperation;
 
@@ -312,6 +316,10 @@ fn decode_opcode(
 						)))
 					}
 				},
+				[false, true] /* x = 2 */=> {
+					let decoded_operand = DecodedInstructionOperand::from_opcode_part(z);
+					Ok(decode_byte_instruction(y, decoded_operand.into(), ByteDestination::Acc))
+				}
 				_ => todo!()
 			}
 		}
@@ -439,6 +447,36 @@ fn decode_xyz(opcode: u8) -> ([bool; 2], [bool; 3], [bool; 3]) {
 	let z = bits[0..3].try_into().unwrap();
 
 	(x, y, z)
+}
+
+fn decode_byte_instruction(op_part: [bool; 3], right: ByteSource, dst: ByteDestination) -> Box<dyn Instruction> {
+	match op_part {
+		[op0, op1, false] /* 0 <= op < 4 */ => {
+			let use_carry = op1;
+			let operation_type = match op0 {
+				false => BinaryArithmeticOperationType::Add,
+				true => BinaryArithmeticOperationType::Sub
+			};
+
+			let operation = BinaryArithmeticOperation::new(operation_type, use_carry);
+			Box::new(BinaryArithmeticInstruction::new(ByteSource::Acc, right, dst, operation))
+		}
+		[op0, op1, true] /* 4 <= z < 8 */ => {
+			let maybe_logical_operation_type = match [op0, op1] {
+				[false, false] => Some(BinaryLogicalOperationType::And),
+				[true, false] => Some(BinaryLogicalOperationType::Xor),
+				[false, true] => Some(BinaryLogicalOperationType::Or),
+				[true, true] => None,
+			};
+
+			if let Some(logical_operation_type) = maybe_logical_operation_type {
+				let logical_operation = BinaryLogicalOperation::new(logical_operation_type);
+				Box::new(BinaryLogicalInstruction::new(ByteSource::Acc, right, dst, logical_operation))
+			} else {
+				Box::new(CompareInstruction::new(ByteSource::Acc, right))
+			}
+		}
+	}
 }
 
 impl From<ExecutionError> for DecoderError {

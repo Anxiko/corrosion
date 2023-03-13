@@ -3,6 +3,8 @@ use crate::hardware::register_bank::{BitFlags, SingleRegisters};
 use crate::instructions::{ExecutionError, Instruction};
 use crate::instructions::ACC_REGISTER;
 use crate::instructions::arithmetic::operation::ArithmeticOperation;
+use crate::instructions::base::ByteSource;
+use crate::instructions::changeset::{BitFlagsChange, ChangesetInstruction};
 
 pub(super) struct Sub {
 	src: SingleRegisters,
@@ -44,6 +46,29 @@ impl Instruction for SubWithCarry {
 		ArithmeticOperation::sub_with_carry(dst_val, src_val, carry_flag).commit(cpu);
 
 		Ok(())
+	}
+}
+
+pub(crate) struct CompareInstruction {
+	left: ByteSource,
+	right: ByteSource,
+}
+
+impl CompareInstruction {
+	pub(crate) fn new(left: ByteSource, right: ByteSource) -> Self {
+		Self { left, right }
+	}
+}
+
+impl ChangesetInstruction for CompareInstruction {
+	type C = BitFlagsChange;
+
+	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError> {
+		let left_value = self.left.read(cpu)?;
+		let right_value = self.right.read(cpu)?;
+		let arithmetic_operation = ArithmeticOperation::sub(left_value, right_value);
+
+		Ok(arithmetic_operation.change_flags())
 	}
 }
 
