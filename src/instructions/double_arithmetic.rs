@@ -104,4 +104,5 @@ impl DoubleByteOperation for IncOrDecDoubleOperation {
 		Ok(dst.change_destination(result))
 	}
 }
-pub(crate)   type IncOrDecDoubleInstruction = BaseDoubleByteInstruction<IncOrDecDoubleOperation>;
+
+pub(crate) type IncOrDecDoubleInstruction = BaseDoubleByteInstruction<IncOrDecDoubleOperation>;

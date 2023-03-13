@@ -3,6 +3,7 @@ use crate::decoder::prefixed::{decode_prefixed_shifting, decode_prefixed_single_
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::{BitFlags, DoubleRegisters, SingleRegisters};
 use crate::instructions::{ExecutionError, Instruction};
+use crate::instructions::arithmetic::{IncOrDecInstruction, IncOrDecOperation, IncOrDecOperationType};
 use crate::instructions::base::{ByteDestination, ByteSource, DoubleByteDestination, DoubleByteSource};
 use crate::instructions::control::{NopInstruction, StopInstruction};
 use crate::instructions::double_arithmetic::{BinaryDoubleAddInstruction, BinaryDoubleAddOperation, IncOrDecDoubleInstruction, IncOrDecDoubleOperation, IncOrDecDoubleType};
@@ -233,6 +234,24 @@ fn decode_opcode(
 								IncOrDecDoubleOperation::new(inc_or_dec_type),
 							)))
 						},
+						[y0, false, true] /* 4 <= z < 6 */ => {
+							let inc_dec_op_type = match y0 {
+								false /* z = 4 */ => {
+									IncOrDecOperationType::Increment
+								}
+								true /* z = 5 */ => {
+									IncOrDecOperationType::Decrement
+								}
+							};
+
+							let decoded_operand = DecodedInstructionOperand::from_opcode_part(y);
+
+							Ok(Box::new(IncOrDecInstruction::new(
+								decoded_operand.into(),
+								decoded_operand.into(),
+								IncOrDecOperation::new(inc_dec_op_type),
+							)))
+						}
 						_ => todo!()
 					}
 				}
@@ -290,6 +309,15 @@ impl From<DecodedInstructionOperand> for ByteSource {
 		match value {
 			DecodedInstructionOperand::SingleRegister(single_reg) => Self::read_from_single(single_reg),
 			DecodedInstructionOperand::HlMemoryAddress => Self::read_from_register_address(DoubleRegisters::HL)
+		}
+	}
+}
+
+impl From<DecodedInstructionOperand> for ByteDestination {
+	fn from(value: DecodedInstructionOperand) -> Self {
+		match value {
+			DecodedInstructionOperand::SingleRegister(single_reg) => Self::SingleRegister(single_reg),
+			DecodedInstructionOperand::HlMemoryAddress => Self::AddressInRegister(DoubleRegisters::HL)
 		}
 	}
 }

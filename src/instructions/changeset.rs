@@ -1,5 +1,5 @@
 use std::any::Any;
-use std::fmt::{Debug, Formatter};
+use std::fmt::Debug;
 
 use dyn_partial_eq::{dyn_partial_eq, DynPartialEq};
 
@@ -89,7 +89,7 @@ impl Change for PcChange {
 }
 
 #[derive(PartialEq, DynPartialEq, Debug)]
-pub(super) struct BitFlagsChange {
+pub(crate) struct BitFlagsChange {
 	zero: Option<bool>,
 	subtraction: Option<bool>,
 	half_carry: Option<bool>,
@@ -97,7 +97,7 @@ pub(super) struct BitFlagsChange {
 }
 
 impl BitFlagsChange {
-	pub(super) fn new(
+	pub(crate) fn new(
 		zero: Option<bool>,
 		subtraction: Option<bool>,
 		half_carry: Option<bool>,
@@ -111,7 +111,7 @@ impl BitFlagsChange {
 		}
 	}
 
-	pub(super) fn keep_all() -> Self {
+	pub(crate) fn keep_all() -> Self {
 		Self {
 			zero: None,
 			subtraction: None,
@@ -120,7 +120,7 @@ impl BitFlagsChange {
 		}
 	}
 
-	pub(super) fn zero_all() -> Self {
+	pub(crate) fn zero_all() -> Self {
 		Self {
 			zero: None,
 			subtraction: None,
@@ -129,23 +129,43 @@ impl BitFlagsChange {
 		}
 	}
 
-	pub(super) fn with_zero_flag(mut self, value: bool) -> Self {
+	pub(crate) fn with_zero_flag(mut self, value: bool) -> Self {
 		self.zero = Some(value);
 		self
 	}
 
-	pub(super) fn with_subtraction_flag(mut self, value: bool) -> Self {
+	pub(crate) fn with_subtraction_flag(mut self, value: bool) -> Self {
 		self.subtraction = Some(value);
 		self
 	}
 
-	pub(super) fn with_half_carry_flag(mut self, value: bool) -> Self {
+	pub(crate) fn with_half_carry_flag(mut self, value: bool) -> Self {
 		self.half_carry = Some(value);
 		self
 	}
 
-	pub(super) fn with_carry_flag(mut self, value: bool) -> Self {
+	pub(crate) fn with_carry_flag(mut self, value: bool) -> Self {
 		self.carry = Some(value);
+		self
+	}
+
+	pub(crate) fn keep_zero_flag(mut self) -> Self {
+		self.zero = None;
+		self
+	}
+
+	pub(crate) fn keep_subtraction_flag(mut self) -> Self {
+		self.subtraction = None;
+		self
+	}
+
+	pub(crate) fn keep_half_carry(mut self) -> Self {
+		self.half_carry = None;
+		self
+	}
+
+	pub(crate) fn keep_carry_flag(mut self) -> Self {
+		self.carry = None;
 		self
 	}
 
