@@ -3,13 +3,14 @@ use crate::decoder::prefixed::{decode_prefixed_shifting, decode_prefixed_single_
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::{BitFlags, DoubleRegisters, SingleRegisters};
 use crate::instructions::{ExecutionError, Instruction};
-use crate::instructions::arithmetic::{IncOrDecInstruction, IncOrDecOperation, IncOrDecOperationType};
+use crate::instructions::arithmetic::{DecimalAdjust, IncOrDecInstruction, IncOrDecOperation, IncOrDecOperationType};
 use crate::instructions::base::{ByteDestination, ByteSource, DoubleByteDestination, DoubleByteSource};
 use crate::instructions::control::{NopInstruction, StopInstruction};
 use crate::instructions::double_arithmetic::{BinaryDoubleAddInstruction, BinaryDoubleAddOperation, IncOrDecDoubleInstruction, IncOrDecDoubleOperation, IncOrDecDoubleType};
 use crate::instructions::jump::{JumpInstruction, JumpInstructionCondition, JumpInstructionDestination};
 use crate::instructions::load::byte_load::{ByteLoadIndex, ByteLoadInstruction, ByteLoadOperation, ByteLoadUpdate, ByteLoadUpdateType};
 use crate::instructions::load::double_byte_load::{DoubleByteLoadInstruction, DoubleByteLoadOperation};
+use crate::instructions::shifting::{ByteShiftInstruction, ByteShiftOperation, ShiftDirection, ShiftType};
 use crate::instructions::single_bit::SingleBitOperation;
 
 mod prefixed;
@@ -94,7 +95,7 @@ fn decode_opcode(
 									Ok(Box::new(StopInstruction::new()))
 								},
 								[true, true, false] /* y = 3 */ => {
-									let delta = load_i8(cpu)?;
+									let delta = load_next_i8(cpu)?;
 
 									Ok(Box::new(JumpInstruction::new(
 										JumpInstructionDestination::Relative(delta),
@@ -107,7 +108,7 @@ fn decode_opcode(
 										true => BitFlags::Carry
 									};
 									let branch_if_equals = y0;
-									let delta = load_i8(cpu)?;
+									let delta = load_next_i8(cpu)?;
 
 									Ok(Box::new(JumpInstruction::new(
 										JumpInstructionDestination::Relative(delta),
@@ -251,8 +252,45 @@ fn decode_opcode(
 								decoded_operand.into(),
 								IncOrDecOperation::new(inc_dec_op_type),
 							)))
+						},
+						[false, true, true] /* z = 6 */ => {
+							let decoded_operand = DecodedInstructionOperand::from_opcode_part(y);
+							let immediate = load_next_u8(cpu)?;
+
+							Ok(Box::new(ByteLoadInstruction::new(
+								ByteSource::Immediate(immediate),
+								decoded_operand.into(),
+								ByteLoadOperation::no_update(),
+							)))
 						}
-						_ => todo!()
+						[true, true, true] /* z = 7 */ => {
+							match y {
+								[y0, y1, false] /* 0 <= y < 4 */ => {
+									let shift_direction = match y0 {
+										false => ShiftDirection::Left,
+										true => ShiftDirection::Right
+									};
+
+									let shift_type = match y1 {
+										false => ShiftType::Rotate,
+										true => ShiftType::RotateWithCarry
+									};
+
+									Ok(Box::new(ByteShiftInstruction::new(
+										ByteSource::Acc,
+										ByteDestination::Acc,
+										ByteShiftOperation::new(shift_direction, shift_type),
+									)))
+								},
+								[false, false, true] /* z = 4 */ => {
+									Ok(Box::new(DecimalAdjust::new()))
+								},
+								[true, false, true] /* z = 5 */ => {
+									
+								}
+								_ => todo!()
+							}
+						}
 					}
 				}
 				_ => todo!()
@@ -275,11 +313,15 @@ fn load_next_u16(cpu: &mut Cpu) -> Result<u16, ExecutionError> {
 	Ok(u16::from_be_bytes([low, high]))
 }
 
-fn load_i8(cpu: &mut Cpu) -> Result<i8, ExecutionError> {
+fn load_next_i8(cpu: &mut Cpu) -> Result<i8, ExecutionError> {
 	let delta = cpu.next_byte()?;
 	let delta = delta as i8;
 
 	Ok(delta)
+}
+
+fn load_next_u8(cpu: &mut Cpu) -> Result<u8, ExecutionError> {
+	cpu.next_byte()
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
