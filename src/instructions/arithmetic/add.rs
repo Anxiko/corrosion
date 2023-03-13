@@ -4,27 +4,71 @@ use crate::hardware::register_bank::{BitFlags, DoubleRegisters, SingleRegisters}
 use crate::instructions::{ExecutionError, Instruction};
 use crate::instructions::ACC_REGISTER;
 use crate::instructions::arithmetic::operation::ArithmeticOperation;
-use crate::instructions::base::{BinaryDoubleOperation, DoubleByteDestination, DoubleByteSource};
+use crate::instructions::base::{BinaryDoubleOperation, BinaryInstruction, BinaryOperation, ByteDestination, ByteSource, DoubleByteDestination, DoubleByteSource};
+use crate::instructions::changeset::{ChangeList, ChangesetInstruction};
 
-pub(crate) struct Add {
-	src: SingleRegisters,
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub(crate) enum BinaryArithmeticOperationType {
+	Add,
+	Sub,
 }
 
-impl Add {
-	pub(crate) fn new(src: SingleRegisters) -> Self {
-		Self { src }
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub(crate) struct BinaryArithmeticOperation {
+	type_: BinaryArithmeticOperationType,
+	with_carry: bool,
+}
+
+impl BinaryArithmeticOperation {
+	pub(crate) fn new(type_: BinaryArithmeticOperationType, with_carry: bool) -> Self {
+		Self{type_, with_carry}
 	}
 }
 
-impl Instruction for Add {
-	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
-		let registers = &mut cpu.register_bank;
-		let dst_val = registers.read_single_named(ACC_REGISTER);
-		let src_val = registers.read_single_named(self.src);
+impl BinaryOperation for BinaryArithmeticOperation {
+	type C = ChangeList;
 
-		ArithmeticOperation::add(dst_val, src_val).commit(cpu);
+	fn compute_changes(&self, cpu: &Cpu, left: &ByteSource, right: &ByteSource, dst: &ByteDestination) -> Result<Self::C, ExecutionError> {
+		let carry = self.with_carry && cpu.register_bank.read_bit_flag(BitFlags::Carry);
+		let left = left.read(cpu)?;
+		let right = right.read(cpu)?;
 
-		Ok(())
+
+		let operation = match self.type_ {
+			BinaryArithmeticOperationType::Add => {
+				ArithmeticOperation::add_with_carry(left, right, carry)
+			},
+			BinaryArithmeticOperationType::Sub => {
+				ArithmeticOperation::sub_with_carry(left, right, carry)
+			}
+		};
+
+		Ok(operation.change(dst))
+	}
+}
+
+pub(crate) type BinaryArithmeticInstruction = BinaryInstruction<BinaryArithmeticOperation>;
+
+pub(crate) struct Add {
+	left: ByteSource,
+	right: ByteSource,
+	dst: ByteDestination,
+}
+
+impl Add {
+	pub(crate) fn new(left: ByteSource, right: ByteSource, dst: ByteDestination) -> Self {
+		Self { left, right, dst }
+	}
+}
+
+impl ChangesetInstruction for Add {
+	type C = ChangeList;
+
+	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError> {
+		let dst_val = self.left.read(cpu)?;
+		let src_val = self.right.read(cpu)?;
+
+		Ok(ArithmeticOperation::add(dst_val, src_val).change(&self.dst))
 	}
 }
 

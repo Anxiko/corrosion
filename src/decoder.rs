@@ -4,6 +4,7 @@ use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::{BitFlags, DoubleRegisters, SingleRegisters};
 use crate::instructions::{ExecutionError, Instruction};
 use crate::instructions::arithmetic::{DecimalAdjust, IncOrDecInstruction, IncOrDecOperation, IncOrDecOperationType};
+use crate::instructions::arithmetic::add::{Add, BinaryArithmeticInstruction, BinaryArithmeticOperation, BinaryArithmeticOperationType};
 use crate::instructions::base::{ByteDestination, ByteSource, DoubleByteDestination, DoubleByteSource};
 use crate::instructions::control::{HaltInstruction, NopInstruction, StopInstruction};
 use crate::instructions::double_arithmetic::{BinaryDoubleAddInstruction, BinaryDoubleAddOperation, IncOrDecDoubleInstruction, IncOrDecDoubleOperation, IncOrDecDoubleType};
@@ -312,6 +313,9 @@ fn decode_opcode(
 						)))
 					}
 				},
+				[false, true] /* x = 2 */=> {
+					todo!()
+				}
 				_ => todo!()
 			}
 		}
@@ -439,6 +443,22 @@ fn decode_xyz(opcode: u8) -> ([bool; 2], [bool; 3], [bool; 3]) {
 	let z = bits[0..3].try_into().unwrap();
 
 	(x, y, z)
+}
+
+fn decode_byte_instruction(op_part: [bool; 3], right: ByteSource, dst: ByteDestination) -> Box<dyn Instruction> {
+	match op_part {
+		[op0, op1, false] /* 0 <= op < 4 */ => {
+			let use_carry = op1;
+			let operation_type = match op0 {
+				false => BinaryArithmeticOperationType::Add,
+				true => BinaryArithmeticOperationType::Sub
+			};
+
+			let operation = BinaryArithmeticOperation::new(operation_type, use_carry);
+			Box::new(BinaryArithmeticInstruction::new(ByteSource::Acc, right, dst, operation))
+		}
+		_ => todo!()
+	}
 }
 
 impl From<ExecutionError> for DecoderError {

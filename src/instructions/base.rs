@@ -237,3 +237,31 @@ pub(crate) trait BinaryDoubleOperation {
 		&self, cpu: &Cpu, left: &DoubleByteSource, right: &DoubleByteSource, dst: &DoubleByteDestination,
 	) -> Result<Self::C, ExecutionError>;
 }
+
+pub(crate) trait BinaryOperation {
+	type C: Change;
+	fn compute_changes(
+		&self, cpu: &Cpu, left: &ByteSource, right: &ByteSource, dst: &ByteDestination,
+	) -> Result<Self::C, ExecutionError>;
+}
+
+pub(crate) struct BinaryInstruction<O: BinaryOperation> {
+	left: ByteSource,
+	right: ByteSource,
+	dst: ByteDestination,
+	op: O,
+}
+
+impl<O: BinaryOperation> BinaryInstruction<O> {
+	pub(crate) fn new(left: ByteSource, right: ByteSource, dst: ByteDestination, op: O) -> Self {
+		Self { left, right, dst, op }
+	}
+}
+
+impl<O: BinaryOperation> ChangesetInstruction for BinaryInstruction<O> {
+	type C = O::C;
+
+	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError> {
+		self.op.compute_changes(cpu, &self.left, &self.right, &self.dst)
+	}
+}

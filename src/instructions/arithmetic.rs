@@ -8,7 +8,7 @@ use crate::instructions::changeset::{BitFlagsChange, Change, ChangeList, Changes
 #[cfg(test)]
 mod tests;
 
-mod add;
+pub(crate) mod add;
 mod operation;
 mod sub;
 
