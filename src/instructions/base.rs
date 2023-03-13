@@ -2,17 +2,17 @@ use crate::hardware::alu::add_u8;
 use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::Ram;
 use crate::hardware::register_bank::{DoubleRegisters, SingleRegisters};
-use crate::instructions::changeset::{BitFlagsChange, Change, ChangeList, ChangesetInstruction, MemoryByteWriteChange, SingleRegisterChange};
+use crate::instructions::changeset::{BitFlagsChange, Change, ChangeList, ChangesetInstruction, DoubleRegisterChange, MemoryByteWriteChange, MemoryDoubleByteWriteChange, SingleRegisterChange, SpChange};
 
 use super::{ACC_REGISTER, ExecutionError};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub(crate) enum ByteSource {
 	Acc,
-	SingleRegister { single_reg: SingleRegisters },
-	MemoryRegister { address_register: DoubleRegisters },
-	MemoryImmediate { address_immediate: u16 },
-	Immediate { value: u8 },
+	SingleRegister(SingleRegisters),
+	AddressInRegister(DoubleRegisters),
+	AddressInImmediate(u16),
+	Immediate(u8),
 }
 
 impl ByteSource {
@@ -21,39 +21,37 @@ impl ByteSource {
 	}
 
 	pub(crate) fn read_from_single(single_reg: SingleRegisters) -> Self {
-		Self::SingleRegister { single_reg }
+		Self::SingleRegister(single_reg)
 	}
 
 	pub(crate) fn read_from_register_address(address_register: DoubleRegisters) -> Self {
-		Self::MemoryRegister {
-			address_register,
-		}
+		Self::AddressInRegister(address_register)
 	}
 
 	fn read_from_immediate_address(address_immediate: u16) -> Self {
-		Self::MemoryImmediate { address_immediate }
+		Self::AddressInImmediate(address_immediate)
 	}
 
 	fn read_from_immediate(value: u8) -> Self {
-		Self::Immediate { value }
+		Self::Immediate(value)
 	}
 
 	pub(super) fn read(&self, cpu: &Cpu) -> Result<u8, ExecutionError> {
 		match self {
 			Self::Acc => Ok(cpu.register_bank.read_single_named(ACC_REGISTER)),
-			Self::SingleRegister { single_reg } => {
+			Self::SingleRegister(single_reg) => {
 				Ok(cpu.register_bank.read_single_named(*single_reg))
 			}
-			Self::MemoryRegister { address_register } => {
+			Self::AddressInRegister(address_register) => {
 				let address = cpu.register_bank.read_double_named(*address_register);
 				let result = cpu.mapped_ram.read_byte(address)?;
 				Ok(result)
 			},
-			Self::MemoryImmediate { address_immediate } => {
+			Self::AddressInImmediate(address_immediate) => {
 				let result = cpu.mapped_ram.read_byte(*address_immediate)?;
 				Ok(result)
 			},
-			Self::Immediate { value } => Ok(*value),
+			Self::Immediate(value) => Ok(*value),
 		}
 	}
 }
@@ -61,9 +59,9 @@ impl ByteSource {
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub(crate) enum ByteDestination {
 	Acc,
-	SingleRegister { single_reg: SingleRegisters },
-	MemoryImmediate { address_immediate: u16 },
-	MemoryRegister { double_reg: DoubleRegisters }
+	SingleRegister(SingleRegisters),
+	MemoryImmediate(u16),
+	AddressInRegister(DoubleRegisters)
 }
 
 impl ByteDestination {
@@ -72,21 +70,21 @@ impl ByteDestination {
 	}
 
 	fn write_to_single(single_reg: SingleRegisters) -> Self {
-		Self::SingleRegister { single_reg }
+		Self::SingleRegister(single_reg)
 	}
 
 	fn write_to_address_register(double_reg: DoubleRegisters) -> Self {
-		Self::MemoryRegister { double_reg }
+		Self::AddressInRegister(double_reg)
 	}
 
 	pub(super) fn change_destination(&self, value: u8) -> Box<dyn Change> {
 		match self {
 			Self::Acc => Box::new(SingleRegisterChange::new(ACC_REGISTER, value)),
-			Self::SingleRegister { single_reg } => Box::new(SingleRegisterChange::new(*single_reg, value)),
-			Self::MemoryImmediate { address_immediate } => {
+			Self::SingleRegister(single_reg) => Box::new(SingleRegisterChange::new(*single_reg, value)),
+			Self::MemoryImmediate(address_immediate) => {
 				Box::new(MemoryByteWriteChange::write_to_immediate(*address_immediate, value))
 			},
-			Self::MemoryRegister { double_reg } => {
+			Self::AddressInRegister(double_reg) => {
 				Box::new(MemoryByteWriteChange::write_to_register(*double_reg, value))
 			}
 		}
@@ -138,6 +136,7 @@ pub(crate) enum DoubleByteSource {
 	DoubleRegister(DoubleRegisters),
 	Immediate(u16),
 	StackPointer,
+	AddressInRegister(DoubleRegisters)
 }
 
 impl DoubleByteSource {
@@ -163,6 +162,11 @@ impl DoubleByteSource {
 			},
 			Self::StackPointer => {
 				Ok(cpu.sp.read())
+			},
+			Self::AddressInRegister(double_register) => {
+				let address = cpu.register_bank.read_double_named(*double_register);
+				let value = cpu.mapped_ram.read_double_byte(address)?;
+				Ok(value)
 			}
 		}
 	}
@@ -172,24 +176,24 @@ impl DoubleByteSource {
 pub(crate) enum DoubleByteDestination {
 	DoubleRegister(DoubleRegisters),
 	StackPointer,
-	MemoryImmediate(u16),
+	AddressInImmediate(u16),
+	AddressInRegister(DoubleRegisters)
 }
 
 impl DoubleByteDestination {
-	fn write_to_double_register(double_register: DoubleRegisters) -> Self {
-		Self::DoubleRegister(double_register)
-	}
-
-	fn write_to_sp() -> Self {
-		Self::StackPointer
-	}
-
-	fn write_to_memory_immediate_address(address: u16) -> Self {
-		Self::MemoryImmediate(address)
-	}
-
-	pub(super) fn change_destination(&self, value: u16) -> Result<Box<dyn Change>, ExecutionError> {
-		todo!()
+	pub(crate) fn change_destination(&self, value: u16) -> Box<dyn Change> {
+		match self {
+			Self::DoubleRegister(double_register) => {
+				Box::new(DoubleRegisterChange::new(*double_register, value))
+			},
+			Self::StackPointer => {
+				Box::new(SpChange::new(value))
+			},
+			Self::AddressInImmediate(address) => {
+				Box::new(MemoryDoubleByteWriteChange::write_to_immediate_address(*address, value))
+			}
+			_ => todo!()
+		}
 	}
 }
 

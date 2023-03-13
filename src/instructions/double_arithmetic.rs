@@ -23,7 +23,7 @@ impl BinaryDoubleOperation for BinaryDoubleAddOperation {
 		let high_alu_result = add_u8(high_left_value, high_right_value);
 
 		Ok(Box::new(ChangeList::new(vec![
-			dst.change_destination(result)?,
+			dst.change_destination(result),
 			Box::new(
 				BitFlagsChange::keep_all()
 					.with_subtraction_flag(false)

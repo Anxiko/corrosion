@@ -3,10 +3,11 @@ use crate::decoder::prefixed::{decode_prefixed_shifting, decode_prefixed_single_
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::{BitFlags, DoubleRegisters, SingleRegisters};
 use crate::instructions::{ExecutionError, Instruction};
-use crate::instructions::base::{ByteSource, DoubleByteDestination, DoubleByteSource};
+use crate::instructions::base::{ByteDestination, ByteSource, DoubleByteDestination, DoubleByteSource};
 use crate::instructions::control::{NopInstruction, StopInstruction};
 use crate::instructions::double_arithmetic::{BinaryDoubleAddInstruction, BinaryDoubleAddOperation};
 use crate::instructions::jump::{JumpInstruction, JumpInstructionCondition, JumpInstructionDestination};
+use crate::instructions::load::byte_load::{ByteLoadIndex, ByteLoadInstruction, ByteLoadOperation, ByteLoadUpdate, ByteLoadUpdateType};
 use crate::instructions::load::double_byte_load::{DoubleByteLoadInstruction, DoubleByteLoadOperation};
 use crate::instructions::single_bit::SingleBitOperation;
 
@@ -138,6 +139,79 @@ fn decode_opcode(
 										double_register_operand.into(),
 										DoubleByteDestination::DoubleRegister(DoubleRegisters::HL),
 										BinaryDoubleAddOperation,
+									)))
+								}
+							}
+						},
+						[false, true, false] /* z = 2 */ => {
+							let [y0, y1, y2] = y;
+							let q = y0;
+							let p = [y1, y2];
+
+							match p[1] {
+								false /* 0 <= p < 2*/ => {
+									let register_address = match p[0] {
+										false /* p = 0 */ => {
+											DoubleRegisters::BC
+										},
+										true /* p = 1 */ => {
+											DoubleRegisters::DE
+										}
+									};
+
+									let (destination, source) = match q {
+										false /* q = 0 */ => {
+											(
+												ByteDestination::AddressInRegister(register_address),
+												ByteSource::Acc
+											)
+										},
+										true /* q = 1 */ => {
+											(
+												ByteDestination::Acc,
+												ByteSource::AddressInRegister(register_address)
+											)
+										}
+									};
+
+									Ok(Box::new(ByteLoadInstruction::new(
+										source, destination, ByteLoadOperation::no_update(),
+									)))
+								}
+								true /* 2 <= p < 4 */ => {
+									let update_type = match p[0] {
+										false /* p = 3 */ => {
+											ByteLoadUpdateType::Increment
+										}
+										true /* p = 4 */ => {
+											ByteLoadUpdateType::Decrement
+										}
+									};
+
+									let update = ByteLoadUpdate::new(
+										ByteLoadIndex::DoubleRegister(DoubleRegisters::HL),
+										update_type,
+									);
+
+									let operation = ByteLoadOperation::with_update(update);
+
+									let (destination, source) = match q {
+										false /* q = 0 */ => {
+											(
+												ByteDestination::AddressInRegister(DoubleRegisters::HL),
+												ByteSource::Acc
+											)
+										}
+										true /* q = 1 */ => {
+											(
+												ByteDestination::Acc,
+												ByteSource::AddressInRegister(DoubleRegisters::HL)
+											)
+										}
+									};
+
+									Ok(Box::new(ByteLoadInstruction::new(
+										source, destination, operation,
 									)))
 								}
 							}

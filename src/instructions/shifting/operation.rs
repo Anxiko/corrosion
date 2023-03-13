@@ -136,9 +136,7 @@ fn zero_flag() {
 		ByteShiftOperation::new(ShiftDirection::Right, ShiftType::Rotate).compute_changes(
 			0,
 			false,
-			&ByteDestination::SingleRegister {
-				single_reg: SingleRegisters::B
-			},
+			&ByteDestination::SingleRegister(SingleRegisters::B),
 		),
 		ChangeList::new(vec![
 			Box::new(SingleRegisterChange::new(SingleRegisters::B, 0)),

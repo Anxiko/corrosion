@@ -7,13 +7,50 @@ use crate::instructions::{ACC_REGISTER, ExecutionError, Instruction};
 use crate::instructions::base::{BaseByteInstruction, ByteDestination, ByteOperation, ByteSource};
 use crate::instructions::changeset::{Change, ChangeList, ChangesetInstruction, DoubleRegisterChange, MemoryByteWriteChange, SingleRegisterChange};
 
-struct LoadByteOperation;
-
-impl LoadByteOperation {
-	fn new() -> Self { Self {} }
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub(crate) enum ByteLoadIndex {
+	Sp,
+	DoubleRegister(DoubleRegisters),
 }
 
-impl ByteOperation for LoadByteOperation {
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub(crate) enum ByteLoadUpdateType {
+	Increment,
+	Decrement,
+}
+
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub(crate) struct ByteLoadUpdate {
+	index: ByteLoadIndex,
+	type_: ByteLoadUpdateType,
+}
+
+impl ByteLoadUpdate {
+	pub(crate) fn new(index: ByteLoadIndex, type_: ByteLoadUpdateType) -> Self {
+		Self {
+			index,
+			type_,
+		}
+	}
+}
+
+pub(crate) struct ByteLoadOperation {
+	update: Option<ByteLoadUpdate>,
+}
+
+impl ByteLoadOperation {
+	pub(crate) fn new(update: Option<ByteLoadUpdate>) -> Self { Self { update } }
+
+	pub(crate) fn no_update() -> Self {
+		Self::new(None)
+	}
+
+	pub(crate) fn with_update(update: ByteLoadUpdate) -> Self {
+		Self { update: Some(update) }
+	}
+}
+
+impl ByteOperation for ByteLoadOperation {
 	type C = Box<dyn Change>;
 
 	fn execute(&self, cpu: &Cpu, src: &ByteSource, dst: &ByteDestination) -> Result<Self::C, ExecutionError> {
@@ -22,7 +59,7 @@ impl ByteOperation for LoadByteOperation {
 	}
 }
 
-type LoadByteInstruction = BaseByteInstruction<LoadByteOperation>;
+pub(crate) type ByteLoadInstruction = BaseByteInstruction<ByteLoadOperation>;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 enum LoadAndUpdateRegister {
@@ -129,8 +166,8 @@ impl ChangesetInstruction for LoadAndUpdateInstruction {
 fn load_operation() {
 	let mut cpu = Cpu::new();
 	cpu.register_bank.write_single_named(SingleRegisters::B, 0b1111_0000);
-	let result = LoadByteOperation::new().execute(
-		&cpu, &ByteSource::SingleRegister { single_reg: SingleRegisters::B }, &ByteDestination::Acc,
+	let result = ByteLoadOperation::no_update().execute(
+		&cpu, &ByteSource::SingleRegister(SingleRegisters::B), &ByteDestination::Acc,
 	).expect("Operation to execute");
 	let expected: Box<dyn Change> = Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b1111_0000));
 
@@ -148,10 +185,10 @@ fn load_instruction() {
 	let mut expected = cpu.clone();
 	expected.register_bank.write_single_named(ACC_REGISTER, 0b1111_0000);
 
-	let operation = LoadByteOperation::new();
+	let operation = ByteLoadOperation::no_update();
 
 	let instruction = BaseByteInstruction::new(
-		ByteSource::SingleRegister { single_reg: SingleRegisters::B },
+		ByteSource::SingleRegister(SingleRegisters::B),
 		ByteDestination::Acc,
 		operation,
 	);

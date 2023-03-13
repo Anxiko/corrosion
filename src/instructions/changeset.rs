@@ -7,6 +7,7 @@ use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::Ram;
 use crate::hardware::register_bank::{BitFlags, DoubleRegisters, SingleRegisters};
 use crate::instructions::{ExecutionError, Instruction};
+use crate::instructions::base::DoubleByteSource;
 
 #[dyn_partial_eq]
 pub(crate) trait Change: Debug {
@@ -231,19 +232,25 @@ impl Change for MemoryByteWriteChange {
 
 #[derive(Debug, PartialEq, DynPartialEq)]
 pub(super) struct MemoryDoubleByteWriteChange {
-	address: u16,
+	address_source: DoubleByteSource,
 	value: u16,
 }
 
 impl MemoryDoubleByteWriteChange {
+	pub(super) fn new(address_source: DoubleByteSource, value: u16) -> Self {
+		Self { address_source, value }
+	}
+
 	pub(super) fn write_to_immediate_address(address: u16, value: u16) -> Self {
-		Self { address, value }
+		Self::new(DoubleByteSource::Immediate(address), value)
 	}
 }
 
 impl Change for MemoryDoubleByteWriteChange {
 	fn commit_change(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
-		cpu.mapped_ram.write_double_byte(self.address, self.value)?;
+		let address = self.address_source.read(cpu)?;
+
+		cpu.mapped_ram.write_double_byte(address, self.value)?;
 		Ok(())
 	}
 }

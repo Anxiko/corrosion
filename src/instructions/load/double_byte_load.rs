@@ -18,7 +18,7 @@ impl DoubleByteOperation for DoubleByteLoadOperation {
 
 	fn execute(&self, cpu: &Cpu, src: &DoubleByteSource, dst: &DoubleByteDestination) -> Result<Self::C, ExecutionError> {
 		let value = src.read(cpu)?;
-		dst.change_destination(value)
+		Ok(dst.change_destination(value))
 	}
 }
 
