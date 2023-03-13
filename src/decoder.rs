@@ -5,7 +5,7 @@ use crate::hardware::register_bank::{BitFlags, DoubleRegisters, SingleRegisters}
 use crate::instructions::{ExecutionError, Instruction};
 use crate::instructions::base::{ByteDestination, ByteSource, DoubleByteDestination, DoubleByteSource};
 use crate::instructions::control::{NopInstruction, StopInstruction};
-use crate::instructions::double_arithmetic::{BinaryDoubleAddInstruction, BinaryDoubleAddOperation};
+use crate::instructions::double_arithmetic::{BinaryDoubleAddInstruction, BinaryDoubleAddOperation, IncOrDecDoubleInstruction, IncOrDecDoubleOperation, IncOrDecDoubleType};
 use crate::instructions::jump::{JumpInstruction, JumpInstructionCondition, JumpInstructionDestination};
 use crate::instructions::load::byte_load::{ByteLoadIndex, ByteLoadInstruction, ByteLoadOperation, ByteLoadUpdate, ByteLoadUpdateType};
 use crate::instructions::load::double_byte_load::{DoubleByteLoadInstruction, DoubleByteLoadOperation};
@@ -215,7 +215,24 @@ fn decode_opcode(
 									)))
 								}
 							}
-						}
+						},
+						[true, true, false] /* z = 3 */ => {
+							let (p, q) = decode_pq(y);
+
+							let decoded_double_operator = DecodedInstructionDoubleRegister::from_opcode_part_double_or_sp(p);
+
+
+							let inc_or_dec_type = match q {
+								false => IncOrDecDoubleType::Increment,
+								true => IncOrDecDoubleType::Decrement
+							};
+
+							Ok(Box::new(IncOrDecDoubleInstruction::new(
+								decoded_double_operator.into(),
+								decoded_double_operator.into(),
+								IncOrDecDoubleOperation::new(inc_or_dec_type),
+							)))
+						},
 						_ => todo!()
 					}
 				}
@@ -223,6 +240,13 @@ fn decode_opcode(
 			}
 		}
 	}
+}
+
+fn decode_pq(y: [bool; 3]) -> ([bool; 2], bool) {
+	let [y0, y1, y2] = y;
+	let q = y0;
+	let p = [y1, y2];
+	(p, q)
 }
 
 fn load_next_u16(cpu: &mut Cpu) -> Result<u16, ExecutionError> {
