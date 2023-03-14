@@ -43,8 +43,14 @@ impl ChangesetInstruction for PushInstruction {
 	}
 }
 
-struct PopInstruction {
-	destination: DoubleRegisters,
+pub(crate) struct PopInstruction {
+	destination: DoubleByteDestination,
+}
+
+impl PopInstruction {
+	pub(crate) fn new(destination: DoubleByteDestination) -> Self {
+		Self { destination }
+	}
 }
 
 impl ChangesetInstruction for PopInstruction {
@@ -56,7 +62,7 @@ impl ChangesetInstruction for PopInstruction {
 		let address = address.wrapping_add(2);
 
 		Ok(ChangeList::new(vec![
-			Box::new(DoubleRegisterChange::new(self.destination, value)),
+			Box::new(self.destination.change_destination(value)),
 			Box::new(SpChange::new(address)),
 		]))
 	}

@@ -15,7 +15,7 @@ use crate::instructions::double_arithmetic::{AddSignedByteToDouble, BinaryDouble
 use crate::instructions::flags::ChangeCarryFlag;
 use crate::instructions::jump::{BranchCondition, JumpInstruction, JumpInstructionDestination, ReturnInstruction};
 use crate::instructions::load::byte_load::{ByteLoadIndex, ByteLoadInstruction, ByteLoadOperation, ByteLoadUpdate, ByteLoadUpdateType};
-use crate::instructions::load::double_byte_load::{DoubleByteLoadInstruction, DoubleByteLoadOperation};
+use crate::instructions::load::double_byte_load::{DoubleByteLoadInstruction, DoubleByteLoadOperation, PopInstruction};
 use crate::instructions::logical::{BinaryLogicalInstruction, BinaryLogicalOperation, BinaryLogicalOperationType, Negate};
 use crate::instructions::shifting::{ByteShiftInstruction, ByteShiftOperation, ShiftDirection, ShiftType};
 use crate::instructions::single_bit::SingleBitOperation;
@@ -105,7 +105,7 @@ fn decode_opcode(
 									let delta = load_next_i8(cpu)?;
 
 									Ok(Box::new(JumpInstruction::new(
-										JumpInstructionDestination::Relative(delta),
+										JumpInstructionDestination::RelativeToPc(delta),
 										BranchCondition::Unconditional,
 									)))
 								}
@@ -118,7 +118,7 @@ fn decode_opcode(
 									let delta = load_next_i8(cpu)?;
 
 									Ok(Box::new(JumpInstruction::new(
-										JumpInstructionDestination::Relative(delta),
+										JumpInstructionDestination::RelativeToPc(delta),
 										BranchCondition::TestFlag { flag, branch_if_equals },
 									)))
 								}
@@ -130,7 +130,7 @@ fn decode_opcode(
 							let p = [y1, y2];
 
 							let double_register_operand =
-								DecodedInstructionDoubleRegister::from_opcode_part_double_or_sp(p);
+								DecodedInstructionDoubleOperand::from_opcode_part_double_or_sp(p);
 
 							match q {
 								false => {
@@ -228,7 +228,7 @@ fn decode_opcode(
 						[true, true, false] /* z = 3 */ => {
 							let (p, q) = decode_pq(y);
 
-							let decoded_double_operator = DecodedInstructionDoubleRegister::from_opcode_part_double_or_sp(p);
+							let decoded_double_operator = DecodedInstructionDoubleOperand::from_opcode_part_double_or_sp(p);
 
 
 							let inc_or_dec_type = match q {
@@ -366,6 +366,60 @@ fn decode_opcode(
 									)))
 								}
 							}
+						},
+						[true, false, false] /* z = 1 */ => {
+							let (p, q) = decode_pq(y);
+
+							match q {
+								false => {
+									let decoded_double_operand = DecodedInstructionDoubleOperand::from_opcode_part_double_or_af(p);
+
+									Ok(Box::new(PopInstruction::new(
+										decoded_double_operand.into()
+									)))
+								},
+								true => {
+									match p {
+										[p0, false] /* 0 <= p < 2 */ => {
+											let enable_interrupts = p0;
+											Ok(Box::new(ReturnInstruction::new(
+												BranchCondition::Unconditional,
+												enable_interrupts,
+											)))
+										}
+										[false, true] /* p = 2 */ => {
+											Ok(Box::new(JumpInstruction::new(
+												JumpInstructionDestination::FromSource(
+													DoubleByteSource::DoubleRegister(DoubleRegisters::HL)
+												),
+												BranchCondition::Unconditional,
+											)))
+										},
+										[true, true] /* p = 3 */ => {
+											Ok(Box::new(DoubleByteLoadInstruction::new(
+												DoubleByteSource::DoubleRegister(DoubleRegisters::HL),
+												DoubleByteDestination::StackPointer,
+												DoubleByteLoadOperation::new(),
+											)))
+										}
+									}
+								}
+							}
+						},
+						[false, true, false] /* z = 2 */ => {
+							match y {
+								[y0, y1, false] /* 0 <= y < 4 */ => {
+									let (flag, value) = decode_conditional([y0, y1]);
+									let branch_conditon = BranchCondition::TestFlag { flag, branch_if_equals: value };
+									let address = load_next_u16(cpu)?;
+
+									Ok(Box::new(JumpInstruction::new(
+										JumpInstructionDestination::FromSource(DoubleByteSource::Immediate(address)),
+										branch_conditon,
+									)))
+								},
+								_ => todo!()
+							}
 						}
 						_ => todo!()
 					}
@@ -441,13 +495,13 @@ impl From<DecodedInstructionOperand> for ByteDestination {
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
-enum DecodedInstructionDoubleRegister {
+enum DecodedInstructionDoubleOperand {
 	DoubleRegister(DoubleRegisters),
 	Sp,
 	Af,
 }
 
-impl DecodedInstructionDoubleRegister {
+impl DecodedInstructionDoubleOperand {
 	fn from_opcode_maybe_double(opcode_part: [bool; 2]) -> Option<DoubleRegisters> {
 		match opcode_part {
 			[false, false] => Some(DoubleRegisters::BC),
@@ -468,22 +522,22 @@ impl DecodedInstructionDoubleRegister {
 	}
 }
 
-impl From<DecodedInstructionDoubleRegister> for DoubleByteSource {
-	fn from(value: DecodedInstructionDoubleRegister) -> Self {
+impl From<DecodedInstructionDoubleOperand> for DoubleByteSource {
+	fn from(value: DecodedInstructionDoubleOperand) -> Self {
 		match value {
-			DecodedInstructionDoubleRegister::DoubleRegister(double_reg) => Self::DoubleRegister(double_reg),
-			DecodedInstructionDoubleRegister::Af => Self::DoubleRegister(DoubleRegisters::AF),
-			DecodedInstructionDoubleRegister::Sp => Self::StackPointer
+			DecodedInstructionDoubleOperand::DoubleRegister(double_reg) => Self::DoubleRegister(double_reg),
+			DecodedInstructionDoubleOperand::Af => Self::DoubleRegister(DoubleRegisters::AF),
+			DecodedInstructionDoubleOperand::Sp => Self::StackPointer
 		}
 	}
 }
 
-impl From<DecodedInstructionDoubleRegister> for DoubleByteDestination {
-	fn from(value: DecodedInstructionDoubleRegister) -> Self {
+impl From<DecodedInstructionDoubleOperand> for DoubleByteDestination {
+	fn from(value: DecodedInstructionDoubleOperand) -> Self {
 		match value {
-			DecodedInstructionDoubleRegister::DoubleRegister(double_reg) => Self::DoubleRegister(double_reg),
-			DecodedInstructionDoubleRegister::Af => Self::DoubleRegister(DoubleRegisters::AF),
-			DecodedInstructionDoubleRegister::Sp => Self::StackPointer
+			DecodedInstructionDoubleOperand::DoubleRegister(double_reg) => Self::DoubleRegister(double_reg),
+			DecodedInstructionDoubleOperand::Af => Self::DoubleRegister(DoubleRegisters::AF),
+			DecodedInstructionDoubleOperand::Sp => Self::StackPointer
 		}
 	}
 }

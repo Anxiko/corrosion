@@ -2,6 +2,7 @@ use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::{Ram, WORKING_RAM_START};
 use crate::hardware::register_bank::{BitFlags, DoubleRegisters};
 use crate::instructions::{ExecutionError, Instruction};
+use crate::instructions::base::DoubleByteSource;
 use crate::instructions::changeset::{Change, ChangeIme, ChangeList, ChangesetInstruction, NoChange, PcChange, SpChange};
 
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -12,9 +13,8 @@ pub(crate) enum BranchCondition {
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub(crate) enum JumpInstructionDestination {
-	Immediate(u16),
-	AddressOnHl,
-	Relative(i8),
+	FromSource(DoubleByteSource),
+	RelativeToPc(i8),
 }
 
 impl BranchCondition {
@@ -31,13 +31,10 @@ impl BranchCondition {
 impl JumpInstructionDestination {
 	fn resolve(&self, cpu: &Cpu) -> Result<u16, ExecutionError> {
 		match self {
-			Self::Immediate(address) => Ok(*address),
-			Self::AddressOnHl => {
-				let address = cpu.register_bank.read_double_named(DoubleRegisters::HL);
-				let destination = cpu.mapped_ram.read_double_byte(address)?;
-				Ok(destination)
-			},
-			Self::Relative(delta) => Ok(cpu.pc.read().wrapping_add_signed((*delta).into()))
+			Self::FromSource(source) => {
+				source.read(cpu)
+			}
+			Self::RelativeToPc(delta) => Ok(cpu.pc.read().wrapping_add_signed((*delta).into()))
 		}
 	}
 }
@@ -122,7 +119,7 @@ fn jump() {
 	let cpu = cpu;
 
 	let instruction = JumpInstruction::new(
-		JumpInstructionDestination::Immediate(0xABCD),
+		JumpInstructionDestination::FromSource(DoubleByteSource::Immediate(0xABCD)),
 		BranchCondition::Unconditional,
 	);
 
@@ -132,7 +129,7 @@ fn jump() {
 	assert_eq!(actual, expected);
 
 	let instruction = JumpInstruction::new(
-		JumpInstructionDestination::AddressOnHl,
+		JumpInstructionDestination::FromSource(DoubleByteSource::AddressInRegister(DoubleRegisters::HL)),
 		BranchCondition::TestFlag { flag: BitFlags::Zero, branch_if_equals: true },
 	);
 
@@ -142,7 +139,7 @@ fn jump() {
 	assert_eq!(actual, expected);
 
 	let instruction = JumpInstruction::new(
-		JumpInstructionDestination::Relative(-0x7F),
+		JumpInstructionDestination::RelativeToPc(-0x7F),
 		BranchCondition::TestFlag { flag: BitFlags::Carry, branch_if_equals: false },
 	);
 
@@ -152,7 +149,7 @@ fn jump() {
 	assert_eq!(actual, expected);
 
 	let instruction = JumpInstruction::new(
-		JumpInstructionDestination::Relative(-0x7F),
+		JumpInstructionDestination::RelativeToPc(-0x7F),
 		BranchCondition::TestFlag { flag: BitFlags::Carry, branch_if_equals: true },
 	);
 

@@ -7,6 +7,12 @@ use crate::instructions::ExecutionError;
 
 pub(crate) struct BinaryDoubleAddOperation;
 
+impl BinaryDoubleAddOperation {
+	pub(crate) fn new() -> Self {
+		Self
+	}
+}
+
 impl BinaryDoubleOperation for BinaryDoubleAddOperation {
 	type C = Box<dyn Change>;
 
