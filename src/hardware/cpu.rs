@@ -1,3 +1,4 @@
+use crate::hardware::ime::Ime;
 use crate::hardware::ram::Ram;
 use crate::hardware::register_bank::{ProgramCounter, StackPointer};
 use crate::instructions::ExecutionError;
@@ -11,6 +12,7 @@ pub struct Cpu {
 	pub mapped_ram: MappedRam,
 	pub(crate) pc: ProgramCounter,
 	pub(crate) sp: StackPointer,
+	pub(crate) ime: Ime,
 }
 
 impl Cpu {
@@ -20,6 +22,7 @@ impl Cpu {
 			mapped_ram: MappedRam::new(),
 			pc: ProgramCounter::new(),
 			sp: StackPointer::new(),
+			ime: Ime::new()
 		}
 	}
 

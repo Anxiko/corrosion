@@ -12,7 +12,7 @@ use crate::instructions::base::{ByteDestination, ByteSource, DoubleByteDestinati
 use crate::instructions::control::{HaltInstruction, NopInstruction, StopInstruction};
 use crate::instructions::double_arithmetic::{BinaryDoubleAddInstruction, BinaryDoubleAddOperation, IncOrDecDoubleInstruction, IncOrDecDoubleOperation, IncOrDecDoubleType};
 use crate::instructions::flags::ChangeCarryFlag;
-use crate::instructions::jump::{JumpInstruction, JumpInstructionCondition, JumpInstructionDestination};
+use crate::instructions::jump::{BranchCondition, JumpInstruction, JumpInstructionDestination, ReturnInstruction};
 use crate::instructions::load::byte_load::{ByteLoadIndex, ByteLoadInstruction, ByteLoadOperation, ByteLoadUpdate, ByteLoadUpdateType};
 use crate::instructions::load::double_byte_load::{DoubleByteLoadInstruction, DoubleByteLoadOperation};
 use crate::instructions::logical::{BinaryLogicalInstruction, BinaryLogicalOperation, BinaryLogicalOperationType, Negate};
@@ -105,7 +105,7 @@ fn decode_opcode(
 
 									Ok(Box::new(JumpInstruction::new(
 										JumpInstructionDestination::Relative(delta),
-										JumpInstructionCondition::Unconditional,
+										BranchCondition::Unconditional,
 									)))
 								}
 								[y0, y1, true]/* 4 <= y < 8 */ => {
@@ -118,7 +118,7 @@ fn decode_opcode(
 
 									Ok(Box::new(JumpInstruction::new(
 										JumpInstructionDestination::Relative(delta),
-										JumpInstructionCondition::TestFlag { flag, branch_if_equals },
+										BranchCondition::TestFlag { flag, branch_if_equals },
 									)))
 								}
 							}
@@ -316,11 +316,24 @@ fn decode_opcode(
 						)))
 					}
 				},
-				[false, true] /* x = 2 */=> {
+				[false, true] /* x = 2 */ => {
 					let decoded_operand = DecodedInstructionOperand::from_opcode_part(z);
 					Ok(decode_byte_instruction(y, decoded_operand.into(), ByteDestination::Acc))
 				}
-				_ => todo!()
+				[true, true] /* x = 3 */ => {
+					match z {
+						[false, false, false] /* z = 0 */ => {
+							match y {
+								[y0, y1, false] /* 0 <= y < 4 */ => {
+									let (flag, value) = decode_conditional([y0, y1]);
+									Ok(Box::new(ReturnInstruction::ret_conditional(flag, value)))
+								},
+								_ => todo!()
+							}
+						}
+						_ => todo!()
+					}
+				}
 			}
 		}
 	}
@@ -477,6 +490,15 @@ fn decode_byte_instruction(op_part: [bool; 3], right: ByteSource, dst: ByteDesti
 			}
 		}
 	}
+}
+
+fn decode_conditional(op_part: [bool; 2]) -> (BitFlags, bool) {
+	let value = op_part[1];
+	let flag = match op_part[0] {
+		false => BitFlags::Zero,
+		true => BitFlags::Carry,
+	};
+	(flag, value)
 }
 
 impl From<ExecutionError> for DecoderError {

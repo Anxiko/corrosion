@@ -316,6 +316,24 @@ pub(super) trait ChangesetInstruction {
 	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError>;
 }
 
+#[derive(PartialEq, DynPartialEq, Debug)]
+pub(crate) struct ChangeIme {
+	value: bool,
+}
+
+impl ChangeIme {
+	pub(crate) fn new(value: bool) -> Self {
+		Self { value }
+	}
+}
+
+impl Change for ChangeIme {
+	fn commit_change(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
+		cpu.ime.write(self.value);
+		Ok(())
+	}
+}
+
 impl<T> Instruction for T
 	where
 		T: ChangesetInstruction,
