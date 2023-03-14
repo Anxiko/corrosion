@@ -3,6 +3,7 @@ use sdl2::log::log;
 use crate::bits::byte_to_bits;
 use crate::decoder::prefixed::{decode_prefixed_shifting, decode_prefixed_single_bit};
 use crate::hardware::cpu::Cpu;
+use crate::hardware::ram::IO_REGISTERS_MAPPING_START;
 use crate::hardware::register_bank::{BitFlags, DoubleRegisters, SingleRegisters};
 use crate::instructions::{ExecutionError, Instruction};
 use crate::instructions::arithmetic::{DecimalAdjust, IncOrDecInstruction, IncOrDecOperation, IncOrDecOperationType};
@@ -10,7 +11,7 @@ use crate::instructions::arithmetic::add::{Add, BinaryArithmeticInstruction, Bin
 use crate::instructions::arithmetic::sub::CompareInstruction;
 use crate::instructions::base::{ByteDestination, ByteSource, DoubleByteDestination, DoubleByteSource};
 use crate::instructions::control::{HaltInstruction, NopInstruction, StopInstruction};
-use crate::instructions::double_arithmetic::{BinaryDoubleAddInstruction, BinaryDoubleAddOperation, IncOrDecDoubleInstruction, IncOrDecDoubleOperation, IncOrDecDoubleType};
+use crate::instructions::double_arithmetic::{AddSignedByteToDouble, BinaryDoubleAddInstruction, BinaryDoubleAddOperation, IncOrDecDoubleInstruction, IncOrDecDoubleOperation, IncOrDecDoubleType};
 use crate::instructions::flags::ChangeCarryFlag;
 use crate::instructions::jump::{BranchCondition, JumpInstruction, JumpInstructionDestination, ReturnInstruction};
 use crate::instructions::load::byte_load::{ByteLoadIndex, ByteLoadInstruction, ByteLoadOperation, ByteLoadUpdate, ByteLoadUpdateType};
@@ -328,7 +329,42 @@ fn decode_opcode(
 									let (flag, value) = decode_conditional([y0, y1]);
 									Ok(Box::new(ReturnInstruction::ret_conditional(flag, value)))
 								},
-								_ => todo!()
+								[false, false, true] /* y = 4 */ => {
+									let offset = load_next_u8(cpu)?;
+
+									Ok(Box::new(ByteLoadInstruction::new(
+										ByteSource::Acc,
+										ByteDestination::MemoryImmediate(
+											IO_REGISTERS_MAPPING_START.wrapping_add(offset.into())
+										),
+										ByteLoadOperation::no_update(),
+									)))
+								},
+								[true, false, true] /* y = 5 */ => {
+									let delta = load_next_i8(cpu)?;
+
+									Ok(Box::new(AddSignedByteToDouble::add_to_sp(delta)))
+								},
+								[false, true, true] /* y = 6 */ => {
+									let offset = load_next_u8(cpu)?;
+
+									Ok(Box::new(ByteLoadInstruction::new(
+										ByteSource::AddressInImmediate(
+											IO_REGISTERS_MAPPING_START.wrapping_add(offset.into())
+										),
+										ByteDestination::Acc,
+										ByteLoadOperation::no_update(),
+									)))
+								},
+								[true, true, true] /* y = 7 */ => {
+									let offset = load_next_i8(cpu)?;
+
+									Ok(Box::new(AddSignedByteToDouble::new(
+										DoubleByteSource::StackPointer,
+										DoubleByteDestination::DoubleRegister(DoubleRegisters::HL),
+										offset,
+									)))
+								}
 							}
 						}
 						_ => todo!()

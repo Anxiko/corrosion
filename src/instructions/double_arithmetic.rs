@@ -1,4 +1,4 @@
-use crate::hardware::alu::add_u8;
+use crate::hardware::alu::{add_u8, delta_u8};
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::DoubleRegisters;
 use crate::instructions::base::{BaseDoubleByteInstruction, BinaryDoubleOperation, DoubleByteDestination, DoubleByteOperation, DoubleByteSource};
@@ -106,3 +106,40 @@ impl DoubleByteOperation for IncOrDecDoubleOperation {
 }
 
 pub(crate) type IncOrDecDoubleInstruction = BaseDoubleByteInstruction<IncOrDecDoubleOperation>;
+
+pub(crate) struct AddSignedByteToDouble {
+	src: DoubleByteSource,
+	dst: DoubleByteDestination,
+	delta: i8,
+}
+
+impl AddSignedByteToDouble {
+	pub(crate) fn new(src: DoubleByteSource, dst: DoubleByteDestination, delta: i8) -> Self {
+		Self { src, dst, delta }
+	}
+
+	pub(crate) fn add_to_sp(delta: i8) -> Self {
+		Self::new(DoubleByteSource::StackPointer, DoubleByteDestination::StackPointer, delta)
+	}
+}
+
+impl ChangesetInstruction for AddSignedByteToDouble {
+	type C = ChangeList;
+
+	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError> {
+		let value = self.src.read(cpu)?;
+		let value_lower = value.to_le_bytes()[0];
+
+		let result = value.wrapping_add_signed(self.delta.into());
+		let lower_result = delta_u8(value_lower, self.delta);
+
+		let bitflag_changes = BitFlagsChange::from(lower_result)
+			.with_zero_flag(false)
+			.with_subtraction_flag(false);
+
+		Ok(ChangeList::new(vec![
+			self.dst.change_destination(result),
+			Box::new(bitflag_changes),
+		]))
+	}
+}
