@@ -321,7 +321,7 @@ fn decode_opcode(
 				},
 				[false, true] /* x = 2 */ => {
 					let decoded_operand = DecodedInstructionOperand::from_opcode_part(z);
-					Ok(decode_byte_instruction(y, decoded_operand.into(), ByteDestination::Acc))
+					Ok(decode_byte_instruction(y, decoded_operand.into()))
 				}
 				[true, true] /* x = 3 */ => {
 					match z {
@@ -520,6 +520,10 @@ fn decode_opcode(
 									}
 								}
 							}
+						},
+						[false, true, true] /* z = 6 */ => {
+							let immediate = load_next_u8(cpu)?;
+							Ok(decode_byte_instruction(y, ByteSource::Immediate(immediate)))
 						}
 						_ => todo!()
 					}
@@ -652,7 +656,9 @@ fn decode_xyz(opcode: u8) -> ([bool; 2], [bool; 3], [bool; 3]) {
 	(x, y, z)
 }
 
-fn decode_byte_instruction(op_part: [bool; 3], right: ByteSource, dst: ByteDestination) -> Box<dyn Instruction> {
+fn decode_byte_instruction(op_part: [bool; 3], right: ByteSource) -> Box<dyn Instruction> {
+	let dst = ByteDestination::Acc;
+
 	match op_part {
 		[op0, op1, false] /* 0 <= op < 4 */ => {
 			let use_carry = op1;
