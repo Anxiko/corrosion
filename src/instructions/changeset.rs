@@ -214,6 +214,7 @@ impl Change for Box<dyn Change> {
 enum MemoryByteWriteAddress {
 	Immediate(u16),
 	Register(DoubleRegisters),
+	OffsetRegister { base: u16, register: SingleRegisters },
 }
 
 impl MemoryByteWriteAddress {
@@ -240,6 +241,10 @@ impl MemoryByteWriteChange {
 
 	pub(super) fn write_to_register(double_register: DoubleRegisters, value: u8) -> Self {
 		Self { address: MemoryByteWriteAddress::Register(double_register), value }
+	}
+
+	pub(super) fn write_to_offset(base: u16, register: SingleRegisters, value: u8) -> Self {
+		Self { address: MemoryByteWriteAddress::OffsetRegister { base, register }, value }
 	}
 }
 

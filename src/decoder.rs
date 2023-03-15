@@ -334,7 +334,7 @@ fn decode_opcode(
 
 									Ok(Box::new(ByteLoadInstruction::new(
 										ByteSource::Acc,
-										ByteDestination::MemoryImmediate(
+										ByteDestination::AddressImmediate(
 											IO_REGISTERS_MAPPING_START.wrapping_add(offset.into())
 										),
 										ByteLoadOperation::no_update(),
@@ -418,7 +418,50 @@ fn decode_opcode(
 										branch_conditon,
 									)))
 								},
-								_ => todo!()
+								[false, y1, true] /* y in {4, 6} */ => {
+									let base = IO_REGISTERS_MAPPING_START;
+									let offset = SingleRegisters::C;
+
+
+									let (src, dst) = match y1 {
+										false => {
+											(
+												ByteSource::Acc,
+												ByteDestination::OffsetAddressInRegister { base, offset }
+											)
+										},
+										true => {
+											(
+												ByteSource::OffsetAddressInRegister { base, offset },
+												ByteDestination::Acc
+											)
+										},
+									};
+
+									Ok(Box::new(ByteLoadInstruction::new(
+										src, dst, ByteLoadOperation::no_update(),
+									)))
+								},
+								[true, y1, true] /* y in {5, 7} */ => {
+									let address = load_next_u16(cpu)?;
+
+									let (src, dst) = match y1 {
+										false => {
+											(
+												ByteSource::Acc,
+												ByteDestination::AddressImmediate(address)
+											)
+										},
+										true => (
+											ByteSource::AddressInImmediate(address),
+											ByteDestination::Acc
+										)
+									};
+
+									Ok(Box::new(ByteLoadInstruction::new(
+										src, dst, ByteLoadOperation::no_update(),
+									)))
+								}
 							}
 						}
 						_ => todo!()

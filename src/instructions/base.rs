@@ -1,6 +1,6 @@
 use crate::hardware::alu::add_u8;
 use crate::hardware::cpu::Cpu;
-use crate::hardware::ram::Ram;
+use crate::hardware::ram::{IO_REGISTERS_MAPPING_START, Ram};
 use crate::hardware::register_bank::{DoubleRegisters, SingleRegisters};
 use crate::instructions::changeset::{BitFlagsChange, Change, ChangeList, ChangesetInstruction, DoubleRegisterChange, MemoryByteWriteChange, MemoryDoubleByteWriteChange, SingleRegisterChange, SpChange};
 
@@ -11,6 +11,7 @@ pub(crate) enum ByteSource {
 	Acc,
 	SingleRegister(SingleRegisters),
 	AddressInRegister(DoubleRegisters),
+	OffsetAddressInRegister { base: u16, offset: SingleRegisters },
 	AddressInImmediate(u16),
 	Immediate(u8),
 }
@@ -47,6 +48,12 @@ impl ByteSource {
 				let result = cpu.mapped_ram.read_byte(address)?;
 				Ok(result)
 			},
+			Self::OffsetAddressInRegister { base, offset } => {
+				let offset = cpu.register_bank.read_single_named(*offset);
+				let address = base.wrapping_add(offset.into());
+				let result = cpu.mapped_ram.read_byte(address)?;
+				Ok(result)
+			}
 			Self::AddressInImmediate(address_immediate) => {
 				let result = cpu.mapped_ram.read_byte(*address_immediate)?;
 				Ok(result)
@@ -60,8 +67,9 @@ impl ByteSource {
 pub(crate) enum ByteDestination {
 	Acc,
 	SingleRegister(SingleRegisters),
-	MemoryImmediate(u16),
-	AddressInRegister(DoubleRegisters)
+	AddressImmediate(u16),
+	AddressInRegister(DoubleRegisters),
+	OffsetAddressInRegister { base: u16, offset: SingleRegisters },
 }
 
 impl ByteDestination {
@@ -81,11 +89,14 @@ impl ByteDestination {
 		match self {
 			Self::Acc => Box::new(SingleRegisterChange::new(ACC_REGISTER, value)),
 			Self::SingleRegister(single_reg) => Box::new(SingleRegisterChange::new(*single_reg, value)),
-			Self::MemoryImmediate(address_immediate) => {
+			Self::AddressImmediate(address_immediate) => {
 				Box::new(MemoryByteWriteChange::write_to_immediate(*address_immediate, value))
 			},
 			Self::AddressInRegister(double_reg) => {
 				Box::new(MemoryByteWriteChange::write_to_register(*double_reg, value))
+			},
+			Self::OffsetAddressInRegister { base, offset } => {
+				Box::new(MemoryByteWriteChange::write_to_offset(*base, *offset, value))
 			}
 		}
 	}
