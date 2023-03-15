@@ -524,8 +524,10 @@ fn decode_opcode(
 						[false, true, true] /* z = 6 */ => {
 							let immediate = load_next_u8(cpu)?;
 							Ok(decode_byte_instruction(y, ByteSource::Immediate(immediate)))
+						},
+						[true, true, true] /* z = 7 */ => {
+							Ok(Box::new(CallInstruction::restart(y)))
 						}
-						_ => todo!()
 					}
 				}
 			}

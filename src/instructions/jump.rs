@@ -1,3 +1,4 @@
+use crate::bits::bits_to_byte;
 use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::{Ram, WORKING_RAM_START};
 use crate::hardware::register_bank::{BitFlags, DoubleRegisters};
@@ -125,6 +126,12 @@ impl CallInstruction {
 
 	pub(crate) fn call_conditional(flag: BitFlags, branch_if_equals: bool, address: u16) -> Self {
 		Self::new(BranchCondition::TestFlag { flag, branch_if_equals }, address)
+	}
+
+	pub(crate) fn restart(bits: [bool; 3]) -> Self {
+		let bits_as_byte: u16 = bits_to_byte(&bits).into();
+		let address = 8u16 * bits_as_byte;
+		Self::call(address)
 	}
 }
 
