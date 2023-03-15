@@ -10,7 +10,8 @@ use crate::instructions::arithmetic::{DecimalAdjust, IncOrDecInstruction, IncOrD
 use crate::instructions::arithmetic::add::{Add, BinaryArithmeticInstruction, BinaryArithmeticOperation, BinaryArithmeticOperationType};
 use crate::instructions::arithmetic::sub::CompareInstruction;
 use crate::instructions::base::{ByteDestination, ByteSource, DoubleByteDestination, DoubleByteSource};
-use crate::instructions::control::{HaltInstruction, NopInstruction, StopInstruction};
+use crate::instructions::changeset::ChangeIme;
+use crate::instructions::control::{HaltInstruction, NopInstruction, SetImeInstruction, StopInstruction};
 use crate::instructions::double_arithmetic::{AddSignedByteToDouble, BinaryDoubleAddInstruction, BinaryDoubleAddOperation, IncOrDecDoubleInstruction, IncOrDecDoubleOperation, IncOrDecDoubleType};
 use crate::instructions::flags::ChangeCarryFlag;
 use crate::instructions::jump::{BranchCondition, JumpInstruction, JumpInstructionDestination, ReturnInstruction};
@@ -23,7 +24,8 @@ use crate::instructions::single_bit::SingleBitOperation;
 mod prefixed;
 
 enum DecoderError {
-	ExecutionError(ExecutionError)
+	ExecutionError(ExecutionError),
+	InvalidOpcode(u8),
 }
 
 enum DecoderState {
@@ -463,6 +465,31 @@ fn decode_opcode(
 									)))
 								}
 							}
+						},
+						[true, true, false] /* z = 3 */ => {
+							match y {
+								[false, false, false] /* y = 0 */ => {
+									let address = load_next_u16(cpu)?;
+									Ok(Box::new(JumpInstruction::new(
+										JumpInstructionDestination::FromSource(DoubleByteSource::Immediate(address)),
+										BranchCondition::Unconditional,
+									)))
+								}
+								[y0, true, true] /* 6 <= y < 8 */ => {
+									let enable_interrupts = y0;
+
+									Ok(Box::new(SetImeInstruction::new(
+										enable_interrupts
+									)))
+								}
+								_ => {
+									Err(DecoderError::InvalidOpcode(opcode))
+								}
+							}
+						},
+						[false, false, true] /* z = 4 */ => {
+
+							todo!()
 						}
 						_ => todo!()
 					}
