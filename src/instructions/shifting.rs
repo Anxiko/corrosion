@@ -1,10 +1,8 @@
-﻿use std::assert_matches::assert_matches;
-
-use crate::hardware::cpu::Cpu;
-use crate::hardware::register_bank::{BitFlags, SingleRegisters};
-use crate::instructions::{ACC_REGISTER, ExecutionError, Instruction};
+﻿use crate::hardware::cpu::Cpu;
+use crate::hardware::register_bank::BitFlags;
 use crate::instructions::base::{BaseByteInstruction, ByteDestination, ByteOperation, ByteSource};
-use crate::instructions::changeset::{Change, ChangeList, SingleRegisterChange};
+use crate::instructions::changeset::{Change, ChangeList};
+use crate::instructions::ExecutionError;
 pub(crate) use crate::instructions::shifting::operation::{ByteShiftOperation, ShiftDirection, ShiftType};
 
 mod operation;

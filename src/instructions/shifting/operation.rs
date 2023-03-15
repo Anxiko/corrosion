@@ -1,8 +1,7 @@
-use crate::hardware::cpu::Cpu;
-use crate::hardware::register_bank::{BitFlags, SingleRegisters};
-use crate::instructions::{ACC_REGISTER, ExecutionError, Instruction};
-use crate::instructions::base::{ByteDestination, ByteOperation, ByteSource};
-use crate::instructions::changeset::{BitFlagsChange, Change, ChangeList, SingleRegisterChange};
+use crate::hardware::register_bank::SingleRegisters;
+use crate::instructions::ACC_REGISTER;
+use crate::instructions::base::ByteDestination;
+use crate::instructions::changeset::{BitFlagsChange, ChangeList};
 
 #[derive(Copy, Clone)]
 pub enum ShiftDirection {

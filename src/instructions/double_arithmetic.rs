@@ -1,6 +1,5 @@
 use crate::hardware::alu::{add_u8, delta_u8};
 use crate::hardware::cpu::Cpu;
-use crate::hardware::register_bank::DoubleRegisters;
 use crate::instructions::base::{BaseDoubleByteInstruction, BinaryDoubleOperation, DoubleByteDestination, DoubleByteOperation, DoubleByteSource};
 use crate::instructions::changeset::{BitFlagsChange, Change, ChangeList, ChangesetInstruction};
 use crate::instructions::ExecutionError;

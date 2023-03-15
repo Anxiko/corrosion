@@ -11,7 +11,7 @@ impl NopInstruction {
 }
 
 impl Instruction for NopInstruction {
-	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
+	fn execute(&self, _cpu: &mut Cpu) -> Result<(), ExecutionError> {
 		Ok(())
 	}
 }
@@ -25,7 +25,7 @@ impl StopInstruction {
 }
 
 impl Instruction for StopInstruction {
-	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
+	fn execute(&self, _cpu: &mut Cpu) -> Result<(), ExecutionError> {
 		todo!("Implement STOP instruction")
 	}
 }
@@ -39,7 +39,7 @@ impl HaltInstruction {
 }
 
 impl Instruction for HaltInstruction {
-	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
+	fn execute(&self, _cpu: &mut Cpu) -> Result<(), ExecutionError> {
 		todo!("Implement HALT instruction")
 	}
 }
@@ -57,7 +57,7 @@ impl SetImeInstruction {
 impl ChangesetInstruction for SetImeInstruction {
 	type C = ChangeIme;
 
-	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError> {
+	fn compute_change(&self, _cpu: &Cpu) -> Result<Self::C, ExecutionError> {
 		Ok(ChangeIme::new(self.value))
 	}
 }

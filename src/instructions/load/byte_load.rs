@@ -1,9 +1,7 @@
-use std::assert_matches::assert_matches;
-
 use crate::hardware::cpu::Cpu;
-use crate::hardware::ram::{Ram, WORKING_RAM_START};
-use crate::hardware::register_bank::{DoubleRegisters, SingleRegisters};
-use crate::instructions::{ACC_REGISTER, ExecutionError, Instruction};
+use crate::hardware::ram::Ram;
+use crate::hardware::register_bank::DoubleRegisters;
+use crate::instructions::{ACC_REGISTER, ExecutionError};
 use crate::instructions::base::{BaseByteInstruction, ByteDestination, ByteOperation, ByteSource};
 use crate::instructions::changeset::{Change, ChangeList, ChangesetInstruction, DoubleRegisterChange, MemoryByteWriteChange, SingleRegisterChange};
 

@@ -1,7 +1,7 @@
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::BitFlags;
 use crate::instructions::ACC_REGISTER;
-use crate::instructions::base::{ByteDestination, ByteSource};
+use crate::instructions::base::ByteDestination;
 use crate::instructions::changeset::{BitFlagsChange, Change, ChangeList};
 
 #[derive(PartialEq, Debug)]

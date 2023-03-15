@@ -314,7 +314,7 @@ impl NoChange {
 }
 
 impl Change for NoChange {
-	fn commit_change(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
+	fn commit_change(&self, _cpu: &mut Cpu) -> Result<(), ExecutionError> {
 		Ok(())
 	}
 }

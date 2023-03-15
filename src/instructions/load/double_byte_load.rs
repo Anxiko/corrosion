@@ -1,8 +1,7 @@
 use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::Ram;
-use crate::hardware::register_bank::DoubleRegisters;
 use crate::instructions::base::{BaseDoubleByteInstruction, DoubleByteDestination, DoubleByteOperation, DoubleByteSource};
-use crate::instructions::changeset::{Change, ChangeList, ChangesetInstruction, DoubleRegisterChange, MemoryDoubleByteWriteChange, SpChange};
+use crate::instructions::changeset::{Change, ChangeList, ChangesetInstruction, MemoryDoubleByteWriteChange, SpChange};
 use crate::instructions::ExecutionError;
 
 pub(crate) struct DoubleByteLoadOperation;

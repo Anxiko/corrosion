@@ -1,4 +1,4 @@
-use crate::hardware::alu::{add_u8, delta_u8};
+use crate::hardware::alu::delta_u8;
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::BitFlags;
 use crate::instructions::{ACC_REGISTER, ExecutionError};

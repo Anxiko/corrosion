@@ -4,7 +4,7 @@ use crate::hardware::register_bank::{BitFlags, DoubleRegisters, SingleRegisters}
 use crate::instructions::{ExecutionError, Instruction};
 use crate::instructions::ACC_REGISTER;
 use crate::instructions::arithmetic::operation::ArithmeticOperation;
-use crate::instructions::base::{BinaryDoubleOperation, BinaryInstruction, BinaryOperation, ByteDestination, ByteSource, DoubleByteDestination, DoubleByteSource};
+use crate::instructions::base::{BinaryInstruction, BinaryOperation, ByteDestination, ByteSource};
 use crate::instructions::changeset::{ChangeList, ChangesetInstruction};
 
 #[derive(Copy, Clone, Debug, PartialEq)]
