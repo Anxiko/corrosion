@@ -1,5 +1,5 @@
 use crate::instructions::base::ByteDestination;
-use crate::instructions::changeset::{BitFlagsChange, Change, ChangeList};
+use crate::instructions::changeset::{BitFlagsChange, Change};
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub(crate) struct AluU8Result {

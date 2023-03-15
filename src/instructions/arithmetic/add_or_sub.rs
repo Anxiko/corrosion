@@ -1,7 +1,6 @@
 use crate::hardware::alu::{add_with_carry_u8, AluU8Result, sub_u8_with_carry};
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::BitFlags;
-
 use crate::instructions::base::{BinaryInstruction, BinaryOperation, ByteDestination, ByteSource};
 use crate::instructions::changeset::ChangeList;
 use crate::instructions::ExecutionError;
@@ -54,3 +53,105 @@ impl BinaryOperation for BinaryArithmeticOperation {
 }
 
 pub(crate) type BinaryArithmeticInstruction = BinaryInstruction<BinaryArithmeticOperation>;
+
+#[cfg(test)]
+mod tests {
+	use crate::hardware::cpu::Cpu;
+	use crate::hardware::register_bank::{BitFlags, SingleRegisters};
+	use crate::instructions::arithmetic::add_or_sub::{BinaryArithmeticInstruction, BinaryArithmeticOperation, BinaryArithmeticOperationType};
+	use crate::instructions::base::{ByteDestination, ByteSource};
+	use crate::instructions::changeset::{BitFlagsChange, ChangeList, ChangesetInstruction, SingleRegisterChange};
+
+	#[test]
+	fn add() {
+		let mut cpu = Cpu::new();
+		cpu.register_bank.write_bit_flag(BitFlags::Carry, true);
+		cpu.register_bank.write_single_named(SingleRegisters::A, 0x12);
+		cpu.register_bank.write_single_named(SingleRegisters::B, 0x34);
+		let cpu = cpu;
+
+		let instruction = BinaryArithmeticInstruction::new(
+			ByteSource::SingleRegister(SingleRegisters::A),
+			ByteSource::SingleRegister(SingleRegisters::B),
+			ByteDestination::SingleRegister(SingleRegisters::A),
+			BinaryArithmeticOperation::new(BinaryArithmeticOperationType::Add, false),
+		);
+
+		let expected = ChangeList::new(vec![
+			Box::new(SingleRegisterChange::new(SingleRegisters::A, 0x46)),
+			Box::new(
+				BitFlagsChange::keep_all()
+					.with_zero_flag(false)
+					.with_half_carry_flag(false)
+					.with_carry_flag(false)
+					.with_subtraction_flag(false)
+			),
+		]);
+
+		let actual = instruction.compute_change(&cpu).expect("Compute changes");
+
+		assert_eq!(actual, expected);
+	}
+
+	#[test]
+	fn add_with_carry() {
+		let mut cpu = Cpu::new();
+		cpu.register_bank.write_bit_flag(BitFlags::Carry, true);
+		cpu.register_bank.write_single_named(SingleRegisters::A, 0x18);
+		cpu.register_bank.write_single_named(SingleRegisters::B, 0x37);
+		let cpu = cpu;
+
+		let instruction = BinaryArithmeticInstruction::new(
+			ByteSource::SingleRegister(SingleRegisters::A),
+			ByteSource::SingleRegister(SingleRegisters::B),
+			ByteDestination::SingleRegister(SingleRegisters::A),
+			BinaryArithmeticOperation::new(BinaryArithmeticOperationType::Add, true),
+		);
+
+		let expected = ChangeList::new(vec![
+			Box::new(SingleRegisterChange::new(SingleRegisters::A, 0x50)),
+			Box::new(
+				BitFlagsChange::keep_all()
+					.with_zero_flag(false)
+					.with_half_carry_flag(true)
+					.with_carry_flag(false)
+					.with_subtraction_flag(false)
+			),
+		]);
+
+		let actual = instruction.compute_change(&cpu).expect("Compute changes");
+
+		assert_eq!(actual, expected);
+	}
+
+	#[test]
+	fn sub() {
+		let mut cpu = Cpu::new();
+		cpu.register_bank.write_bit_flag(BitFlags::Carry, false);
+		cpu.register_bank.write_single_named(SingleRegisters::A, 0x18);
+		cpu.register_bank.write_single_named(SingleRegisters::B, 0x37);
+		let cpu = cpu;
+
+		let instruction = BinaryArithmeticInstruction::new(
+			ByteSource::SingleRegister(SingleRegisters::A),
+			ByteSource::SingleRegister(SingleRegisters::B),
+			ByteDestination::SingleRegister(SingleRegisters::A),
+			BinaryArithmeticOperation::new(BinaryArithmeticOperationType::Sub, true),
+		);
+
+		let expected = ChangeList::new(vec![
+			Box::new(SingleRegisterChange::new(SingleRegisters::A, 0xE1)),
+			Box::new(
+				BitFlagsChange::keep_all()
+					.with_zero_flag(false)
+					.with_half_carry_flag(false)
+					.with_carry_flag(true)
+					.with_subtraction_flag(true)
+			),
+		]);
+
+		let actual = instruction.compute_change(&cpu).expect("Compute changes");
+
+		assert_eq!(actual, expected);
+	}
+}
