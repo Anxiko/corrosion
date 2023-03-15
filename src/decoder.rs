@@ -20,11 +20,6 @@ use crate::instructions::single_bit::SingleBitOperation;
 
 mod prefixed;
 
-enum DecoderError {
-	ExecutionError(ExecutionError),
-	InvalidOpcode(u8),
-}
-
 enum DecoderState {
 	Empty,
 	WithPrefix { prefix: DecodedInstructionPrefix },
@@ -44,7 +39,7 @@ impl DecodedInstructionPrefix {
 	}
 }
 
-fn decoder(cpu: &mut Cpu) -> Result<Box<dyn Instruction>, DecoderError> {
+pub fn fetch_and_decode(cpu: &mut Cpu) -> Result<Box<dyn Instruction>, ExecutionError> {
 	let first_byte = cpu.next_byte()?;
 
 	let prefix = DecodedInstructionPrefix::try_decode_prefix(first_byte);
@@ -61,7 +56,7 @@ fn decoder(cpu: &mut Cpu) -> Result<Box<dyn Instruction>, DecoderError> {
 
 fn decode_opcode(
 	prefix: Option<DecodedInstructionPrefix>, opcode: u8, cpu: &mut Cpu,
-) -> Result<Box<dyn Instruction>, DecoderError> {
+) -> Result<Box<dyn Instruction>, ExecutionError> {
 	let (x, y, z) = decode_xyz(opcode);
 
 	match prefix {
@@ -480,7 +475,7 @@ fn decode_opcode(
 									)))
 								}
 								_ => {
-									Err(DecoderError::InvalidOpcode(opcode))
+									Err(ExecutionError::InvalidOpcode(opcode))
 								}
 							}
 						},
@@ -493,7 +488,7 @@ fn decode_opcode(
 										flag, branch_if_equals, address,
 									)))
 								},
-								_ => Err(DecoderError::InvalidOpcode(opcode))
+								_ => Err(ExecutionError::InvalidOpcode(opcode))
 							}
 						},
 						[true, false, true] /* z = 5 */ => {
@@ -513,7 +508,7 @@ fn decode_opcode(
 												address,
 											)))
 										},
-										_ => Err(DecoderError::InvalidOpcode(opcode))
+										_ => Err(ExecutionError::InvalidOpcode(opcode))
 									}
 								}
 							}
@@ -694,10 +689,4 @@ fn decode_conditional(op_part: [bool; 2]) -> (BitFlags, bool) {
 		true => BitFlags::Carry,
 	};
 	(flag, value)
-}
-
-impl From<ExecutionError> for DecoderError {
-	fn from(value: ExecutionError) -> Self {
-		DecoderError::ExecutionError(value)
-	}
 }

@@ -1,3 +1,6 @@
+use std::error::Error;
+use std::fmt::{Display, Formatter};
+
 use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::RamError;
 use crate::hardware::register_bank::SingleRegisters;
@@ -14,13 +17,27 @@ pub(crate) mod control;
 pub(crate) mod jump;
 pub(crate) mod double_arithmetic;
 
-pub(crate) trait Instruction {
+pub trait Instruction {
 	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError>;
 }
 
 #[derive(Debug)]
-pub(crate) enum ExecutionError {
+pub enum ExecutionError {
 	RamError(RamError),
+	InvalidOpcode(u8),
+}
+
+impl Display for ExecutionError {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Self::RamError(ram_error) => write!(f, "{ram_error}"),
+			Self::InvalidOpcode(opcode) => write!(f, "Invalid opcode {opcode:#06X}")
+		}
+	}
+}
+
+impl Error for ExecutionError {
+	
 }
 
 impl From<RamError> for ExecutionError {

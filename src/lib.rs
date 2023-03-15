@@ -3,5 +3,5 @@
 
 pub mod hardware;
 pub mod instructions;
-mod decoder;
+pub mod decoder;
 mod bits;

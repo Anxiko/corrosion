@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter};
+
 pub(crate) const VIDEO_RAM_START: u16 = 0x8000;
 pub(crate) const VRAM_TILE_DATA_START: u16 = 0x800;
 
@@ -32,7 +34,7 @@ pub(crate) trait Ram {
 }
 
 #[derive(Debug, Copy, Clone)]
-pub(crate) enum RamError {
+pub enum RamError {
 	InvalidAddress(u16),
 	UnmappedRegion(u16),
 }
@@ -46,12 +48,25 @@ impl RamError {
 	}
 }
 
+impl Display for RamError {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Self::UnmappedRegion(address) => {
+				write!(f, "No mapped RAM region for {address}")
+			},
+			Self::InvalidAddress(address) => {
+				write!(f, "Attempted to access invalid address {address}")
+			}
+		}
+	}
+}
+
 #[derive(Debug, PartialEq, Clone)]
 pub struct MappedRam {
 	working_ram: RamChip<WORKING_RAM_SIZE>,
 	video_ram: RamChip<VIDEO_RAM_SIZE>,
 	mapped_io_registers: MappedIoRegisters,
-	oam: RamChip<OAM_SIZE>
+	oam: RamChip<OAM_SIZE>,
 }
 
 #[derive(Copy, Clone)]
