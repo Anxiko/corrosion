@@ -6,7 +6,7 @@ use crate::hardware::register_bank::{BitFlags, DoubleRegisters, SingleRegisters}
 use crate::instructions::{ExecutionError, Instruction};
 use crate::instructions::arithmetic::add_or_sub::{BinaryArithmeticInstruction, BinaryArithmeticOperation, BinaryArithmeticOperationType};
 use crate::instructions::arithmetic::compare::CompareInstruction;
-use crate::instructions::arithmetic::DecimalAdjust;
+use crate::instructions::arithmetic::bcd::DecimalAdjust;
 use crate::instructions::arithmetic::inc_or_dec::{IncOrDecInstruction, IncOrDecOperation, IncOrDecOperationType};
 use crate::instructions::base::{ByteDestination, ByteSource, DoubleByteDestination, DoubleByteSource};
 use crate::instructions::control::{HaltInstruction, NopInstruction, SetImeInstruction, StopInstruction};
