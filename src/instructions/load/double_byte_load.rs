@@ -24,8 +24,14 @@ impl DoubleByteOperation for DoubleByteLoadOperation {
 
 pub(crate) type DoubleByteLoadInstruction = BaseDoubleByteInstruction<DoubleByteLoadOperation>;
 
-struct PushInstruction {
-	source: DoubleRegisters,
+pub(crate) struct PushInstruction {
+	source: DoubleByteSource,
+}
+
+impl PushInstruction {
+	pub(crate) fn new(source: DoubleByteSource) -> Self {
+		Self{source}
+	}
 }
 
 impl ChangesetInstruction for PushInstruction {
@@ -34,7 +40,7 @@ impl ChangesetInstruction for PushInstruction {
 	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError> {
 		let address = cpu.sp.read();
 		let address = address.wrapping_sub(2);
-		let value = cpu.register_bank.read_double_named(self.source);
+		let value = self.source.read(cpu)?;
 
 		Ok(ChangeList::new(vec![
 			Box::new(SpChange::new(address)),

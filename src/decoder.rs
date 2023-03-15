@@ -16,7 +16,7 @@ use crate::instructions::double_arithmetic::{AddSignedByteToDouble, BinaryDouble
 use crate::instructions::flags::ChangeCarryFlag;
 use crate::instructions::jump::{BranchCondition, CallInstruction, JumpInstruction, JumpInstructionDestination, ReturnInstruction};
 use crate::instructions::load::byte_load::{ByteLoadIndex, ByteLoadInstruction, ByteLoadOperation, ByteLoadUpdate, ByteLoadUpdateType};
-use crate::instructions::load::double_byte_load::{DoubleByteLoadInstruction, DoubleByteLoadOperation, PopInstruction};
+use crate::instructions::load::double_byte_load::{DoubleByteLoadInstruction, DoubleByteLoadOperation, PopInstruction, PushInstruction};
 use crate::instructions::logical::{BinaryLogicalInstruction, BinaryLogicalOperation, BinaryLogicalOperationType, Negate};
 use crate::instructions::shifting::{ByteShiftInstruction, ByteShiftOperation, ShiftDirection, ShiftType};
 use crate::instructions::single_bit::SingleBitOperation;
@@ -493,10 +493,32 @@ fn decode_opcode(
 									let address = load_next_u16(cpu)?;
 									let (flag, branch_if_equals) = decode_conditional([y0, y1]);
 									Ok(Box::new(CallInstruction::call_conditional(
-										flag, branch_if_equals, address
+										flag, branch_if_equals, address,
 									)))
 								},
 								_ => Err(DecoderError::InvalidOpcode(opcode))
+							}
+						},
+						[true, false, true] /* z = 5 */ => {
+							let (p, q) = decode_pq(y);
+
+							match q {
+								false => {
+									let decoded_operand = DecodedInstructionDoubleOperand::from_opcode_part_double_or_af(p);
+									Ok(Box::new(PushInstruction::new(decoded_operand.into())))
+								}
+								true => {
+									match p {
+										[false, false] /* p = 0 */ => {
+											let address = load_next_u16(cpu)?;
+											Ok(Box::new(CallInstruction::new(
+												BranchCondition::Unconditional,
+												address,
+											)))
+										},
+										_ => Err(DecoderError::InvalidOpcode(opcode))
+									}
+								}
 							}
 						}
 						_ => todo!()
