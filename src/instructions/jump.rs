@@ -3,7 +3,7 @@ use crate::hardware::ram::{Ram, WORKING_RAM_START};
 use crate::hardware::register_bank::{BitFlags, DoubleRegisters};
 use crate::instructions::{ExecutionError, Instruction};
 use crate::instructions::base::DoubleByteSource;
-use crate::instructions::changeset::{Change, ChangeIme, ChangeList, ChangesetInstruction, NoChange, PcChange, SpChange};
+use crate::instructions::changeset::{Change, ChangeIme, ChangeList, ChangesetInstruction, MemoryDoubleByteWriteChange, NoChange, PcChange, SpChange};
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub(crate) enum BranchCondition {
@@ -103,6 +103,50 @@ impl ChangesetInstruction for ReturnInstruction {
 			if self.enable_interrupts {
 				changes.push(Box::new(ChangeIme::new(true)));
 			}
+		}
+
+		Ok(ChangeList::new(changes))
+	}
+}
+
+pub(crate) struct CallInstruction {
+	condition: BranchCondition,
+	address: u16,
+}
+
+impl CallInstruction {
+	pub(crate) fn new(condition: BranchCondition, address: u16) -> Self {
+		Self { condition, address }
+	}
+
+	pub(crate) fn call(address: u16) -> Self {
+		Self::new(BranchCondition::Unconditional, address)
+	}
+
+	pub(crate) fn call_conditional(flag: BitFlags, branch_if_equals: bool, address: u16) -> Self {
+		Self::new(BranchCondition::TestFlag { flag, branch_if_equals }, address)
+	}
+}
+
+impl ChangesetInstruction for CallInstruction {
+	type C = ChangeList;
+
+	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError> {
+		let mut changes: Vec<Box<dyn Change>> = Vec::new();
+
+		if self.condition.satisfied(cpu) {
+			let mut sp = cpu.sp.read();
+			sp = sp.wrapping_add_signed(-2);
+			changes.push(Box::new(SpChange::new(sp)));
+
+			let old_pc = cpu.pc.read();
+			changes.push(Box::new(MemoryDoubleByteWriteChange::new(
+				DoubleByteSource::StackPointer, old_pc,
+			)));
+
+			changes.push(Box::new(PcChange::new(
+				self.address
+			)))
 		}
 
 		Ok(ChangeList::new(changes))

@@ -14,7 +14,7 @@ use crate::instructions::changeset::ChangeIme;
 use crate::instructions::control::{HaltInstruction, NopInstruction, SetImeInstruction, StopInstruction};
 use crate::instructions::double_arithmetic::{AddSignedByteToDouble, BinaryDoubleAddInstruction, BinaryDoubleAddOperation, IncOrDecDoubleInstruction, IncOrDecDoubleOperation, IncOrDecDoubleType};
 use crate::instructions::flags::ChangeCarryFlag;
-use crate::instructions::jump::{BranchCondition, JumpInstruction, JumpInstructionDestination, ReturnInstruction};
+use crate::instructions::jump::{BranchCondition, CallInstruction, JumpInstruction, JumpInstructionDestination, ReturnInstruction};
 use crate::instructions::load::byte_load::{ByteLoadIndex, ByteLoadInstruction, ByteLoadOperation, ByteLoadUpdate, ByteLoadUpdateType};
 use crate::instructions::load::double_byte_load::{DoubleByteLoadInstruction, DoubleByteLoadOperation, PopInstruction};
 use crate::instructions::logical::{BinaryLogicalInstruction, BinaryLogicalOperation, BinaryLogicalOperationType, Negate};
@@ -488,8 +488,16 @@ fn decode_opcode(
 							}
 						},
 						[false, false, true] /* z = 4 */ => {
-
-							todo!()
+							match y {
+								[y0, y1, false] /* 0 <= y < 4 */ => {
+									let address = load_next_u16(cpu)?;
+									let (flag, branch_if_equals) = decode_conditional([y0, y1]);
+									Ok(Box::new(CallInstruction::call_conditional(
+										flag, branch_if_equals, address
+									)))
+								},
+								_ => Err(DecoderError::InvalidOpcode(opcode))
+							}
 						}
 						_ => todo!()
 					}
