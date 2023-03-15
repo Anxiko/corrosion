@@ -84,7 +84,7 @@ impl ByteDestination {
 		Self::AddressInRegister(double_reg)
 	}
 
-	pub(super) fn change_destination(&self, value: u8) -> Box<dyn Change> {
+	pub(crate) fn change_destination(&self, value: u8) -> Box<dyn Change> {
 		match self {
 			Self::Acc => Box::new(SingleRegisterChange::new(ACC_REGISTER, value)),
 			Self::SingleRegister(single_reg) => Box::new(SingleRegisterChange::new(*single_reg, value)),

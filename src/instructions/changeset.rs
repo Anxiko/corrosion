@@ -290,7 +290,7 @@ pub(crate) struct ChangeList {
 }
 
 impl ChangeList {
-	pub(super) fn new(changes: Vec<Box<dyn Change>>) -> Self {
+	pub(crate) fn new(changes: Vec<Box<dyn Change>>) -> Self {
 		Self { changes }
 	}
 }

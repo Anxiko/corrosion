@@ -1,69 +1,11 @@
-use crate::hardware::alu::delta_u8;
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::BitFlags;
 use crate::instructions::{ACC_REGISTER, ExecutionError};
-use crate::instructions::base::{BaseByteInstruction, ByteDestination, ByteOperation, ByteSource};
 use crate::instructions::changeset::{BitFlagsChange, Change, ChangeList, ChangesetInstruction, SingleRegisterChange};
 
-#[cfg(test)]
-mod tests;
-
-pub(crate) mod add;
-mod operation;
-pub(crate) mod sub;
-
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub(crate) enum IncOrDecOperationType {
-	Increment,
-	Decrement,
-}
-
-impl IncOrDecOperationType {
-	fn delta(&self) -> i8 {
-		match self {
-			Self::Increment => 1,
-			Self::Decrement => -1
-		}
-	}
-
-	fn is_sub(&self) -> bool {
-		match self {
-			Self::Increment => false,
-			Self::Decrement => true
-		}
-	}
-}
-
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub(crate) struct IncOrDecOperation {
-	type_: IncOrDecOperationType,
-}
-
-impl IncOrDecOperation {
-	pub(crate) fn new(type_: IncOrDecOperationType) -> Self {
-		Self { type_ }
-	}
-}
-
-impl ByteOperation for IncOrDecOperation {
-	type C = Box<dyn Change>;
-
-	fn execute(&self, cpu: &Cpu, src: &ByteSource, dst: &ByteDestination) -> Result<Self::C, ExecutionError> {
-		let value = src.read(cpu)?;
-		let delta = self.type_.delta();
-
-		let alu_result = delta_u8(value, delta);
-		let result = alu_result.result;
-		let bitflags_change = BitFlagsChange::from(alu_result).keep_carry_flag();
-
-		Ok(Box::new(ChangeList::new(vec![
-			dst.change_destination(result),
-			Box::new(bitflags_change),
-		])))
-	}
-}
-
-pub(crate) type IncOrDecInstruction = BaseByteInstruction<IncOrDecOperation>;
+pub(crate) mod add_or_sub;
+pub(crate) mod inc_or_dec;
+pub(crate) mod compare;
 
 pub(crate) struct DecimalAdjust;
 
