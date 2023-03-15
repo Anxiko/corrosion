@@ -1,5 +1,3 @@
-use sdl2::log::log;
-
 use crate::bits::byte_to_bits;
 use crate::decoder::prefixed::{decode_prefixed_shifting, decode_prefixed_single_bit};
 use crate::hardware::cpu::Cpu;
@@ -7,10 +5,9 @@ use crate::hardware::ram::IO_REGISTERS_MAPPING_START;
 use crate::hardware::register_bank::{BitFlags, DoubleRegisters, SingleRegisters};
 use crate::instructions::{ExecutionError, Instruction};
 use crate::instructions::arithmetic::{DecimalAdjust, IncOrDecInstruction, IncOrDecOperation, IncOrDecOperationType};
-use crate::instructions::arithmetic::add::{Add, BinaryArithmeticInstruction, BinaryArithmeticOperation, BinaryArithmeticOperationType};
+use crate::instructions::arithmetic::add::{BinaryArithmeticInstruction, BinaryArithmeticOperation, BinaryArithmeticOperationType};
 use crate::instructions::arithmetic::sub::CompareInstruction;
 use crate::instructions::base::{ByteDestination, ByteSource, DoubleByteDestination, DoubleByteSource};
-use crate::instructions::changeset::ChangeIme;
 use crate::instructions::control::{HaltInstruction, NopInstruction, SetImeInstruction, StopInstruction};
 use crate::instructions::double_arithmetic::{AddSignedByteToDouble, BinaryDoubleAddInstruction, BinaryDoubleAddOperation, IncOrDecDoubleInstruction, IncOrDecDoubleOperation, IncOrDecDoubleType};
 use crate::instructions::flags::ChangeCarryFlag;

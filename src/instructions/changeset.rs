@@ -214,7 +214,7 @@ impl Change for Box<dyn Change> {
 enum MemoryByteWriteAddress {
 	Immediate(u16),
 	Register(DoubleRegisters),
-	OffsetRegister { base: u16, register: SingleRegisters },
+	OffsetRegister { base: u16, offset: SingleRegisters },
 }
 
 impl MemoryByteWriteAddress {
@@ -223,6 +223,10 @@ impl MemoryByteWriteAddress {
 			Self::Immediate(address) => *address,
 			Self::Register(double_register) => {
 				cpu.register_bank.read_double_named(*double_register)
+			},
+			Self::OffsetRegister { base, offset } => {
+				let offset_value = cpu.register_bank.read_single_named(*offset);
+				base.wrapping_add(offset_value.into())
 			}
 		}
 	}
@@ -243,8 +247,8 @@ impl MemoryByteWriteChange {
 		Self { address: MemoryByteWriteAddress::Register(double_register), value }
 	}
 
-	pub(super) fn write_to_offset(base: u16, register: SingleRegisters, value: u8) -> Self {
-		Self { address: MemoryByteWriteAddress::OffsetRegister { base, register }, value }
+	pub(super) fn write_to_offset(base: u16, offset: SingleRegisters, value: u8) -> Self {
+		Self { address: MemoryByteWriteAddress::OffsetRegister { base, offset }, value }
 	}
 }
 
