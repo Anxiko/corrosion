@@ -4,6 +4,7 @@ use crate::hardware::register_bank::{BitFlags, DoubleRegisters, SingleRegisters}
 use crate::instructions::ACC_REGISTER;
 use crate::instructions::arithmetic::add::{Add, AddHl, AddImmediate, AddWithCarry, Increment};
 use crate::instructions::arithmetic::sub::{Compare, Decrement, Sub, SubWithCarry};
+use crate::instructions::base::{ByteDestination, ByteSource};
 use crate::instructions::Instruction;
 
 #[test]
@@ -13,7 +14,13 @@ fn add() {
 	cpu.register_bank
 		.write_single_named(SingleRegisters::B, 0x34);
 
-	assert!(Add::new(SingleRegisters::B).execute(&mut cpu).is_ok());
+	assert!(
+		Add::new(
+			ByteSource::Acc, ByteSource::SingleRegister(SingleRegisters::B), ByteDestination::Acc,
+		)
+			.execute(&mut cpu)
+			.is_ok()
+	);
 
 	assert_eq!(cpu.register_bank.read_single_named(ACC_REGISTER), 0x46);
 	assert!(!cpu.register_bank.read_bit_flag(BitFlags::Zero));
