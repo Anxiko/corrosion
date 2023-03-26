@@ -55,3 +55,75 @@ impl ChangesetInstruction for DecimalAdjust {
 		])))
 	}
 }
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn adjust_add() {
+		/*
+			There are 3 possible scenarios when adding two nibbles that represent a decimal digit:
+			- Result nibble is a valid digit (0x2 + 0x3 = 0x5)
+			- Result nibble is not a valid digit, but doesn't overflow (0x7 + 0x8 = 0xF)
+			- Result nibble overflows (0x8 + 0x8 = 0x10)
+
+			When a nibble add overflows, the resulting nibble is a valid digit, though not the correct one.
+			A nibble needs to be adjusted if it's not a valid digit, or if it overflows.
+
+			Because we're adding 2 nibbles (the high and low nibbles of a byte), there are 3*3 = 9 possible combinations
+			of possible results.
+		 */
+
+		// High nibble is valid
+
+		assert_eq!(
+			DecimalAdjust::adjust(0x12 + 0x34, false, false, false),
+			(0x46, false)
+		); // Low nibble is valid
+
+		assert_eq!(
+			DecimalAdjust::adjust(0x12 + 0x38, false, false, false),
+			(0x50, false)
+		); // Low nibble is not valid
+
+		assert_eq!(
+			DecimalAdjust::adjust(0x18 + 0x38, false, false, true),
+			(0x56, false)
+		); // Low nibble overflows
+
+		// High nibble is not valid
+
+		assert_eq!(
+			DecimalAdjust::adjust(0x52 + 0x54, false, false, false),
+			(0x06, true)
+		); // Low nibble is valid
+
+		assert_eq!(
+			DecimalAdjust::adjust(0x52 + 0x58, false, false, false),
+			(0x10, true)
+		); // Low nibble is not valid
+
+		assert_eq!(
+			DecimalAdjust::adjust(0x58 + 0x58, false, false, true),
+			(0x16, true)
+		); // Low nibble overflows
+
+		// High nibble overflows
+
+		assert_eq!(
+			DecimalAdjust::adjust(0x82u8.wrapping_add(0x84), false, true, false),
+			(0x66, true)
+		); // Low nibble is valid
+
+		assert_eq!(
+			DecimalAdjust::adjust(0x82u8.wrapping_add(0x88), false, true, false),
+			(0x70, true)
+		); // Low nibble is not valid
+
+		assert_eq!(
+			DecimalAdjust::adjust(0x88u8.wrapping_add(0x88), false, true, true),
+			(0x76, true)
+		); // Low nibble overflows
+	}
+}
