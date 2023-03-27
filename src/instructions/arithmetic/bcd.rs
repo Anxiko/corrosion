@@ -36,7 +36,7 @@ impl DecimalAdjust {
 }
 
 impl ChangesetInstruction for DecimalAdjust {
-	type C = Box<dyn Change>;
+	type C = ChangeList;
 
 	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError> {
 		let acc = cpu.register_bank.read_single_named(ACC_REGISTER);
@@ -46,14 +46,14 @@ impl ChangesetInstruction for DecimalAdjust {
 
 		let (next_acc, next_carry_flag) = DecimalAdjust::adjust(acc, sub_flag, carry_flag, half_carry_flag);
 
-		Ok(Box::new(ChangeList::new(vec![
+		Ok(ChangeList::new(vec![
 			Box::new(SingleRegisterChange::new(ACC_REGISTER, next_acc)),
 			Box::new(BitFlagsChange::keep_all()
 				.with_zero_flag(next_acc == 0)
 				.with_half_carry_flag(false)
 				.with_carry_flag(next_carry_flag)
 			),
-		])))
+		]))
 	}
 }
 
@@ -163,5 +163,29 @@ mod tests {
 			DecimalAdjust::adjust(0x34u8.wrapping_sub(0x45), true, true, true),
 			(0x89, true)
 		); // Low nibble borrow
+	}
+
+	#[test]
+	fn decimal_adjust() {
+		let mut cpu = Cpu::new();
+		cpu.register_bank.write_single_named(ACC_REGISTER, 0x32 + 0x18);
+		cpu.register_bank.write_bit_flag(BitFlags::HalfCarry, true);
+
+		let instruction = DecimalAdjust::new();
+		let actual = instruction.compute_change(&cpu).expect("Compute changes");
+		let expected = ChangeList::new(vec![
+			Box::new(SingleRegisterChange::new(ACC_REGISTER, 0x50)),
+			Box::new(
+				BitFlagsChange::keep_all()
+					.with_zero_flag(false)
+					.with_carry_flag(false)
+					.with_half_carry_flag(false)
+			),
+		]);
+
+		assert_eq!(
+			actual,
+			expected
+		);
 	}
 }
