@@ -12,8 +12,8 @@ impl DecimalAdjust {
 
 	// Implementation derived from here: https://forums.nesdev.org/viewtopic.php?t=15944
 	fn adjust(mut value: u8, sub_flag: bool, carry_flag: bool, half_carry_flag: bool) -> (u8, bool) {
+		let mut next_carry_flag = false;
 		if !sub_flag {
-			let mut next_carry_flag = false;
 			if carry_flag || value > 0x99 {
 				value = value.wrapping_add(0x60);
 				next_carry_flag = true;
@@ -25,11 +25,12 @@ impl DecimalAdjust {
 		} else {
 			if carry_flag {
 				value = value.wrapping_sub(0x60);
+				next_carry_flag = true
 			}
 			if half_carry_flag {
 				value = value.wrapping_sub(0x06);
 			}
-			(value, false)
+			(value, next_carry_flag)
 		}
 	}
 }
@@ -73,7 +74,7 @@ mod tests {
 
 			Because we're adding 2 nibbles (the high and low nibbles of a byte), there are 3*3 = 9 possible combinations
 			of possible results.
-		 */
+		*/
 
 		// High nibble is valid
 
@@ -125,5 +126,42 @@ mod tests {
 			DecimalAdjust::adjust(0x88u8.wrapping_add(0x88), false, true, true),
 			(0x76, true)
 		); // Low nibble overflows
+	}
+
+	#[test]
+	fn adjust_sub() {
+		/*
+			When subbing nibbles, an underflow (borrow from the next highest bit) can occur, if the minuend is less than
+			the subtrahend. THe resulting nibble may or may not represent a valid digit, but the result will always be
+			invalid.
+
+			Half carry and carry flag indicate if a borrow happens on the subtractions from the lower and higher nibbles.
+			Because a nibble subtraction may or not borrow, and there are two nibbles in a byte, there are 2 * 2 = 4
+			possible scenarios
+		*/
+
+		// High nibble no borrow
+
+		assert_eq!(
+			DecimalAdjust::adjust(0x34 - 0x12, true, false, false),
+			(0x22, false)
+		); // Low nibble no borrow
+
+		assert_eq!(
+			DecimalAdjust::adjust(0x34 - 0x15, true, false, true),
+			(0x19, false)
+		); // Low nibble borrow
+
+		// High nibble borrow
+
+		assert_eq!(
+			DecimalAdjust::adjust(0x34u8.wrapping_sub(0x42), true, true, false),
+			(0x92, true)
+		); // Low nibble no borrow
+
+		assert_eq!(
+			DecimalAdjust::adjust(0x34u8.wrapping_sub(0x45), true, true, true),
+			(0x89, true)
+		); // Low nibble borrow
 	}
 }
