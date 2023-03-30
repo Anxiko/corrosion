@@ -26,3 +26,74 @@ impl ChangesetInstruction for CompareInstruction {
 		Ok(result.change_flags())
 	}
 }
+
+#[cfg(test)]
+mod tests {
+	use crate::hardware::register_bank::SingleRegisters;
+	use crate::instructions::ACC_REGISTER;
+
+	use super::*;
+
+	#[test]
+	fn bigger_than() {
+		let mut cpu = Cpu::new();
+		cpu.register_bank.write_single_named(ACC_REGISTER, 0x80);
+		cpu.register_bank.write_single_named(SingleRegisters::B, 0x79);
+
+		let expected = BitFlagsChange::keep_all()
+			.with_carry_flag(false)
+			.with_zero_flag(false)
+			.with_half_carry_flag(true)
+			.with_subtraction_flag(true);
+
+		let instruction = CompareInstruction::new(
+			ByteSource::Acc, ByteSource::SingleRegister(SingleRegisters::B),
+		);
+
+		let actual = instruction.compute_change(&cpu).expect("Compute changes");
+
+		assert_eq!(actual, expected)
+	}
+
+	#[test]
+	fn equal() {
+		let mut cpu = Cpu::new();
+		cpu.register_bank.write_single_named(ACC_REGISTER, 0x80);
+		cpu.register_bank.write_single_named(SingleRegisters::B, 0x80);
+
+		let expected = BitFlagsChange::keep_all()
+			.with_carry_flag(false)
+			.with_half_carry_flag(false)
+			.with_subtraction_flag(true)
+			.with_zero_flag(true);
+
+		let instruction = CompareInstruction::new(
+			ByteSource::Acc, ByteSource::SingleRegister(SingleRegisters::B),
+		);
+
+		let actual = instruction.compute_change(&cpu).expect("Compute changes");
+
+		assert_eq!(actual, expected);
+	}
+
+	#[test]
+	fn less_than() {
+		let mut cpu = Cpu::new();
+		cpu.register_bank.write_single_named(ACC_REGISTER, 0x80);
+		cpu.register_bank.write_single_named(SingleRegisters::B, 0x81);
+
+		let expected = BitFlagsChange::keep_all()
+			.with_carry_flag(true)
+			.with_half_carry_flag(true)
+			.with_subtraction_flag(true)
+			.with_zero_flag(false);
+
+		let instruction = CompareInstruction::new(
+			ByteSource::Acc, ByteSource::SingleRegister(SingleRegisters::B),
+		);
+
+		let actual = instruction.compute_change(&cpu).expect("Compute changes");
+
+		assert_eq!(actual, expected);
+	}
+}
