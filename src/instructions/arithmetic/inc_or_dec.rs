@@ -3,56 +3,93 @@ use crate::hardware::cpu::Cpu;
 use crate::instructions::base::{BaseByteInstruction, ByteDestination, ByteOperation, ByteSource};
 use crate::instructions::changeset::{BitFlagsChange, Change, ChangeList};
 use crate::instructions::ExecutionError;
-
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub enum IncOrDecOperationType {
-	Increment,
-	Decrement,
-}
-
-impl IncOrDecOperationType {
-	fn delta(&self) -> i8 {
-		match self {
-			Self::Increment => 1,
-			Self::Decrement => -1
-		}
-	}
-
-	fn is_sub(&self) -> bool {
-		match self {
-			Self::Increment => false,
-			Self::Decrement => true
-		}
-	}
-}
+use crate::instructions::shared::IndexUpdateType;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct IncOrDecOperation {
-	type_: IncOrDecOperationType,
+	type_: IndexUpdateType,
 }
 
 impl IncOrDecOperation {
-	pub fn new(type_: IncOrDecOperationType) -> Self {
+	pub fn new(type_: IndexUpdateType) -> Self {
 		Self { type_ }
 	}
 }
 
 impl ByteOperation for IncOrDecOperation {
-	type C = Box<dyn Change>;
+	type C = ChangeList;
 
 	fn execute(&self, cpu: &Cpu, src: &ByteSource, dst: &ByteDestination) -> Result<Self::C, ExecutionError> {
 		let value = src.read(cpu)?;
-		let delta = self.type_.delta();
+		let delta = self.type_.to_delta();
 
 		let alu_result = delta_u8(value, delta);
 		let result = alu_result.result;
 		let bitflags_change = BitFlagsChange::from(alu_result).keep_carry_flag();
 
-		Ok(Box::new(ChangeList::new(vec![
+		Ok(ChangeList::new(vec![
 			dst.change_destination(result),
 			Box::new(bitflags_change),
-		])))
+		]))
 	}
 }
 
 pub(crate) type IncOrDecInstruction = BaseByteInstruction<IncOrDecOperation>;
+
+#[cfg(test)]
+mod tests {
+	use crate::instructions::ACC_REGISTER;
+	use crate::instructions::changeset::{ChangesetInstruction, SingleRegisterChange};
+
+	use super::*;
+
+	#[test]
+	fn increase() {
+		let mut cpu = Cpu::new();
+		cpu.register_bank.write_single_named(ACC_REGISTER, 0x80);
+
+		let instruction = IncOrDecInstruction::new(
+			ByteSource::Acc,
+			ByteDestination::Acc,
+			IncOrDecOperation::new(IndexUpdateType::Increment),
+		);
+
+		let expected = ChangeList::new(vec![
+			Box::new(SingleRegisterChange::new(ACC_REGISTER, 0x81)),
+			Box::new(
+				BitFlagsChange::keep_all()
+					.with_subtraction_flag(false)
+					.with_zero_flag(false)
+					.with_half_carry_flag(false)
+			),
+		]);
+
+		let actual = instruction.compute_change(&cpu).expect("Compute changes");
+		assert_eq!(actual, expected);
+	}
+
+	#[test]
+	fn decrease() {
+		let mut cpu = Cpu::new();
+		cpu.register_bank.write_single_named(ACC_REGISTER, 0x80);
+
+		let instruction = IncOrDecInstruction::new(
+			ByteSource::Acc,
+			ByteDestination::Acc,
+			IncOrDecOperation::new(IndexUpdateType::Decrement),
+		);
+
+		let expected = ChangeList::new(vec![
+			Box::new(SingleRegisterChange::new(ACC_REGISTER, 0x7F)),
+			Box::new(
+				BitFlagsChange::keep_all()
+					.with_subtraction_flag(true)
+					.with_zero_flag(false)
+					.with_half_carry_flag(true)
+			),
+		]);
+
+		let actual = instruction.compute_change(&cpu).expect("Compute changes");
+		assert_eq!(actual, expected);
+	}
+}

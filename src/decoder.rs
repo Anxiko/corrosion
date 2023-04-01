@@ -7,7 +7,7 @@ use crate::instructions::{ExecutionError, Instruction};
 use crate::instructions::arithmetic::add_or_sub::{BinaryArithmeticInstruction, BinaryArithmeticOperation, BinaryArithmeticOperationType};
 use crate::instructions::arithmetic::compare::CompareInstruction;
 use crate::instructions::arithmetic::bcd::DecimalAdjust;
-use crate::instructions::arithmetic::inc_or_dec::{IncOrDecInstruction, IncOrDecOperation, IncOrDecOperationType};
+use crate::instructions::arithmetic::inc_or_dec::{IncOrDecInstruction, IncOrDecOperation};
 use crate::instructions::base::{ByteDestination, ByteSource, DoubleByteDestination, DoubleByteSource};
 use crate::instructions::control::{HaltInstruction, NopInstruction, SetImeInstruction, StopInstruction};
 use crate::instructions::double_arithmetic::{AddSignedByteToDouble, BinaryDoubleAddInstruction, BinaryDoubleAddOperation, IncOrDecDoubleInstruction, IncOrDecDoubleOperation, IncOrDecDoubleType};
@@ -16,6 +16,7 @@ use crate::instructions::jump::{BranchCondition, CallInstruction, JumpInstructio
 use crate::instructions::load::byte_load::{ByteLoadIndex, ByteLoadInstruction, ByteLoadOperation, ByteLoadUpdate, ByteLoadUpdateType};
 use crate::instructions::load::double_byte_load::{DoubleByteLoadInstruction, DoubleByteLoadOperation, PopInstruction, PushInstruction};
 use crate::instructions::logical::{BinaryLogicalInstruction, BinaryLogicalOperation, BinaryLogicalOperationType, Negate};
+use crate::instructions::shared::IndexUpdateType;
 use crate::instructions::shifting::{ByteShiftInstruction, ByteShiftOperation, ShiftDirection, ShiftType};
 use crate::instructions::single_bit::SingleBitOperation;
 
@@ -240,10 +241,10 @@ fn decode_opcode(
 						[y0, false, true] /* 4 <= z < 6 */ => {
 							let inc_dec_op_type = match y0 {
 								false /* z = 4 */ => {
-									IncOrDecOperationType::Increment
+									IndexUpdateType::Increment
 								}
 								true /* z = 5 */ => {
-									IncOrDecOperationType::Decrement
+									IndexUpdateType::Decrement
 								}
 							};
 
