@@ -5,15 +5,15 @@ use crate::hardware::ram::IO_REGISTERS_MAPPING_START;
 use crate::hardware::register_bank::{BitFlags, DoubleRegisters, SingleRegisters};
 use crate::instructions::{ExecutionError, Instruction};
 use crate::instructions::arithmetic::add_or_sub::{BinaryArithmeticInstruction, BinaryArithmeticOperation, BinaryArithmeticOperationType};
-use crate::instructions::arithmetic::compare::CompareInstruction;
 use crate::instructions::arithmetic::bcd::DecimalAdjust;
+use crate::instructions::arithmetic::compare::CompareInstruction;
 use crate::instructions::arithmetic::inc_or_dec::{IncOrDecInstruction, IncOrDecOperation};
 use crate::instructions::base::{ByteDestination, ByteSource, DoubleByteDestination, DoubleByteSource};
 use crate::instructions::control::{HaltInstruction, NopInstruction, SetImeInstruction, StopInstruction};
 use crate::instructions::double_arithmetic::{AddSignedByteToDouble, BinaryDoubleAddInstruction, BinaryDoubleAddOperation, IncOrDecDoubleInstruction, IncOrDecDoubleOperation, IncOrDecDoubleType};
 use crate::instructions::flags::ChangeCarryFlag;
 use crate::instructions::jump::{BranchCondition, CallInstruction, JumpInstruction, JumpInstructionDestination, ReturnInstruction};
-use crate::instructions::load::byte_load::{ByteLoadIndex, ByteLoadInstruction, ByteLoadOperation, ByteLoadUpdate, ByteLoadUpdateType};
+use crate::instructions::load::byte_load::{ByteLoadInstruction, ByteLoadOperation, ByteLoadUpdate};
 use crate::instructions::load::double_byte_load::{DoubleByteLoadInstruction, DoubleByteLoadOperation, PopInstruction, PushInstruction};
 use crate::instructions::logical::{BinaryLogicalInstruction, BinaryLogicalOperation, BinaryLogicalOperationType, Negate};
 use crate::instructions::shared::IndexUpdateType;
@@ -186,15 +186,15 @@ fn decode_opcode(
 								true /* 2 <= p < 4 */ => {
 									let update_type = match p[0] {
 										false /* p = 3 */ => {
-											ByteLoadUpdateType::Increment
+											IndexUpdateType::Increment
 										}
 										true /* p = 4 */ => {
-											ByteLoadUpdateType::Decrement
+											IndexUpdateType::Decrement
 										}
 									};
 
 									let update = ByteLoadUpdate::new(
-										ByteLoadIndex::DoubleRegister(DoubleRegisters::HL),
+										DoubleRegisters::HL,
 										update_type,
 									);
 
