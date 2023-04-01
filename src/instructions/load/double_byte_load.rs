@@ -29,7 +29,7 @@ pub(crate) struct PushInstruction {
 
 impl PushInstruction {
 	pub(crate) fn new(source: DoubleByteSource) -> Self {
-		Self{source}
+		Self { source }
 	}
 }
 
@@ -67,8 +67,75 @@ impl ChangesetInstruction for PopInstruction {
 		let address = address.wrapping_add(2);
 
 		Ok(ChangeList::new(vec![
-			Box::new(self.destination.change_destination(value)),
+			self.destination.change_destination(value),
 			Box::new(SpChange::new(address)),
 		]))
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use crate::hardware::cpu::Cpu;
+	use crate::hardware::ram::{Ram, WORKING_RAM_START};
+	use crate::hardware::register_bank::DoubleRegisters;
+	use crate::instructions::base::{DoubleByteDestination, DoubleByteSource};
+	use crate::instructions::changeset::{Change, ChangeList, ChangesetInstruction, DoubleRegisterChange, MemoryDoubleByteWriteChange, SpChange};
+	use crate::instructions::load::double_byte_load::{DoubleByteLoadInstruction, DoubleByteLoadOperation, PopInstruction, PushInstruction};
+
+	#[test]
+	fn load() {
+		let mut cpu = Cpu::new();
+		cpu.sp.write(0x1234);
+
+		let instruction = DoubleByteLoadInstruction::new(
+			DoubleByteSource::StackPointer,
+			DoubleByteDestination::AddressInImmediate(WORKING_RAM_START),
+			DoubleByteLoadOperation::new(),
+		);
+
+		let expected: Box<dyn Change> = Box::new(MemoryDoubleByteWriteChange::write_to_immediate_address(
+			WORKING_RAM_START, 0x1234,
+		));
+		let actual = instruction.compute_change(&cpu).expect("Compute changes");
+
+		assert_eq!(actual, expected);
+	}
+
+	#[test]
+	fn push() {
+		let mut cpu = Cpu::new();
+		cpu.sp.write(WORKING_RAM_START + 2);
+		cpu.register_bank.write_double_named(DoubleRegisters::BC, 0x1234);
+
+		let instruction = PushInstruction::new(
+			DoubleByteSource::DoubleRegister(DoubleRegisters::BC)
+		);
+
+		let expected = ChangeList::new(vec![
+			Box::new(SpChange::new(WORKING_RAM_START)),
+			Box::new(MemoryDoubleByteWriteChange::write_to_immediate_address(WORKING_RAM_START, 0x1234)),
+		]);
+		let actual = instruction.compute_change(&cpu).expect("Compute changes");
+
+		assert_eq!(actual, expected);
+	}
+
+	#[test]
+	fn pop() {
+		let mut cpu = Cpu::new();
+		cpu.sp.write(WORKING_RAM_START);
+		cpu.mapped_ram.write_double_byte(WORKING_RAM_START, 0x1234).expect("Write to RAM");
+
+		let instruction = PopInstruction::new(
+			DoubleByteDestination::DoubleRegister(DoubleRegisters::BC)
+		);
+
+		let expected = ChangeList::new(vec![
+			Box::new(DoubleRegisterChange::new(DoubleRegisters::BC, 0x1234)),
+			Box::new(SpChange::new(WORKING_RAM_START + 2)),
+		]);
+		let actual = instruction.compute_change(&cpu).expect("Compute changes");
+
+		assert_eq!(actual, expected);
 	}
 }
