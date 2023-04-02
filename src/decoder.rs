@@ -76,7 +76,7 @@ fn decode_opcode(
 					SingleBitOperation::Write(true), y, z,
 				)),
 			}
-		},
+		}
 		None => {
 			match x {
 				[false, false] /* x = 0 */ => {
@@ -94,10 +94,10 @@ fn decode_opcode(
 										DoubleByteDestination::StackPointer,
 										DoubleByteLoadOperation,
 									)))
-								},
+								}
 								[false, true, false] /* y = 2 */ => {
 									Ok(Box::new(StopInstruction::new()))
-								},
+								}
 								[true, true, false] /* y = 3 */ => {
 									let delta = load_next_i8(cpu)?;
 
@@ -138,7 +138,7 @@ fn decode_opcode(
 										double_register_operand.into(),
 										DoubleByteLoadOperation::new(),
 									)))
-								},
+								}
 								true => {
 									Ok(Box::new(BinaryDoubleAddInstruction::new(
 										DoubleByteSource::DoubleRegister(DoubleRegisters::HL),
@@ -148,7 +148,7 @@ fn decode_opcode(
 									)))
 								}
 							}
-						},
+						}
 						[false, true, false] /* z = 2 */ => {
 							let [y0, y1, y2] = y;
 							let q = y0;
@@ -159,7 +159,7 @@ fn decode_opcode(
 									let register_address = match p[0] {
 										false /* p = 0 */ => {
 											DoubleRegisters::BC
-										},
+										}
 										true /* p = 1 */ => {
 											DoubleRegisters::DE
 										}
@@ -171,7 +171,7 @@ fn decode_opcode(
 												ByteDestination::AddressInRegister(register_address),
 												ByteSource::read_from_acc()
 											)
-										},
+										}
 										true /* q = 1 */ => {
 											(
 												ByteDestination::Acc,
@@ -221,7 +221,7 @@ fn decode_opcode(
 									)))
 								}
 							}
-						},
+						}
 						[true, true, false] /* z = 3 */ => {
 							let (p, q) = decode_pq(y);
 
@@ -238,7 +238,7 @@ fn decode_opcode(
 								decoded_double_operator.into(),
 								IncOrDecDoubleOperation::new(inc_or_dec_type),
 							)))
-						},
+						}
 						[y0, false, true] /* 4 <= z < 6 */ => {
 							let inc_dec_op_type = match y0 {
 								false /* z = 4 */ => {
@@ -256,7 +256,7 @@ fn decode_opcode(
 								decoded_operand.into(),
 								IncOrDecOperation::new(inc_dec_op_type),
 							)))
-						},
+						}
 						[false, true, true] /* z = 6 */ => {
 							let decoded_operand = DecodedInstructionOperand::from_opcode_part(y);
 							let immediate = load_next_u8(cpu)?;
@@ -285,13 +285,13 @@ fn decode_opcode(
 										ByteDestination::Acc,
 										ByteShiftOperation::new(shift_direction, shift_type),
 									)))
-								},
+								}
 								[false, false, true] /* z = 4 */ => {
 									Ok(Box::new(DecimalAdjust::new()))
-								},
+								}
 								[true, false, true] /* z = 5 */ => {
 									Ok(Box::new(Negate::new()))
-								},
+								}
 								[y0, true, true] /* 6 <= z < 8 */ => {
 									let carry_flag_value = y0;
 									Ok(Box::new(ChangeCarryFlag::new(carry_flag_value)))
@@ -299,7 +299,7 @@ fn decode_opcode(
 							}
 						}
 					}
-				},
+				}
 				[true, false] /* x = 1 */ => {
 					if y == [false, true, true] && z == [false, true, true] /* y = z = 6 */ {
 						Ok(Box::new(HaltInstruction::new()))
@@ -313,7 +313,7 @@ fn decode_opcode(
 							ByteLoadOperation::no_update(),
 						)))
 					}
-				},
+				}
 				[false, true] /* x = 2 */ => {
 					let decoded_operand = DecodedInstructionOperand::from_opcode_part(z);
 					Ok(decode_byte_instruction(y, decoded_operand.into()))
@@ -325,7 +325,7 @@ fn decode_opcode(
 								[y0, y1, false] /* 0 <= y < 4 */ => {
 									let (flag, value) = decode_conditional([y0, y1]);
 									Ok(Box::new(ReturnInstruction::ret_conditional(flag, value)))
-								},
+								}
 								[false, false, true] /* y = 4 */ => {
 									let offset = load_next_u8(cpu)?;
 
@@ -336,12 +336,12 @@ fn decode_opcode(
 										),
 										ByteLoadOperation::no_update(),
 									)))
-								},
+								}
 								[true, false, true] /* y = 5 */ => {
 									let delta = load_next_i8(cpu)?;
 
 									Ok(Box::new(AddSignedByteToDouble::add_to_sp(delta)))
-								},
+								}
 								[false, true, true] /* y = 6 */ => {
 									let offset = load_next_u8(cpu)?;
 
@@ -352,7 +352,7 @@ fn decode_opcode(
 										ByteDestination::Acc,
 										ByteLoadOperation::no_update(),
 									)))
-								},
+								}
 								[true, true, true] /* y = 7 */ => {
 									let offset = load_next_i8(cpu)?;
 
@@ -363,7 +363,7 @@ fn decode_opcode(
 									)))
 								}
 							}
-						},
+						}
 						[true, false, false] /* z = 1 */ => {
 							let (p, q) = decode_pq(y);
 
@@ -374,7 +374,7 @@ fn decode_opcode(
 									Ok(Box::new(PopInstruction::new(
 										decoded_double_operand.into()
 									)))
-								},
+								}
 								true => {
 									match p {
 										[p0, false] /* 0 <= p < 2 */ => {
@@ -391,7 +391,7 @@ fn decode_opcode(
 												),
 												BranchCondition::Unconditional,
 											)))
-										},
+										}
 										[true, true] /* p = 3 */ => {
 											Ok(Box::new(DoubleByteLoadInstruction::new(
 												DoubleByteSource::DoubleRegister(DoubleRegisters::HL),
@@ -402,7 +402,7 @@ fn decode_opcode(
 									}
 								}
 							}
-						},
+						}
 						[false, true, false] /* z = 2 */ => {
 							match y {
 								[y0, y1, false] /* 0 <= y < 4 */ => {
@@ -414,7 +414,7 @@ fn decode_opcode(
 										JumpInstructionDestination::FromSource(DoubleByteSource::Immediate(address)),
 										branch_conditon,
 									)))
-								},
+								}
 								[false, y1, true] /* y in {4, 6} */ => {
 									let base = IO_REGISTERS_MAPPING_START;
 									let offset = SingleRegisters::C;
@@ -426,19 +426,19 @@ fn decode_opcode(
 												ByteSource::read_from_acc(),
 												ByteDestination::OffsetAddressInRegister { base, offset }
 											)
-										},
+										}
 										true => {
 											(
 												ByteSource::OffsetAddressInRegister { base, offset },
 												ByteDestination::Acc
 											)
-										},
+										}
 									};
 
 									Ok(Box::new(ByteLoadInstruction::new(
 										src, dst, ByteLoadOperation::no_update(),
 									)))
-								},
+								}
 								[true, y1, true] /* y in {5, 7} */ => {
 									let address = load_next_u16(cpu)?;
 
@@ -448,7 +448,7 @@ fn decode_opcode(
 												ByteSource::read_from_acc(),
 												ByteDestination::AddressImmediate(address)
 											)
-										},
+										}
 										true => (
 											ByteSource::AddressInImmediate(address),
 											ByteDestination::Acc
@@ -460,7 +460,7 @@ fn decode_opcode(
 									)))
 								}
 							}
-						},
+						}
 						[true, true, false] /* z = 3 */ => {
 							match y {
 								[false, false, false] /* y = 0 */ => {
@@ -481,7 +481,7 @@ fn decode_opcode(
 									Err(ExecutionError::InvalidOpcode(opcode))
 								}
 							}
-						},
+						}
 						[false, false, true] /* z = 4 */ => {
 							match y {
 								[y0, y1, false] /* 0 <= y < 4 */ => {
@@ -490,10 +490,10 @@ fn decode_opcode(
 									Ok(Box::new(CallInstruction::call_conditional(
 										flag, branch_if_equals, address,
 									)))
-								},
+								}
 								_ => Err(ExecutionError::InvalidOpcode(opcode))
 							}
-						},
+						}
 						[true, false, true] /* z = 5 */ => {
 							let (p, q) = decode_pq(y);
 
@@ -510,16 +510,16 @@ fn decode_opcode(
 												BranchCondition::Unconditional,
 												address,
 											)))
-										},
+										}
 										_ => Err(ExecutionError::InvalidOpcode(opcode))
 									}
 								}
 							}
-						},
+						}
 						[false, true, true] /* z = 6 */ => {
 							let immediate = load_next_u8(cpu)?;
 							Ok(decode_byte_instruction(y, ByteSource::Immediate(immediate)))
-						},
+						}
 						[true, true, true] /* z = 7 */ => {
 							Ok(Box::new(CallInstruction::restart(y)))
 						}
@@ -580,8 +580,8 @@ impl DecodedInstructionOperand {
 impl From<DecodedInstructionOperand> for ByteSource {
 	fn from(value: DecodedInstructionOperand) -> Self {
 		match value {
-			DecodedInstructionOperand::SingleRegister(single_reg) => Self::read_from_single(single_reg),
-			DecodedInstructionOperand::HlMemoryAddress => Self::read_from_register_address(DoubleRegisters::HL)
+			DecodedInstructionOperand::SingleRegister(single_reg) => Self::SingleRegister(single_reg),
+			DecodedInstructionOperand::HlMemoryAddress => Self::AddressInRegister(DoubleRegisters::HL)
 		}
 	}
 }

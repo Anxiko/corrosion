@@ -91,7 +91,7 @@ mod tests {
 
 		let actual = operation.execute(
 			&cpu,
-			&ByteSource::read_from_single(SingleRegisters::B),
+			&ByteSource::SingleRegister(SingleRegisters::B),
 			&ByteDestination::Acc,
 		).expect("Operation to execute");
 

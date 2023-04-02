@@ -19,22 +19,6 @@ impl ByteSource {
 		Self::SingleRegister(ACC_REGISTER)
 	}
 
-	pub(crate) fn read_from_single(single_reg: SingleRegisters) -> Self {
-		Self::SingleRegister(single_reg)
-	}
-
-	pub(crate) fn read_from_register_address(address_register: DoubleRegisters) -> Self {
-		Self::AddressInRegister(address_register)
-	}
-
-	fn read_from_immediate_address(address_immediate: u16) -> Self {
-		Self::AddressInImmediate(address_immediate)
-	}
-
-	fn read_from_immediate(value: u8) -> Self {
-		Self::Immediate(value)
-	}
-
 	pub(super) fn read(&self, cpu: &Cpu) -> Result<u8, ExecutionError> {
 		match self {
 			Self::SingleRegister(single_reg) => {
