@@ -3,7 +3,7 @@ use crate::decoder::prefixed::{decode_prefixed_shifting, decode_prefixed_single_
 use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::IO_REGISTERS_MAPPING_START;
 use crate::hardware::register_bank::{BitFlags, DoubleRegisters, SingleRegisters};
-use crate::instructions::{ExecutionError, Instruction};
+use crate::instructions::{ACC_REGISTER, ExecutionError, Instruction};
 use crate::instructions::arithmetic::add_or_sub::{BinaryArithmeticInstruction, BinaryArithmeticOperation, BinaryArithmeticOperationType};
 use crate::instructions::arithmetic::bcd::DecimalAdjust;
 use crate::instructions::arithmetic::compare::CompareInstruction;
@@ -169,7 +169,7 @@ fn decode_opcode(
 										false /* q = 0 */ => {
 											(
 												ByteDestination::AddressInRegister(register_address),
-												ByteSource::Acc
+												ByteSource::read_from_acc()
 											)
 										},
 										true /* q = 1 */ => {
@@ -205,7 +205,7 @@ fn decode_opcode(
 										false /* q = 0 */ => {
 											(
 												ByteDestination::AddressInRegister(DoubleRegisters::HL),
-												ByteSource::Acc
+												ByteSource::read_from_acc()
 											)
 										}
 										true /* q = 1 */ => {
@@ -281,7 +281,7 @@ fn decode_opcode(
 									};
 
 									Ok(Box::new(ByteShiftInstruction::new(
-										ByteSource::Acc,
+										ByteSource::read_from_acc(),
 										ByteDestination::Acc,
 										ByteShiftOperation::new(shift_direction, shift_type),
 									)))
@@ -330,7 +330,7 @@ fn decode_opcode(
 									let offset = load_next_u8(cpu)?;
 
 									Ok(Box::new(ByteLoadInstruction::new(
-										ByteSource::Acc,
+										ByteSource::read_from_acc(),
 										ByteDestination::AddressImmediate(
 											IO_REGISTERS_MAPPING_START.wrapping_add(offset.into())
 										),
@@ -423,7 +423,7 @@ fn decode_opcode(
 									let (src, dst) = match y1 {
 										false => {
 											(
-												ByteSource::Acc,
+												ByteSource::read_from_acc(),
 												ByteDestination::OffsetAddressInRegister { base, offset }
 											)
 										},
@@ -445,7 +445,7 @@ fn decode_opcode(
 									let (src, dst) = match y1 {
 										false => {
 											(
-												ByteSource::Acc,
+												ByteSource::read_from_acc(),
 												ByteDestination::AddressImmediate(address)
 											)
 										},
@@ -665,7 +665,7 @@ fn decode_byte_instruction(op_part: [bool; 3], right: ByteSource) -> Box<dyn Ins
 			};
 
 			let operation = BinaryArithmeticOperation::new(operation_type, use_carry);
-			Box::new(BinaryArithmeticInstruction::new(ByteSource::Acc, right, dst, operation))
+			Box::new(BinaryArithmeticInstruction::new(ByteSource::read_from_acc(), right, dst, operation))
 		}
 		[op0, op1, true] /* 4 <= z < 8 */ => {
 			let maybe_logical_operation_type = match [op0, op1] {
@@ -677,9 +677,9 @@ fn decode_byte_instruction(op_part: [bool; 3], right: ByteSource) -> Box<dyn Ins
 
 			if let Some(logical_operation_type) = maybe_logical_operation_type {
 				let logical_operation = BinaryLogicalOperation::new(logical_operation_type);
-				Box::new(BinaryLogicalInstruction::new(ByteSource::Acc, right, dst, logical_operation))
+				Box::new(BinaryLogicalInstruction::new(ByteSource::read_from_acc(), right, dst, logical_operation))
 			} else {
-				Box::new(CompareInstruction::new(ByteSource::Acc, right))
+				Box::new(CompareInstruction::new(ByteSource::read_from_acc(), right))
 			}
 		}
 	}

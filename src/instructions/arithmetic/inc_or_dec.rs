@@ -49,7 +49,7 @@ mod tests {
 		cpu.register_bank.write_single_named(ACC_REGISTER, 0x80);
 
 		let instruction = IncOrDecInstruction::new(
-			ByteSource::Acc,
+			ByteSource::read_from_acc(),
 			ByteDestination::Acc,
 			IncOrDecOperation::new(IndexUpdateType::Increment),
 		);
@@ -74,7 +74,7 @@ mod tests {
 		cpu.register_bank.write_single_named(ACC_REGISTER, 0x80);
 
 		let instruction = IncOrDecInstruction::new(
-			ByteSource::Acc,
+			ByteSource::read_from_acc(),
 			ByteDestination::Acc,
 			IncOrDecOperation::new(IndexUpdateType::Decrement),
 		);

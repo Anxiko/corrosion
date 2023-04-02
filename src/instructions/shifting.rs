@@ -63,7 +63,7 @@ mod tests {
 		cpu.register_bank.write_bit_flag(BitFlags::Carry, true);
 
 		let instruction = ByteShiftInstruction::new(
-			ByteSource::Acc,
+			ByteSource::read_from_acc(),
 			ByteDestination::Acc,
 			ByteShiftOperation::new(ShiftDirection::Left, ShiftType::RotateWithCarry),
 		);

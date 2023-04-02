@@ -7,7 +7,6 @@ use super::{ACC_REGISTER, ExecutionError};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub(crate) enum ByteSource {
-	Acc,
 	SingleRegister(SingleRegisters),
 	AddressInRegister(DoubleRegisters),
 	OffsetAddressInRegister { base: u16, offset: SingleRegisters },
@@ -16,8 +15,8 @@ pub(crate) enum ByteSource {
 }
 
 impl ByteSource {
-	fn read_from_acc() -> Self {
-		Self::Acc
+	pub(crate) fn read_from_acc() -> Self {
+		Self::SingleRegister(ACC_REGISTER)
 	}
 
 	pub(crate) fn read_from_single(single_reg: SingleRegisters) -> Self {
@@ -38,7 +37,6 @@ impl ByteSource {
 
 	pub(super) fn read(&self, cpu: &Cpu) -> Result<u8, ExecutionError> {
 		match self {
-			Self::Acc => Ok(cpu.register_bank.read_single_named(ACC_REGISTER)),
 			Self::SingleRegister(single_reg) => {
 				Ok(cpu.register_bank.read_single_named(*single_reg))
 			}
@@ -46,7 +44,7 @@ impl ByteSource {
 				let address = cpu.register_bank.read_double_named(*address_register);
 				let result = cpu.mapped_ram.read_byte(address)?;
 				Ok(result)
-			},
+			}
 			Self::OffsetAddressInRegister { base, offset } => {
 				let offset = cpu.register_bank.read_single_named(*offset);
 				let address = base.wrapping_add(offset.into());
@@ -56,7 +54,7 @@ impl ByteSource {
 			Self::AddressInImmediate(address_immediate) => {
 				let result = cpu.mapped_ram.read_byte(*address_immediate)?;
 				Ok(result)
-			},
+			}
 			Self::Immediate(value) => Ok(*value),
 		}
 	}
@@ -90,10 +88,10 @@ impl ByteDestination {
 			Self::SingleRegister(single_reg) => Box::new(SingleRegisterChange::new(*single_reg, value)),
 			Self::AddressImmediate(address_immediate) => {
 				Box::new(MemoryByteWriteChange::write_to_immediate(*address_immediate, value))
-			},
+			}
 			Self::AddressInRegister(double_reg) => {
 				Box::new(MemoryByteWriteChange::write_to_register(*double_reg, value))
-			},
+			}
 			Self::OffsetAddressInRegister { base, offset } => {
 				Box::new(MemoryByteWriteChange::write_to_offset(*base, *offset, value))
 			}
@@ -146,7 +144,7 @@ pub(crate) enum DoubleByteSource {
 	DoubleRegister(DoubleRegisters),
 	Immediate(u16),
 	StackPointer,
-	AddressInRegister(DoubleRegisters)
+	AddressInRegister(DoubleRegisters),
 }
 
 impl DoubleByteSource {
@@ -166,13 +164,13 @@ impl DoubleByteSource {
 		match self {
 			Self::DoubleRegister(double_register) => {
 				Ok(cpu.register_bank.read_double_named(*double_register))
-			},
+			}
 			Self::Immediate(immediate) => {
 				Ok(*immediate)
-			},
+			}
 			Self::StackPointer => {
 				Ok(cpu.sp.read())
-			},
+			}
 			Self::AddressInRegister(double_register) => {
 				let address = cpu.register_bank.read_double_named(*double_register);
 				let value = cpu.mapped_ram.read_double_byte(address)?;
@@ -187,7 +185,7 @@ pub(crate) enum DoubleByteDestination {
 	DoubleRegister(DoubleRegisters),
 	StackPointer,
 	AddressInImmediate(u16),
-	AddressInRegister(DoubleRegisters)
+	AddressInRegister(DoubleRegisters),
 }
 
 impl DoubleByteDestination {
@@ -195,10 +193,10 @@ impl DoubleByteDestination {
 		match self {
 			Self::DoubleRegister(double_register) => {
 				Box::new(DoubleRegisterChange::new(*double_register, value))
-			},
+			}
 			Self::StackPointer => {
 				Box::new(SpChange::new(value))
-			},
+			}
 			Self::AddressInImmediate(address) => {
 				Box::new(MemoryDoubleByteWriteChange::write_to_immediate_address(*address, value))
 			}

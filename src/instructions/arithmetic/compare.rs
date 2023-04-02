@@ -47,7 +47,7 @@ mod tests {
 			.with_subtraction_flag(true);
 
 		let instruction = CompareInstruction::new(
-			ByteSource::Acc, ByteSource::SingleRegister(SingleRegisters::B),
+			ByteSource::read_from_acc(), ByteSource::SingleRegister(SingleRegisters::B),
 		);
 
 		let actual = instruction.compute_change(&cpu).expect("Compute changes");
@@ -68,7 +68,7 @@ mod tests {
 			.with_zero_flag(true);
 
 		let instruction = CompareInstruction::new(
-			ByteSource::Acc, ByteSource::SingleRegister(SingleRegisters::B),
+			ByteSource::read_from_acc(), ByteSource::SingleRegister(SingleRegisters::B),
 		);
 
 		let actual = instruction.compute_change(&cpu).expect("Compute changes");
@@ -89,7 +89,7 @@ mod tests {
 			.with_zero_flag(false);
 
 		let instruction = CompareInstruction::new(
-			ByteSource::Acc, ByteSource::SingleRegister(SingleRegisters::B),
+			ByteSource::read_from_acc(), ByteSource::SingleRegister(SingleRegisters::B),
 		);
 
 		let actual = instruction.compute_change(&cpu).expect("Compute changes");
