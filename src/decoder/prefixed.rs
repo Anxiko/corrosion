@@ -2,7 +2,8 @@ use crate::bits::bits_to_byte;
 use crate::decoder::DecodedInstructionOperand;
 use crate::instructions::base::ByteDestination;
 use crate::instructions::Instruction;
-use crate::instructions::shifting::{ByteShiftInstruction, ByteShiftOperation, ByteSwapInstruction, ByteSwapOperation, ShiftDirection, ShiftType};
+use crate::instructions::shifting::{ByteShiftInstruction, ByteSwapInstruction, ByteSwapOperation};
+use crate::instructions::shifting::operation::{ByteShiftOperation, ShiftDirection, ShiftType};
 use crate::instructions::single_bit::{SingleBitInstruction, SingleBitOperand, SingleBitOperation};
 
 pub(super) fn decode_prefixed_shifting(y: [bool; 3], z: [bool; 3]) -> Box<dyn Instruction> {

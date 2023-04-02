@@ -17,7 +17,8 @@ use crate::instructions::load::byte_load::{ByteLoadInstruction, ByteLoadOperatio
 use crate::instructions::load::double_byte_load::{DoubleByteLoadInstruction, DoubleByteLoadOperation, PopInstruction, PushInstruction};
 use crate::instructions::logical::{BinaryLogicalInstruction, BinaryLogicalOperation, BinaryLogicalOperationType, Negate};
 use crate::instructions::shared::IndexUpdateType;
-use crate::instructions::shifting::{ByteShiftInstruction, ByteShiftOperation, ShiftDirection, ShiftType};
+use crate::instructions::shifting::ByteShiftInstruction;
+use crate::instructions::shifting::operation::{ByteShiftOperation, ShiftDirection, ShiftType};
 use crate::instructions::single_bit::SingleBitOperation;
 
 mod prefixed;

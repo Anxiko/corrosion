@@ -1,13 +1,11 @@
-﻿use std::assert_matches::assert_matches;
-use crate::hardware::cpu::Cpu;
-use crate::hardware::register_bank::{BitFlags, SingleRegisters};
+﻿use crate::hardware::cpu::Cpu;
+use crate::hardware::register_bank::BitFlags;
 use crate::instructions::base::{BaseByteInstruction, ByteDestination, ByteOperation, ByteSource};
-use crate::instructions::changeset::{Change, ChangeList, SingleRegisterChange};
-use crate::instructions::{ACC_REGISTER, ExecutionError};
-pub(crate) use crate::instructions::shifting::operation::{ByteShiftOperation, ShiftDirection, ShiftType};
-use crate::instructions::Instruction;
+use crate::instructions::changeset::{Change, ChangeList};
+use crate::instructions::ExecutionError;
+use crate::instructions::shifting::operation::ByteShiftOperation;
 
-mod operation;
+pub(crate) mod operation;
 
 impl ByteOperation for ByteShiftOperation {
 	type C = ChangeList;
@@ -49,47 +47,58 @@ impl ByteOperation for ByteSwapOperation {
 
 pub(crate) type ByteSwapInstruction = BaseByteInstruction<ByteSwapOperation>;
 
-#[test]
-fn shift_instruction() {
-	let mut cpu = Cpu::new();
-	let old_carry = true;
-	cpu.register_bank
-		.write_single_named(ACC_REGISTER, 0b0011_0101);
-	cpu.register_bank.write_bit_flag(BitFlags::Carry, old_carry);
+#[cfg(test)]
+mod tests {
+	use std::assert_matches::assert_matches;
 
-	let mut expected = cpu.clone();
-	expected
-		.register_bank
-		.write_single_named(ACC_REGISTER, 0b0110_1011);
-	expected
-		.register_bank
-		.write_bit_flag(BitFlags::Carry, false);
+	use crate::hardware::register_bank::SingleRegisters;
+	use crate::instructions::ACC_REGISTER;
+	use crate::instructions::changeset::{BitFlagsChange, ChangesetInstruction, SingleRegisterChange};
+	use crate::instructions::shifting::operation::{ShiftDirection, ShiftType};
 
-	let instruction = ByteShiftInstruction::new(
-		ByteSource::Acc,
-		ByteDestination::Acc,
-		ByteShiftOperation::new(ShiftDirection::Left, ShiftType::RotateWithCarry),
-	);
+	use super::*;
+
+	#[test]
+	fn shift_instruction() {
+		let mut cpu = Cpu::new();
+		cpu.register_bank.write_single_named(ACC_REGISTER, 0b0011_0101);
+		cpu.register_bank.write_bit_flag(BitFlags::Carry, true);
+
+		let instruction = ByteShiftInstruction::new(
+			ByteSource::Acc,
+			ByteDestination::Acc,
+			ByteShiftOperation::new(ShiftDirection::Left, ShiftType::RotateWithCarry),
+		);
 
 
-	assert_matches!(instruction.execute(&mut cpu), Ok(()));
-	assert_eq!(cpu, expected);
-}
+		let expected = ChangeList::new(vec![
+			Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b0110_1011)),
+			Box::new(
+				BitFlagsChange::keep_all()
+					.with_carry_flag(false)
+					.with_zero_flag(false)
+			)
+		]);
+		let actual = instruction.compute_change(&cpu).expect("Compute changes");
 
-#[test]
-fn swap_operation() {
-	let mut cpu = Cpu::new();
-	cpu.register_bank.write_single_named(SingleRegisters::B, 0b0011_0101);
+		assert_eq!(actual, expected);
+	}
 
-	let operation = ByteSwapOperation::new();
+	#[test]
+	fn swap_operation() {
+		let mut cpu = Cpu::new();
+		cpu.register_bank.write_single_named(SingleRegisters::B, 0b0011_0101);
 
-	let actual = operation.execute(
-		&cpu,
-		&ByteSource::read_from_single(SingleRegisters::B),
-		&ByteDestination::Acc,
-	).expect("Operation to execute");
+		let operation = ByteSwapOperation::new();
 
-	let expected: Box<dyn Change> = Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b0101_0011));
+		let actual = operation.execute(
+			&cpu,
+			&ByteSource::read_from_single(SingleRegisters::B),
+			&ByteDestination::Acc,
+		).expect("Operation to execute");
 
-	assert_eq!(actual, expected);
+		let expected: Box<dyn Change> = Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b0101_0011));
+
+		assert_eq!(actual, expected);
+	}
 }
