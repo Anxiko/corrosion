@@ -122,10 +122,10 @@ impl BitFlagsChange {
 
 	pub(crate) fn zero_all() -> Self {
 		Self {
-			zero: None,
-			subtraction: None,
-			half_carry: None,
-			carry: None,
+			zero: Some(false),
+			subtraction: Some(false),
+			half_carry: Some(false),
+			carry: Some(false),
 		}
 	}
 

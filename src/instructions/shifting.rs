@@ -49,8 +49,6 @@ pub(crate) type ByteSwapInstruction = BaseByteInstruction<ByteSwapOperation>;
 
 #[cfg(test)]
 mod tests {
-	use std::assert_matches::assert_matches;
-
 	use crate::hardware::register_bank::SingleRegisters;
 	use crate::instructions::ACC_REGISTER;
 	use crate::instructions::changeset::{BitFlagsChange, ChangesetInstruction, SingleRegisterChange};
@@ -74,7 +72,7 @@ mod tests {
 		let expected = ChangeList::new(vec![
 			Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b0110_1011)),
 			Box::new(
-				BitFlagsChange::keep_all()
+				BitFlagsChange::zero_all()
 					.with_carry_flag(false)
 					.with_zero_flag(false)
 			)
