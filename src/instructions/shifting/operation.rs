@@ -1,7 +1,6 @@
-use crate::hardware::register_bank::SingleRegisters;
 use crate::instructions::ACC_REGISTER;
 use crate::instructions::base::ByteDestination;
-use crate::instructions::changeset::{BitFlagsChange, ChangeList, SingleRegisterChange};
+use crate::instructions::changeset::{BitFlagsChange, ChangeList};
 
 #[derive(Copy, Clone)]
 pub enum ShiftDirection {
@@ -24,21 +23,6 @@ pub enum ShiftType {
 	RotateWithCarry,
 	LogicalShift,
 	ArithmeticShift,
-}
-
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub(super) enum ShiftDestination {
-	Acc,
-	Single(SingleRegisters),
-}
-
-impl ShiftDestination {
-	fn as_single_named_register(self) -> SingleRegisters {
-		match self {
-			Self::Acc => ACC_REGISTER,
-			Self::Single(register) => register,
-		}
-	}
 }
 
 pub struct ByteShiftOperation {
@@ -76,6 +60,7 @@ impl ByteShiftOperation {
 	fn zero_flag_for_result(&self, destination: &ByteDestination, result: u8) -> bool {
 		match destination {
 			ByteDestination::Acc => false,
+			ByteDestination::SingleRegister(ACC_REGISTER) => false,
 			_ => result == 0,
 		}
 	}
@@ -113,145 +98,153 @@ impl ByteShiftOperation {
 	}
 }
 
-#[test]
-fn zero_flag() {
-	assert_eq!(
-		ByteShiftOperation::new(ShiftDirection::Right, ShiftType::Rotate).compute_changes(
-			0,
-			false,
-			&ByteDestination::Acc,
-		),
-		ChangeList::new(vec![
-			Box::new(SingleRegisterChange::new(ACC_REGISTER, 0)),
-			Box::new(
-				BitFlagsChange::zero_all()
-					.with_zero_flag(false)
-					.with_carry_flag(false)
+#[cfg(test)]
+mod tests {
+	use crate::hardware::register_bank::SingleRegisters;
+	use crate::instructions::changeset::SingleRegisterChange;
+
+	use super::*;
+
+	#[test]
+	fn zero_flag() {
+		assert_eq!(
+			ByteShiftOperation::new(ShiftDirection::Right, ShiftType::Rotate).compute_changes(
+				0,
+				false,
+				&ByteDestination::Acc,
 			),
-		])
-	);
+			ChangeList::new(vec![
+				Box::new(SingleRegisterChange::new(ACC_REGISTER, 0)),
+				Box::new(
+					BitFlagsChange::zero_all()
+						.with_zero_flag(false)
+						.with_carry_flag(false)
+				),
+			])
+		);
 
-	assert_eq!(
-		ByteShiftOperation::new(ShiftDirection::Right, ShiftType::Rotate).compute_changes(
-			0,
-			false,
-			&ByteDestination::SingleRegister(SingleRegisters::B),
-		),
-		ChangeList::new(vec![
-			Box::new(SingleRegisterChange::new(SingleRegisters::B, 0)),
-			Box::new(
-				BitFlagsChange::zero_all()
-					.with_zero_flag(true)
-					.with_carry_flag(false)
+		assert_eq!(
+			ByteShiftOperation::new(ShiftDirection::Right, ShiftType::Rotate).compute_changes(
+				0,
+				false,
+				&ByteDestination::SingleRegister(SingleRegisters::B),
 			),
-		])
-	);
-}
+			ChangeList::new(vec![
+				Box::new(SingleRegisterChange::new(SingleRegisters::B, 0)),
+				Box::new(
+					BitFlagsChange::zero_all()
+						.with_zero_flag(true)
+						.with_carry_flag(false)
+				),
+			])
+		);
+	}
 
-#[test]
-fn rotate() {
-	assert_eq!(
-		ByteShiftOperation::new(ShiftDirection::Right, ShiftType::Rotate).compute_changes(
-			0b1100_1010,
-			false,
-			&ByteDestination::Acc,
-		),
-		ChangeList::new(vec![
-			Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b0110_0101)),
-			Box::new(BitFlagsChange::zero_all().with_zero_flag(false).with_carry_flag(false)),
-		])
-	);
+	#[test]
+	fn rotate() {
+		assert_eq!(
+			ByteShiftOperation::new(ShiftDirection::Right, ShiftType::Rotate).compute_changes(
+				0b1100_1010,
+				false,
+				&ByteDestination::Acc,
+			),
+			ChangeList::new(vec![
+				Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b0110_0101)),
+				Box::new(BitFlagsChange::zero_all().with_zero_flag(false).with_carry_flag(false)),
+			])
+		);
 
-	assert_eq!(
-		ByteShiftOperation::new(ShiftDirection::Left, ShiftType::Rotate).compute_changes(
-			0b1100_1010,
-			false,
-			&ByteDestination::Acc,
-		),
-		ChangeList::new(vec![
-			Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b1001_0101)),
-			Box::new(BitFlagsChange::zero_all().with_zero_flag(false).with_carry_flag(true)),
-		])
-	);
-}
+		assert_eq!(
+			ByteShiftOperation::new(ShiftDirection::Left, ShiftType::Rotate).compute_changes(
+				0b1100_1010,
+				false,
+				&ByteDestination::Acc,
+			),
+			ChangeList::new(vec![
+				Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b1001_0101)),
+				Box::new(BitFlagsChange::zero_all().with_zero_flag(false).with_carry_flag(true)),
+			])
+		);
+	}
 
-#[test]
-fn rotate_with_carry() {
-	assert_eq!(
-		ByteShiftOperation::new(ShiftDirection::Right, ShiftType::RotateWithCarry).compute_changes(
-			0b0011_1010,
-			true,
-			&ByteDestination::Acc,
-		),
-		ChangeList::new(vec![
-			Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b1001_1101)),
-			Box::new(BitFlagsChange::zero_all().with_zero_flag(false).with_carry_flag(false)),
-		])
-	);
+	#[test]
+	fn rotate_with_carry() {
+		assert_eq!(
+			ByteShiftOperation::new(ShiftDirection::Right, ShiftType::RotateWithCarry).compute_changes(
+				0b0011_1010,
+				true,
+				&ByteDestination::Acc,
+			),
+			ChangeList::new(vec![
+				Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b1001_1101)),
+				Box::new(BitFlagsChange::zero_all().with_zero_flag(false).with_carry_flag(false)),
+			])
+		);
 
-	assert_eq!(
-		ByteShiftOperation::new(ShiftDirection::Left, ShiftType::RotateWithCarry).compute_changes(
-			0b1001_1101,
-			false,
-			&ByteDestination::Acc,
-		),
-		ChangeList::new(vec![
-			Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b0011_1010)),
-			Box::new(BitFlagsChange::zero_all().with_zero_flag(false).with_carry_flag(true)),
-		])
-	);
-}
+		assert_eq!(
+			ByteShiftOperation::new(ShiftDirection::Left, ShiftType::RotateWithCarry).compute_changes(
+				0b1001_1101,
+				false,
+				&ByteDestination::Acc,
+			),
+			ChangeList::new(vec![
+				Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b0011_1010)),
+				Box::new(BitFlagsChange::zero_all().with_zero_flag(false).with_carry_flag(true)),
+			])
+		);
+	}
 
-#[test]
-fn shift_logical() {
-	assert_eq!(
-		ByteShiftOperation::new(ShiftDirection::Right, ShiftType::LogicalShift).compute_changes(
-			0b0011_1010,
-			false,
-			&ByteDestination::Acc,
-		),
-		ChangeList::new(vec![
-			Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b0001_1101)),
-			Box::new(BitFlagsChange::zero_all().with_zero_flag(false).with_carry_flag(false)),
-		])
-	);
+	#[test]
+	fn shift_logical() {
+		assert_eq!(
+			ByteShiftOperation::new(ShiftDirection::Right, ShiftType::LogicalShift).compute_changes(
+				0b0011_1010,
+				false,
+				&ByteDestination::Acc,
+			),
+			ChangeList::new(vec![
+				Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b0001_1101)),
+				Box::new(BitFlagsChange::zero_all().with_zero_flag(false).with_carry_flag(false)),
+			])
+		);
 
-	assert_eq!(
-		ByteShiftOperation::new(ShiftDirection::Left, ShiftType::LogicalShift).compute_changes(
-			0b1001_1101,
-			false,
-			&ByteDestination::Acc,
-		),
-		ChangeList::new(vec![
-			Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b0011_1010)),
-			Box::new(BitFlagsChange::zero_all().with_zero_flag(false).with_carry_flag(true)),
-		])
-	);
-}
+		assert_eq!(
+			ByteShiftOperation::new(ShiftDirection::Left, ShiftType::LogicalShift).compute_changes(
+				0b1001_1101,
+				false,
+				&ByteDestination::Acc,
+			),
+			ChangeList::new(vec![
+				Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b0011_1010)),
+				Box::new(BitFlagsChange::zero_all().with_zero_flag(false).with_carry_flag(true)),
+			])
+		);
+	}
 
-#[test]
-fn shift_arithmetic() {
-	assert_eq!(
-		ByteShiftOperation::new(ShiftDirection::Right, ShiftType::ArithmeticShift).compute_changes(
-			0b1100_1010,
-			false,
-			&ByteDestination::Acc,
-		),
-		ChangeList::new(vec![
-			Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b1110_0101)),
-			Box::new(BitFlagsChange::zero_all().with_zero_flag(false).with_carry_flag(false)),
-		])
-	);
+	#[test]
+	fn shift_arithmetic() {
+		assert_eq!(
+			ByteShiftOperation::new(ShiftDirection::Right, ShiftType::ArithmeticShift).compute_changes(
+				0b1100_1010,
+				false,
+				&ByteDestination::Acc,
+			),
+			ChangeList::new(vec![
+				Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b1110_0101)),
+				Box::new(BitFlagsChange::zero_all().with_zero_flag(false).with_carry_flag(false)),
+			])
+		);
 
-	assert_eq!(
-		ByteShiftOperation::new(ShiftDirection::Left, ShiftType::ArithmeticShift).compute_changes(
-			0b1000_1101,
-			false,
-			&ByteDestination::Acc,
-		),
-		ChangeList::new(vec![
-			Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b0001_1010)),
-			Box::new(BitFlagsChange::zero_all().with_zero_flag(false).with_carry_flag(true)),
-		])
-	);
+		assert_eq!(
+			ByteShiftOperation::new(ShiftDirection::Left, ShiftType::ArithmeticShift).compute_changes(
+				0b1000_1101,
+				false,
+				&ByteDestination::Acc,
+			),
+			ChangeList::new(vec![
+				Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b0001_1010)),
+				Box::new(BitFlagsChange::zero_all().with_zero_flag(false).with_carry_flag(true)),
+			])
+		);
+	}
 }
