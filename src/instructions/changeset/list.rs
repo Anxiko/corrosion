@@ -1,8 +1,9 @@
 use dyn_partial_eq::DynPartialEq;
 
 use crate::hardware::cpu::Cpu;
-use crate::instructions::changeset::Change;
 use crate::instructions::ExecutionError;
+
+use super::Change;
 
 #[derive(PartialEq, DynPartialEq, Debug)]
 pub(crate) struct ChangeList {

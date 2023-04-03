@@ -8,6 +8,7 @@ use crate::instructions::{ExecutionError, Instruction};
 pub(crate) use self::flags::{BitFlagsChange, ChangeIme};
 pub(crate) use self::list::ChangeList;
 pub(crate) use self::memory::{MemoryByteWriteChange, MemoryDoubleByteWriteChange};
+pub(crate) use self::noop::NoChange;
 pub(crate) use self::registers::{DoubleRegisterChange, SingleRegisterChange};
 pub(crate) use self::special_registers::{PcChange, SpChange};
 
@@ -22,22 +23,8 @@ mod flags;
 mod boxed;
 mod memory;
 mod list;
+mod noop;
 
-
-#[derive(PartialEq, DynPartialEq, Debug)]
-pub(crate) struct NoChange {}
-
-impl NoChange {
-	pub(crate) fn new() -> Self {
-		Self {}
-	}
-}
-
-impl Change for NoChange {
-	fn commit_change(&self, _cpu: &mut Cpu) -> Result<(), ExecutionError> {
-		Ok(())
-	}
-}
 
 pub(super) trait ChangesetInstruction {
 	type C: Change;

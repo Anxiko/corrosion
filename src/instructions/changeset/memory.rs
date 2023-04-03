@@ -4,8 +4,9 @@ use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::Ram;
 use crate::hardware::register_bank::{DoubleRegisters, SingleRegisters};
 use crate::instructions::base::double_byte::DoubleByteSource;
-use crate::instructions::changeset::Change;
 use crate::instructions::ExecutionError;
+
+use super::Change;
 
 #[derive(Debug, PartialEq)]
 enum MemoryByteWriteAddress {
