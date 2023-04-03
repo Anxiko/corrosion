@@ -1,4 +1,3 @@
-use std::any::Any;
 use std::fmt::Debug;
 
 use dyn_partial_eq::{dyn_partial_eq, DynPartialEq};
@@ -21,29 +20,8 @@ pub(crate) trait Change: Debug {
 mod registers;
 mod special_registers;
 mod flags;
+mod boxed;
 
-impl DynPartialEq for Box<dyn Change> {
-	fn box_eq(&self, other: &dyn Any) -> bool {
-		let other: Option<&Self> = other.downcast_ref();
-		other.is_some_and(|other| {
-			let boxed_self = &(**self);
-			let boxed_other = &(**other);
-
-			boxed_self.box_eq(boxed_other.as_any())
-		})
-	}
-
-	fn as_any(&self) -> &dyn Any {
-		self
-	}
-}
-
-impl Change for Box<dyn Change> {
-	fn commit_change(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
-		let boxed_change = &(**self);
-		boxed_change.commit_change(cpu)
-	}
-}
 
 #[derive(Debug, PartialEq)]
 enum MemoryByteWriteAddress {
