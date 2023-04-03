@@ -6,6 +6,7 @@ use crate::hardware::cpu::Cpu;
 use crate::instructions::{ExecutionError, Instruction};
 
 pub(crate) use self::flags::{BitFlagsChange, ChangeIme};
+pub(crate) use self::list::ChangeList;
 pub(crate) use self::memory::{MemoryByteWriteChange, MemoryDoubleByteWriteChange};
 pub(crate) use self::registers::{DoubleRegisterChange, SingleRegisterChange};
 pub(crate) use self::special_registers::{PcChange, SpChange};
@@ -20,27 +21,8 @@ mod special_registers;
 mod flags;
 mod boxed;
 mod memory;
+mod list;
 
-
-#[derive(PartialEq, DynPartialEq, Debug)]
-pub(crate) struct ChangeList {
-	changes: Vec<Box<dyn Change>>,
-}
-
-impl ChangeList {
-	pub(crate) fn new(changes: Vec<Box<dyn Change>>) -> Self {
-		Self { changes }
-	}
-}
-
-impl Change for ChangeList {
-	fn commit_change(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
-		for change in self.changes.iter() {
-			change.commit_change(cpu)?;
-		}
-		Ok(())
-	}
-}
 
 #[derive(PartialEq, DynPartialEq, Debug)]
 pub(crate) struct NoChange {}
