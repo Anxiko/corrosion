@@ -8,12 +8,12 @@ use crate::instructions::ExecutionError;
 use super::Change;
 
 #[derive(PartialEq, DynPartialEq, Debug)]
-pub(in crate::instructions) struct SpChange {
+pub(crate) struct SpChange {
 	value: u16,
 }
 
 impl SpChange {
-	pub(in crate::instructions) fn new(value: u16) -> Self {
+	pub(crate) fn new(value: u16) -> Self {
 		Self { value }
 	}
 }
@@ -26,12 +26,12 @@ impl Change for SpChange {
 }
 
 #[derive(PartialEq, DynPartialEq, Debug)]
-pub(in crate::instructions) struct PcChange {
+pub(crate) struct PcChange {
 	value: u16,
 }
 
 impl PcChange {
-	pub(in crate::instructions) fn new(value: u16) -> Self {
+	pub(crate) fn new(value: u16) -> Self {
 		Self { value }
 	}
 }

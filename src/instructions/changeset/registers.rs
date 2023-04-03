@@ -7,13 +7,13 @@ use crate::instructions::ExecutionError;
 use super::Change;
 
 #[derive(PartialEq, DynPartialEq, Debug)]
-pub(in crate::instructions) struct SingleRegisterChange {
+pub(crate) struct SingleRegisterChange {
 	reg: SingleRegisters,
 	value: u8,
 }
 
 impl SingleRegisterChange {
-	pub(in crate::instructions) fn new(reg: SingleRegisters, value: u8) -> Self {
+	pub(crate) fn new(reg: SingleRegisters, value: u8) -> Self {
 		Self { reg, value }
 	}
 }
@@ -26,13 +26,13 @@ impl Change for SingleRegisterChange {
 }
 
 #[derive(PartialEq, DynPartialEq, Debug)]
-pub(in crate::instructions) struct DoubleRegisterChange {
+pub(crate) struct DoubleRegisterChange {
 	reg: DoubleRegisters,
 	value: u16,
 }
 
 impl DoubleRegisterChange {
-	pub(in crate::instructions) fn new(reg: DoubleRegisters, value: u16) -> Self {
+	pub(crate) fn new(reg: DoubleRegisters, value: u16) -> Self {
 		Self { reg, value }
 	}
 }
