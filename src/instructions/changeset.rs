@@ -9,7 +9,8 @@ use crate::hardware::register_bank::{BitFlags, DoubleRegisters, SingleRegisters}
 use crate::instructions::{ExecutionError, Instruction};
 use crate::instructions::base::double_byte::DoubleByteSource;
 
-pub(crate) use self::registers::{SingleRegisterChange, DoubleRegisterChange};
+pub(in crate::instructions) use self::registers::{DoubleRegisterChange, SingleRegisterChange};
+pub(in crate::instructions) use self::special_registers::{PcChange, SpChange};
 
 #[dyn_partial_eq]
 pub(crate) trait Change: Debug {
@@ -17,42 +18,7 @@ pub(crate) trait Change: Debug {
 }
 
 pub(crate) mod registers;
-
-#[derive(PartialEq, DynPartialEq, Debug)]
-pub(super) struct SpChange {
-	value: u16,
-}
-
-impl SpChange {
-	pub(super) fn new(value: u16) -> Self {
-		Self { value }
-	}
-}
-
-impl Change for SpChange {
-	fn commit_change(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
-		cpu.sp.write(self.value);
-		Ok(())
-	}
-}
-
-#[derive(PartialEq, DynPartialEq, Debug)]
-pub(super) struct PcChange {
-	value: u16,
-}
-
-impl PcChange {
-	pub(super) fn new(value: u16) -> Self {
-		Self { value }
-	}
-}
-
-impl Change for PcChange {
-	fn commit_change(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
-		cpu.pc.write(self.value);
-		Ok(())
-	}
-}
+pub(crate) mod special_registers;
 
 #[derive(PartialEq, DynPartialEq, Debug)]
 pub(crate) struct BitFlagsChange {
@@ -189,7 +155,7 @@ impl MemoryByteWriteAddress {
 			Self::Immediate(address) => *address,
 			Self::Register(double_register) => {
 				cpu.register_bank.read_double_named(*double_register)
-			},
+			}
 			Self::OffsetRegister { base, offset } => {
 				let offset_value = cpu.register_bank.read_single_named(*offset);
 				base.wrapping_add(offset_value.into())
