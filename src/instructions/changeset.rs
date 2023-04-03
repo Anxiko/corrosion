@@ -9,48 +9,14 @@ use crate::hardware::register_bank::{BitFlags, DoubleRegisters, SingleRegisters}
 use crate::instructions::{ExecutionError, Instruction};
 use crate::instructions::base::double_byte::DoubleByteSource;
 
+pub(crate) use self::registers::{SingleRegisterChange, DoubleRegisterChange};
+
 #[dyn_partial_eq]
 pub(crate) trait Change: Debug {
 	fn commit_change(&self, cpu: &mut Cpu) -> Result<(), ExecutionError>;
 }
 
-#[derive(PartialEq, DynPartialEq, Debug)]
-pub(super) struct SingleRegisterChange {
-	reg: SingleRegisters,
-	value: u8,
-}
-
-impl SingleRegisterChange {
-	pub(super) fn new(reg: SingleRegisters, value: u8) -> Self {
-		Self { reg, value }
-	}
-}
-
-impl Change for SingleRegisterChange {
-	fn commit_change(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
-		cpu.register_bank.write_single_named(self.reg, self.value);
-		Ok(())
-	}
-}
-
-#[derive(PartialEq, DynPartialEq, Debug)]
-pub(super) struct DoubleRegisterChange {
-	reg: DoubleRegisters,
-	value: u16,
-}
-
-impl DoubleRegisterChange {
-	pub(super) fn new(reg: DoubleRegisters, value: u16) -> Self {
-		Self { reg, value }
-	}
-}
-
-impl Change for DoubleRegisterChange {
-	fn commit_change(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
-		cpu.register_bank.write_double_named(self.reg, self.value);
-		Ok(())
-	}
-}
+pub(crate) mod registers;
 
 #[derive(PartialEq, DynPartialEq, Debug)]
 pub(super) struct SpChange {
