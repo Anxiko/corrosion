@@ -7,7 +7,7 @@ use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::Ram;
 use crate::hardware::register_bank::{BitFlags, DoubleRegisters, SingleRegisters};
 use crate::instructions::{ExecutionError, Instruction};
-use crate::instructions::base::DoubleByteSource;
+use crate::instructions::base::double_byte::DoubleByteSource;
 
 #[dyn_partial_eq]
 pub(crate) trait Change: Debug {

@@ -1,6 +1,6 @@
 use crate::hardware::alu::sub_u8;
 use crate::hardware::cpu::Cpu;
-use crate::instructions::base::ByteSource;
+use crate::instructions::base::byte::ByteSource;
 use crate::instructions::changeset::{BitFlagsChange, ChangesetInstruction};
 use crate::instructions::ExecutionError;
 

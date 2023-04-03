@@ -1,6 +1,6 @@
 use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::Ram;
-use crate::instructions::base::{BaseDoubleByteInstruction, DoubleByteDestination, DoubleByteOperation, DoubleByteSource};
+use crate::instructions::base::double_byte::{UnaryDoubleByteInstruction, DoubleByteDestination, UnaryDoubleByteOperation, DoubleByteSource};
 use crate::instructions::changeset::{Change, ChangeList, ChangesetInstruction, MemoryDoubleByteWriteChange, SpChange};
 use crate::instructions::ExecutionError;
 
@@ -12,7 +12,7 @@ impl DoubleByteLoadOperation {
 	}
 }
 
-impl DoubleByteOperation for DoubleByteLoadOperation {
+impl UnaryDoubleByteOperation for DoubleByteLoadOperation {
 	type C = Box<dyn Change>;
 
 	fn execute(&self, cpu: &Cpu, src: &DoubleByteSource, dst: &DoubleByteDestination) -> Result<Self::C, ExecutionError> {
@@ -21,7 +21,7 @@ impl DoubleByteOperation for DoubleByteLoadOperation {
 	}
 }
 
-pub(crate) type DoubleByteLoadInstruction = BaseDoubleByteInstruction<DoubleByteLoadOperation>;
+pub(crate) type DoubleByteLoadInstruction = UnaryDoubleByteInstruction<DoubleByteLoadOperation>;
 
 pub(crate) struct PushInstruction {
 	source: DoubleByteSource,
@@ -78,7 +78,7 @@ mod tests {
 	use crate::hardware::cpu::Cpu;
 	use crate::hardware::ram::{Ram, WORKING_RAM_START};
 	use crate::hardware::register_bank::DoubleRegisters;
-	use crate::instructions::base::{DoubleByteDestination, DoubleByteSource};
+	use crate::instructions::base::double_byte::{DoubleByteDestination, DoubleByteSource};
 	use crate::instructions::changeset::{Change, ChangeList, ChangesetInstruction, DoubleRegisterChange, MemoryDoubleByteWriteChange, SpChange};
 	use crate::instructions::load::double_byte_load::{DoubleByteLoadInstruction, DoubleByteLoadOperation, PopInstruction, PushInstruction};
 

@@ -1,5 +1,5 @@
 use crate::instructions::ACC_REGISTER;
-use crate::instructions::base::ByteDestination;
+use crate::instructions::base::byte::ByteDestination;
 use crate::instructions::changeset::{BitFlagsChange, ChangeList};
 
 #[derive(Copy, Clone)]

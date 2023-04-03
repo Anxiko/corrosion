@@ -8,7 +8,8 @@ use crate::instructions::arithmetic::add_or_sub::{BinaryArithmeticInstruction, B
 use crate::instructions::arithmetic::bcd::DecimalAdjust;
 use crate::instructions::arithmetic::compare::CompareInstruction;
 use crate::instructions::arithmetic::inc_or_dec::{IncOrDecInstruction, IncOrDecOperation};
-use crate::instructions::base::{ByteDestination, ByteSource, DoubleByteDestination, DoubleByteSource};
+use crate::instructions::base::byte::{ByteDestination, ByteSource};
+use crate::instructions::base::double_byte::{DoubleByteDestination, DoubleByteSource};
 use crate::instructions::control::{HaltInstruction, NopInstruction, SetImeInstruction, StopInstruction};
 use crate::instructions::double_arithmetic::{AddSignedByteToDouble, BinaryDoubleAddInstruction, BinaryDoubleAddOperation, IncOrDecDoubleInstruction, IncOrDecDoubleOperation, IncOrDecDoubleType};
 use crate::instructions::flags::ChangeCarryFlag;
@@ -144,7 +145,7 @@ fn decode_opcode(
 										DoubleByteSource::DoubleRegister(DoubleRegisters::HL),
 										double_register_operand.into(),
 										DoubleByteDestination::DoubleRegister(DoubleRegisters::HL),
-										BinaryDoubleAddOperation,
+										BinaryDoubleAddOperation::new(),
 									)))
 								}
 							}

@@ -1,7 +1,8 @@
 use crate::hardware::alu::{add_with_carry_u8, AluU8Result, sub_u8_with_carry};
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::BitFlags;
-use crate::instructions::base::{BinaryInstruction, BinaryOperation, ByteDestination, ByteSource};
+use crate::instructions::base::byte::BinaryByteInstruction;
+use crate::instructions::base::byte::{BinaryByteOperation, ByteDestination, ByteSource};
 use crate::instructions::changeset::ChangeList;
 use crate::instructions::ExecutionError;
 
@@ -34,7 +35,7 @@ impl BinaryArithmeticOperation {
 	}
 }
 
-impl BinaryOperation for BinaryArithmeticOperation {
+impl BinaryByteOperation for BinaryArithmeticOperation {
 	type C = ChangeList;
 
 	fn compute_changes(&self, cpu: &Cpu, left: &ByteSource, right: &ByteSource, dst: &ByteDestination) -> Result<Self::C, ExecutionError> {
@@ -52,14 +53,14 @@ impl BinaryOperation for BinaryArithmeticOperation {
 	}
 }
 
-pub(crate) type BinaryArithmeticInstruction = BinaryInstruction<BinaryArithmeticOperation>;
+pub(crate) type BinaryArithmeticInstruction = BinaryByteInstruction<BinaryArithmeticOperation>;
 
 #[cfg(test)]
 mod tests {
 	use crate::hardware::cpu::Cpu;
 	use crate::hardware::register_bank::{BitFlags, SingleRegisters};
 	use crate::instructions::arithmetic::add_or_sub::{BinaryArithmeticInstruction, BinaryArithmeticOperation, BinaryArithmeticOperationType};
-	use crate::instructions::base::{ByteDestination, ByteSource};
+	use crate::instructions::base::byte::{ByteDestination, ByteSource};
 	use crate::instructions::changeset::{BitFlagsChange, ChangeList, ChangesetInstruction, SingleRegisterChange};
 
 	#[test]

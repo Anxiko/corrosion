@@ -1,4 +1,4 @@
-use crate::instructions::base::ByteDestination;
+use crate::instructions::base::byte::ByteDestination;
 use crate::instructions::changeset::{BitFlagsChange, Change};
 
 #[derive(Copy, Clone, Debug, PartialEq)]

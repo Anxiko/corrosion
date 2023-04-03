@@ -1,6 +1,6 @@
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::DoubleRegisters;
-use crate::instructions::base::{BaseByteInstruction, ByteDestination, ByteOperation, ByteSource};
+use crate::instructions::base::byte::{UnaryByteInstruction, ByteDestination, UnaryByteOperation, ByteSource};
 use crate::instructions::changeset::{ChangeList, DoubleRegisterChange};
 use crate::instructions::ExecutionError;
 use crate::instructions::shared::IndexUpdateType;
@@ -43,7 +43,7 @@ impl ByteLoadOperation {
 	}
 }
 
-impl ByteOperation for ByteLoadOperation {
+impl UnaryByteOperation for ByteLoadOperation {
 	type C = ChangeList;
 
 	fn execute(&self, cpu: &Cpu, src: &ByteSource, dst: &ByteDestination) -> Result<Self::C, ExecutionError> {
@@ -60,7 +60,7 @@ impl ByteOperation for ByteLoadOperation {
 	}
 }
 
-pub(crate) type ByteLoadInstruction = BaseByteInstruction<ByteLoadOperation>;
+pub(crate) type ByteLoadInstruction = UnaryByteInstruction<ByteLoadOperation>;
 
 impl ByteLoadInstruction {
 	fn just_load(src: ByteSource, dst: ByteDestination) -> Self {

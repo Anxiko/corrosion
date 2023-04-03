@@ -1,6 +1,6 @@
 use crate::hardware::alu::delta_u8;
 use crate::hardware::cpu::Cpu;
-use crate::instructions::base::{BaseByteInstruction, ByteDestination, ByteOperation, ByteSource};
+use crate::instructions::base::byte::{UnaryByteInstruction, ByteDestination, UnaryByteOperation, ByteSource};
 use crate::instructions::changeset::{BitFlagsChange, Change, ChangeList};
 use crate::instructions::ExecutionError;
 use crate::instructions::shared::IndexUpdateType;
@@ -16,7 +16,7 @@ impl IncOrDecOperation {
 	}
 }
 
-impl ByteOperation for IncOrDecOperation {
+impl UnaryByteOperation for IncOrDecOperation {
 	type C = ChangeList;
 
 	fn execute(&self, cpu: &Cpu, src: &ByteSource, dst: &ByteDestination) -> Result<Self::C, ExecutionError> {
@@ -34,7 +34,7 @@ impl ByteOperation for IncOrDecOperation {
 	}
 }
 
-pub(crate) type IncOrDecInstruction = BaseByteInstruction<IncOrDecOperation>;
+pub(crate) type IncOrDecInstruction = UnaryByteInstruction<IncOrDecOperation>;
 
 #[cfg(test)]
 mod tests {

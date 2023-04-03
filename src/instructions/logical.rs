@@ -2,7 +2,8 @@ use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::SingleRegisters;
 use crate::instructions::{ExecutionError, Instruction};
 use crate::instructions::ACC_REGISTER;
-use crate::instructions::base::{BinaryInstruction, BinaryOperation, ByteDestination, ByteSource};
+use crate::instructions::base::byte::BinaryByteInstruction;
+use crate::instructions::base::byte::{BinaryByteOperation, ByteDestination, ByteSource};
 use crate::instructions::changeset::{BitFlagsChange, ChangeList};
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -33,7 +34,7 @@ impl BinaryLogicalOperation {
 	}
 }
 
-impl BinaryOperation for BinaryLogicalOperation {
+impl BinaryByteOperation for BinaryLogicalOperation {
 	type C = ChangeList;
 
 	fn compute_changes(
@@ -50,7 +51,7 @@ impl BinaryOperation for BinaryLogicalOperation {
 	}
 }
 
-pub(crate) type BinaryLogicalInstruction = BinaryInstruction<BinaryLogicalOperation>;
+pub(crate) type BinaryLogicalInstruction = BinaryByteInstruction<BinaryLogicalOperation>;
 
 pub(crate) struct And {
 	src: SingleRegisters,

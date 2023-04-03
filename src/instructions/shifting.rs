@@ -1,13 +1,13 @@
 ﻿use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::BitFlags;
-use crate::instructions::base::{BaseByteInstruction, ByteDestination, ByteOperation, ByteSource};
+use crate::instructions::base::byte::{UnaryByteInstruction, ByteDestination, UnaryByteOperation, ByteSource};
 use crate::instructions::changeset::{Change, ChangeList};
 use crate::instructions::ExecutionError;
 use crate::instructions::shifting::operation::ByteShiftOperation;
 
 pub(crate) mod operation;
 
-impl ByteOperation for ByteShiftOperation {
+impl UnaryByteOperation for ByteShiftOperation {
 	type C = ChangeList;
 
 	fn execute(
@@ -24,7 +24,7 @@ impl ByteOperation for ByteShiftOperation {
 	}
 }
 
-pub(crate) type ByteShiftInstruction = BaseByteInstruction<ByteShiftOperation>;
+pub(crate) type ByteShiftInstruction = UnaryByteInstruction<ByteShiftOperation>;
 
 pub(crate) struct ByteSwapOperation {}
 
@@ -32,7 +32,7 @@ impl ByteSwapOperation {
 	pub(crate) fn new() -> Self { Self {} }
 }
 
-impl ByteOperation for ByteSwapOperation {
+impl UnaryByteOperation for ByteSwapOperation {
 	type C = Box<dyn Change>;
 
 	fn execute(&self, cpu: &Cpu, src: &ByteSource, dst: &ByteDestination) -> Result<Self::C, ExecutionError> {
@@ -45,7 +45,7 @@ impl ByteOperation for ByteSwapOperation {
 	}
 }
 
-pub(crate) type ByteSwapInstruction = BaseByteInstruction<ByteSwapOperation>;
+pub(crate) type ByteSwapInstruction = UnaryByteInstruction<ByteSwapOperation>;
 
 #[cfg(test)]
 mod tests {
