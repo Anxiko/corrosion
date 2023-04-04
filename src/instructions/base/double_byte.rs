@@ -63,7 +63,7 @@ impl DoubleByteDestination {
 				Box::new(SpChange::new(value))
 			}
 			Self::AddressInImmediate(address) => {
-				Box::new(MemoryDoubleByteWriteChange::write_to_immediate_address(*address, value))
+				Box::new(MemoryDoubleByteWriteChange::write_to_immediate(*address, value))
 			}
 			_ => todo!()
 		}

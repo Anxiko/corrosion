@@ -43,7 +43,7 @@ impl ChangesetInstruction for PushInstruction {
 
 		Ok(ChangeList::new(vec![
 			Box::new(SpChange::new(address)),
-			Box::new(MemoryDoubleByteWriteChange::write_to_immediate_address(address, value)),
+			Box::new(MemoryDoubleByteWriteChange::write_to_immediate(address, value)),
 		]))
 	}
 }
@@ -93,7 +93,7 @@ mod tests {
 			DoubleByteLoadOperation::new(),
 		);
 
-		let expected: Box<dyn Change> = Box::new(MemoryDoubleByteWriteChange::write_to_immediate_address(
+		let expected: Box<dyn Change> = Box::new(MemoryDoubleByteWriteChange::write_to_immediate(
 			WORKING_RAM_START, 0x1234,
 		));
 		let actual = instruction.compute_change(&cpu).expect("Compute changes");
@@ -113,7 +113,7 @@ mod tests {
 
 		let expected = ChangeList::new(vec![
 			Box::new(SpChange::new(WORKING_RAM_START)),
-			Box::new(MemoryDoubleByteWriteChange::write_to_immediate_address(WORKING_RAM_START, 0x1234)),
+			Box::new(MemoryDoubleByteWriteChange::write_to_immediate(WORKING_RAM_START, 0x1234)),
 		]);
 		let actual = instruction.compute_change(&cpu).expect("Compute changes");
 

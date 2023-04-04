@@ -147,7 +147,7 @@ impl ChangesetInstruction for CallInstruction {
 			changes.push(Box::new(SpChange::new(sp)));
 
 			let old_pc = cpu.pc.read();
-			changes.push(Box::new(MemoryDoubleByteWriteChange::new(
+			changes.push(Box::new(MemoryDoubleByteWriteChange::write_to_source(
 				DoubleByteSource::StackPointer, old_pc,
 			)));
 
