@@ -24,3 +24,39 @@ impl Change for ChangeList {
 		Ok(())
 	}
 }
+
+#[cfg(test)]
+mod tests {
+	use crate::hardware::ram::{Ram, WORKING_RAM_START};
+	use crate::instructions::ACC_REGISTER;
+	use crate::instructions::changeset::{MemoryByteWriteChange, SingleRegisterChange};
+
+	use super::*;
+
+	#[test]
+	fn empty_list() {
+		let mut actual = Cpu::new();
+		let expected = actual.clone();
+
+		let change = ChangeList::new(Vec::new());
+		change.commit_change(&mut actual).unwrap();
+
+		assert_eq!(actual, expected);
+	}
+
+	#[test]
+	fn multiple_changes() {
+		let mut actual = Cpu::new();
+		let mut expected = actual.clone();
+		expected.register_bank.write_single_named(ACC_REGISTER, 0xFF);
+		expected.mapped_ram.write_byte(WORKING_RAM_START, 0x12).unwrap();
+
+		let change = ChangeList::new(vec![
+			Box::new(SingleRegisterChange::new(ACC_REGISTER, 0xFF)),
+			Box::new(MemoryByteWriteChange::write_to_immediate(WORKING_RAM_START, 0x12)),
+		]);
+		change.commit_change(&mut actual).unwrap();
+
+		assert_eq!(actual, expected);
+	}
+}
