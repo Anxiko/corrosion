@@ -149,3 +149,61 @@ impl<O: BinaryByteOperation> ChangesetInstruction for BinaryByteInstruction<O> {
 		self.op.compute_changes(cpu, &self.left, &self.right, &self.dst)
 	}
 }
+
+#[cfg(test)]
+mod tests {
+	use crate::hardware::ram::WORKING_RAM_START;
+
+	use super::*;
+
+	#[test]
+	fn source_register() {
+		let mut cpu = Cpu::new();
+		cpu.register_bank.write_single_named(ACC_REGISTER, 0x12);
+
+		let source = ByteSource::SingleRegister(ACC_REGISTER);
+
+		assert_eq!(source.read(&cpu).unwrap(), 0x12);
+	}
+
+	#[test]
+	fn source_address_in_register() {
+		let mut cpu = Cpu::new();
+		cpu.register_bank.write_double_named(DoubleRegisters::HL, WORKING_RAM_START);
+		cpu.mapped_ram.write_byte(WORKING_RAM_START, 0x12).unwrap();
+
+		let source = ByteSource::AddressInRegister(DoubleRegisters::HL);
+
+		assert_eq!(source.read(&cpu).unwrap(), 0x12);
+	}
+
+	#[test]
+	fn source_offset_in_register() {
+		let mut cpu = Cpu::new();
+		cpu.register_bank.write_single_named(SingleRegisters::B, 0x20);
+		cpu.mapped_ram.write_byte(WORKING_RAM_START + 0x20, 0x12).unwrap();
+
+		let source = ByteSource::OffsetAddressInRegister { base: WORKING_RAM_START, offset: SingleRegisters::B };
+
+		assert_eq!(source.read(&cpu).unwrap(), 0x12);
+	}
+
+	#[test]
+	fn source_address_in_immediate() {
+		let mut cpu = Cpu::new();
+		cpu.mapped_ram.write_byte(WORKING_RAM_START + 0x20, 0x12).unwrap();
+
+		let source = ByteSource::AddressInImmediate(WORKING_RAM_START + 0x20);
+
+		assert_eq!(source.read(&cpu).unwrap(), 0x12);
+	}
+
+	#[test]
+	fn source_immediate() {
+		let cpu = Cpu::new();
+
+		let source = ByteSource::Immediate(0x12);
+
+		assert_eq!(source.read(&cpu).unwrap(), 0x12);
+	}
+}
