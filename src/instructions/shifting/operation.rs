@@ -59,7 +59,6 @@ impl ByteShiftOperation {
 
 	fn zero_flag_for_result(&self, destination: &ByteDestination, result: u8) -> bool {
 		match destination {
-			ByteDestination::Acc => false,
 			ByteDestination::SingleRegister(ACC_REGISTER) => false,
 			_ => result == 0,
 		}
@@ -111,7 +110,7 @@ mod tests {
 			ByteShiftOperation::new(ShiftDirection::Right, ShiftType::Rotate).compute_changes(
 				0,
 				false,
-				&ByteDestination::Acc,
+				&ByteDestination::write_to_acc(),
 			),
 			ChangeList::new(vec![
 				Box::new(SingleRegisterChange::new(ACC_REGISTER, 0)),
@@ -146,7 +145,7 @@ mod tests {
 			ByteShiftOperation::new(ShiftDirection::Right, ShiftType::Rotate).compute_changes(
 				0b1100_1010,
 				false,
-				&ByteDestination::Acc,
+				&ByteDestination::write_to_acc(),
 			),
 			ChangeList::new(vec![
 				Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b0110_0101)),
@@ -158,7 +157,7 @@ mod tests {
 			ByteShiftOperation::new(ShiftDirection::Left, ShiftType::Rotate).compute_changes(
 				0b1100_1010,
 				false,
-				&ByteDestination::Acc,
+				&ByteDestination::write_to_acc(),
 			),
 			ChangeList::new(vec![
 				Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b1001_0101)),
@@ -173,7 +172,7 @@ mod tests {
 			ByteShiftOperation::new(ShiftDirection::Right, ShiftType::RotateWithCarry).compute_changes(
 				0b0011_1010,
 				true,
-				&ByteDestination::Acc,
+				&ByteDestination::write_to_acc(),
 			),
 			ChangeList::new(vec![
 				Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b1001_1101)),
@@ -185,7 +184,7 @@ mod tests {
 			ByteShiftOperation::new(ShiftDirection::Left, ShiftType::RotateWithCarry).compute_changes(
 				0b1001_1101,
 				false,
-				&ByteDestination::Acc,
+				&ByteDestination::write_to_acc(),
 			),
 			ChangeList::new(vec![
 				Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b0011_1010)),
@@ -200,7 +199,7 @@ mod tests {
 			ByteShiftOperation::new(ShiftDirection::Right, ShiftType::LogicalShift).compute_changes(
 				0b0011_1010,
 				false,
-				&ByteDestination::Acc,
+				&ByteDestination::write_to_acc(),
 			),
 			ChangeList::new(vec![
 				Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b0001_1101)),
@@ -212,7 +211,7 @@ mod tests {
 			ByteShiftOperation::new(ShiftDirection::Left, ShiftType::LogicalShift).compute_changes(
 				0b1001_1101,
 				false,
-				&ByteDestination::Acc,
+				&ByteDestination::write_to_acc(),
 			),
 			ChangeList::new(vec![
 				Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b0011_1010)),
@@ -227,7 +226,7 @@ mod tests {
 			ByteShiftOperation::new(ShiftDirection::Right, ShiftType::ArithmeticShift).compute_changes(
 				0b1100_1010,
 				false,
-				&ByteDestination::Acc,
+				&ByteDestination::write_to_acc(),
 			),
 			ChangeList::new(vec![
 				Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b1110_0101)),
@@ -239,7 +238,7 @@ mod tests {
 			ByteShiftOperation::new(ShiftDirection::Left, ShiftType::ArithmeticShift).compute_changes(
 				0b1000_1101,
 				false,
-				&ByteDestination::Acc,
+				&ByteDestination::write_to_acc(),
 			),
 			ChangeList::new(vec![
 				Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b0001_1010)),

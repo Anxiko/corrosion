@@ -94,7 +94,7 @@ mod tests {
 
 		let instruction = ByteLoadInstruction::just_load(
 			ByteSource::SingleRegister(SingleRegisters::B),
-			ByteDestination::Acc,
+			ByteDestination::write_to_acc(),
 		);
 
 		let expected = ChangeList::new(vec![
@@ -113,7 +113,7 @@ mod tests {
 
 		let instruction = ByteLoadInstruction::load_from_index_and_update(
 			DoubleRegisters::HL,
-			ByteDestination::Acc,
+			ByteDestination::write_to_acc(),
 			IndexUpdateType::Increment,
 		);
 

@@ -18,7 +18,7 @@ impl ByteSource {
 		Self::SingleRegister(ACC_REGISTER)
 	}
 
-	pub(in crate::instructions) fn read(&self, cpu: &Cpu) -> Result<u8, ExecutionError> {
+	pub(crate) fn read(&self, cpu: &Cpu) -> Result<u8, ExecutionError> {
 		match self {
 			Self::SingleRegister(single_reg) => {
 				Ok(cpu.register_bank.read_single_named(*single_reg))
@@ -45,7 +45,6 @@ impl ByteSource {
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub(crate) enum ByteDestination {
-	Acc,
 	SingleRegister(SingleRegisters),
 	AddressImmediate(u16),
 	AddressInRegister(DoubleRegisters),
@@ -53,21 +52,12 @@ pub(crate) enum ByteDestination {
 }
 
 impl ByteDestination {
-	fn write_to_acc() -> Self {
-		Self::Acc
-	}
-
-	fn write_to_single(single_reg: SingleRegisters) -> Self {
-		Self::SingleRegister(single_reg)
-	}
-
-	fn write_to_address_register(double_reg: DoubleRegisters) -> Self {
-		Self::AddressInRegister(double_reg)
+	pub(crate) fn write_to_acc() -> Self {
+		Self::SingleRegister(ACC_REGISTER)
 	}
 
 	pub(crate) fn change_destination(&self, value: u8) -> Box<dyn Change> {
 		match self {
-			Self::Acc => Box::new(SingleRegisterChange::new(ACC_REGISTER, value)),
 			Self::SingleRegister(single_reg) => Box::new(SingleRegisterChange::new(*single_reg, value)),
 			Self::AddressImmediate(address_immediate) => {
 				Box::new(MemoryByteWriteChange::write_to_immediate(*address_immediate, value))

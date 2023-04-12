@@ -64,7 +64,7 @@ mod tests {
 
 		let instruction = ByteShiftInstruction::new(
 			ByteSource::read_from_acc(),
-			ByteDestination::Acc,
+			ByteDestination::write_to_acc(),
 			ByteShiftOperation::new(ShiftDirection::Left, ShiftType::RotateWithCarry),
 		);
 
@@ -92,7 +92,7 @@ mod tests {
 		let actual = operation.execute(
 			&cpu,
 			&ByteSource::SingleRegister(SingleRegisters::B),
-			&ByteDestination::Acc,
+			&ByteDestination::write_to_acc(),
 		).expect("Operation to execute");
 
 		let expected: Box<dyn Change> = Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b0101_0011));

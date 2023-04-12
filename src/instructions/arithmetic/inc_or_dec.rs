@@ -50,7 +50,7 @@ mod tests {
 
 		let instruction = IncOrDecInstruction::new(
 			ByteSource::read_from_acc(),
-			ByteDestination::Acc,
+			ByteDestination::write_to_acc(),
 			IncOrDecOperation::new(IndexUpdateType::Increment),
 		);
 
@@ -75,7 +75,7 @@ mod tests {
 
 		let instruction = IncOrDecInstruction::new(
 			ByteSource::read_from_acc(),
-			ByteDestination::Acc,
+			ByteDestination::write_to_acc(),
 			IncOrDecOperation::new(IndexUpdateType::Decrement),
 		);
 

@@ -175,7 +175,7 @@ fn decode_opcode(
 										}
 										true /* q = 1 */ => {
 											(
-												ByteDestination::Acc,
+												ByteDestination::write_to_acc(),
 												ByteSource::AddressInRegister(register_address)
 											)
 										}
@@ -211,7 +211,7 @@ fn decode_opcode(
 										}
 										true /* q = 1 */ => {
 											(
-												ByteDestination::Acc,
+												ByteDestination::write_to_acc(),
 												ByteSource::AddressInRegister(DoubleRegisters::HL)
 											)
 										}
@@ -283,7 +283,7 @@ fn decode_opcode(
 
 									Ok(Box::new(ByteShiftInstruction::new(
 										ByteSource::read_from_acc(),
-										ByteDestination::Acc,
+										ByteDestination::write_to_acc(),
 										ByteShiftOperation::new(shift_direction, shift_type),
 									)))
 								}
@@ -350,7 +350,7 @@ fn decode_opcode(
 										ByteSource::AddressInImmediate(
 											IO_REGISTERS_MAPPING_START.wrapping_add(offset.into())
 										),
-										ByteDestination::Acc,
+										ByteDestination::write_to_acc(),
 										ByteLoadOperation::no_update(),
 									)))
 								}
@@ -431,7 +431,7 @@ fn decode_opcode(
 										true => {
 											(
 												ByteSource::OffsetAddressInRegister { base, offset },
-												ByteDestination::Acc
+												ByteDestination::write_to_acc()
 											)
 										}
 									};
@@ -452,7 +452,7 @@ fn decode_opcode(
 										}
 										true => (
 											ByteSource::AddressInImmediate(address),
-											ByteDestination::Acc
+											ByteDestination::write_to_acc()
 										)
 									};
 
@@ -655,7 +655,7 @@ fn decode_xyz(opcode: u8) -> ([bool; 2], [bool; 3], [bool; 3]) {
 }
 
 fn decode_byte_instruction(op_part: [bool; 3], right: ByteSource) -> Box<dyn Instruction> {
-	let dst = ByteDestination::Acc;
+	let dst = ByteDestination::write_to_acc();
 
 	match op_part {
 		[op0, op1, false] /* 0 <= op < 4 */ => {

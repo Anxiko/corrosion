@@ -23,10 +23,10 @@ pub(super) fn decode_prefixed_shifting(y: [bool; 3], z: [bool; 3]) -> Box<dyn In
 
 	match (shift_type, shift_direction) {
 		(ShiftType::LogicalShift, ShiftDirection::Left) => Box::new(ByteSwapInstruction::new(
-			source, ByteDestination::Acc, ByteSwapOperation::new(),
+			source, ByteDestination::write_to_acc(), ByteSwapOperation::new(),
 		)), // Logical left shift does not exist, instead this encodes a swap instruction
 		(_, _) => Box::new(ByteShiftInstruction::new(
-			source, ByteDestination::Acc, ByteShiftOperation::new(shift_direction, shift_type),
+			source, ByteDestination::write_to_acc(), ByteShiftOperation::new(shift_direction, shift_type),
 		))
 	}
 }
