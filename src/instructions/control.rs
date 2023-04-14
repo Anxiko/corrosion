@@ -61,3 +61,21 @@ impl ChangesetInstruction for SetImeInstruction {
 		Ok(ChangeIme::new(self.value))
 	}
 }
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	use crate::hardware::cpu::Cpu;
+
+
+	#[test]
+	fn change_ime() {
+		let cpu = Cpu::new();
+
+		let actual = SetImeInstruction::new(true).compute_change(&cpu).unwrap();
+		let expected = ChangeIme::new(true);
+
+		assert_eq!(actual, expected);
+	}
+}
