@@ -151,7 +151,7 @@ mod tests {
 		let mut cpu = Cpu::new();
 		cpu.register_bank.write_single_named(ACC_REGISTER, 0x12);
 
-		let source = ByteSource::SingleRegister(ACC_REGISTER);
+		let source = ByteSource::read_from_acc();
 
 		assert_eq!(source.read(&cpu).unwrap(), 0x12);
 	}
@@ -195,5 +195,51 @@ mod tests {
 		let source = ByteSource::Immediate(0x12);
 
 		assert_eq!(source.read(&cpu).unwrap(), 0x12);
+	}
+
+	#[test]
+	fn destination_register() {
+		let dest = ByteDestination::write_to_acc();
+
+		let actual = dest.change_destination(0x12);
+		let expected: Box<dyn Change> = Box::new(SingleRegisterChange::new(ACC_REGISTER, 0x12));
+
+		assert_eq!(actual, expected);
+	}
+
+	#[test]
+	fn destination_address_in_register() {
+		let dest = ByteDestination::AddressInRegister(DoubleRegisters::HL);
+
+		let actual = dest.change_destination(0x12);
+		let expected: Box<dyn Change> = Box::new(MemoryByteWriteChange::write_to_register(
+			DoubleRegisters::HL, 0x12,
+		));
+
+		assert_eq!(actual, expected);
+	}
+
+	#[test]
+	fn destination_address_immediate() {
+		let dest = ByteDestination::AddressImmediate(WORKING_RAM_START);
+
+		let actual = dest.change_destination(0x12);
+		let expected: Box<dyn Change> = Box::new(MemoryByteWriteChange::write_to_immediate(
+			WORKING_RAM_START, 0x12,
+		));
+
+		assert_eq!(actual, expected);
+	}
+
+	#[test]
+	fn destination_offset_in_register() {
+		let dest = ByteDestination::OffsetAddressInRegister { base: WORKING_RAM_START, offset: SingleRegisters::B };
+
+		let actual = dest.change_destination(0x12);
+		let expected: Box<dyn Change> = Box::new(MemoryByteWriteChange::write_to_offset(
+			WORKING_RAM_START, SingleRegisters::B, 0x12,
+		));
+
+		assert_eq!(actual, expected);
 	}
 }
