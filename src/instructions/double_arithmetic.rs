@@ -1,6 +1,6 @@
 use crate::hardware::alu::{add_u8, delta_u8};
 use crate::hardware::cpu::Cpu;
-use crate::instructions::base::double_byte::{UnaryDoubleByteInstruction, BinaryDoubleByteOperation, DoubleByteDestination, UnaryDoubleByteOperation, DoubleByteSource};
+use crate::instructions::base::double_byte::{BinaryDoubleByteInstruction, BinaryDoubleByteOperation, DoubleByteDestination, DoubleByteSource, UnaryDoubleByteInstruction, UnaryDoubleByteOperation};
 use crate::instructions::changeset::{BitFlagsChange, Change, ChangeList, ChangesetInstruction};
 use crate::instructions::ExecutionError;
 
@@ -40,29 +40,8 @@ impl BinaryDoubleByteOperation for BinaryDoubleAddOperation {
 	}
 }
 
-pub(crate) struct BinaryDoubleInstruction<O: BinaryDoubleByteOperation> {
-	left: DoubleByteSource,
-	right: DoubleByteSource,
-	dst: DoubleByteDestination,
-	op: O,
-}
 
-impl<O: BinaryDoubleByteOperation> BinaryDoubleInstruction<O> {
-	pub(crate) fn new(left: DoubleByteSource, right: DoubleByteSource, dst: DoubleByteDestination, op: O) -> Self {
-		Self { left, right, dst, op }
-	}
-}
-
-impl<O> ChangesetInstruction for BinaryDoubleInstruction<O> where
-	O: BinaryDoubleByteOperation {
-	type C = O::C;
-
-	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError> {
-		self.op.compute_changes(cpu, &self.left, &self.right, &self.dst)
-	}
-}
-
-pub(crate) type BinaryDoubleAddInstruction = BinaryDoubleInstruction<BinaryDoubleAddOperation>;
+pub(crate) type BinaryDoubleAddInstruction = BinaryDoubleByteInstruction<BinaryDoubleAddOperation>;
 
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -148,3 +127,6 @@ impl ChangesetInstruction for AddSignedByteToDouble {
 		]))
 	}
 }
+
+#[cfg(test)]
+mod tests {}

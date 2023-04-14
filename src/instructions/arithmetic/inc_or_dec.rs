@@ -1,7 +1,7 @@
 use crate::hardware::alu::delta_u8;
 use crate::hardware::cpu::Cpu;
-use crate::instructions::base::byte::{UnaryByteInstruction, ByteDestination, UnaryByteOperation, ByteSource};
-use crate::instructions::changeset::{BitFlagsChange, Change, ChangeList};
+use crate::instructions::base::byte::{ByteDestination, ByteSource, UnaryByteInstruction, UnaryByteOperation};
+use crate::instructions::changeset::{BitFlagsChange, ChangeList};
 use crate::instructions::ExecutionError;
 use crate::instructions::shared::IndexUpdateType;
 

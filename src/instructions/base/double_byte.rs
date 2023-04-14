@@ -104,6 +104,28 @@ pub(crate) trait BinaryDoubleByteOperation {
 	) -> Result<Self::C, ExecutionError>;
 }
 
+pub(crate) struct BinaryDoubleByteInstruction<O: BinaryDoubleByteOperation> {
+	left: DoubleByteSource,
+	right: DoubleByteSource,
+	dst: DoubleByteDestination,
+	op: O,
+}
+
+impl<O: BinaryDoubleByteOperation> BinaryDoubleByteInstruction<O> {
+	pub(crate) fn new(left: DoubleByteSource, right: DoubleByteSource, dst: DoubleByteDestination, op: O) -> Self {
+		Self { left, right, dst, op }
+	}
+}
+
+impl<O> ChangesetInstruction for BinaryDoubleByteInstruction<O> where
+	O: BinaryDoubleByteOperation {
+	type C = O::C;
+
+	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError> {
+		self.op.compute_changes(cpu, &self.left, &self.right, &self.dst)
+	}
+}
+
 #[cfg(test)]
 mod tests {
 	use crate::hardware::ram::WORKING_RAM_START;
