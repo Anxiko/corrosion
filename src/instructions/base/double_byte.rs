@@ -13,19 +13,7 @@ pub(crate) enum DoubleByteSource {
 }
 
 impl DoubleByteSource {
-	fn read_from_double_register(double_register: DoubleRegisters) -> Self {
-		Self::DoubleRegister(double_register)
-	}
-
-	fn read_from_immediate(immediate: u16) -> Self {
-		Self::Immediate(immediate)
-	}
-
-	fn read_from_sp() -> Self {
-		Self::StackPointer
-	}
-
-	pub(in crate::instructions) fn read(&self, cpu: &Cpu) -> Result<u16, ExecutionError> {
+	pub(crate) fn read(&self, cpu: &Cpu) -> Result<u16, ExecutionError> {
 		match self {
 			Self::DoubleRegister(double_register) => {
 				Ok(cpu.register_bank.read_double_named(*double_register))
@@ -65,7 +53,12 @@ impl DoubleByteDestination {
 			Self::AddressInImmediate(address) => {
 				Box::new(MemoryDoubleByteWriteChange::write_to_immediate(*address, value))
 			}
-			_ => todo!()
+			Self::AddressInRegister(double_register) => {
+				Box::new(MemoryDoubleByteWriteChange::write_to_source(
+					DoubleByteSource::DoubleRegister(*double_register),
+					value,
+				))
+			}
 		}
 	}
 }
@@ -109,4 +102,96 @@ pub(crate) trait BinaryDoubleByteOperation {
 	fn compute_changes(
 		&self, cpu: &Cpu, left: &DoubleByteSource, right: &DoubleByteSource, dst: &DoubleByteDestination,
 	) -> Result<Self::C, ExecutionError>;
+}
+
+#[cfg(test)]
+mod tests {
+	use crate::hardware::ram::WORKING_RAM_START;
+
+	use super::*;
+
+	#[test]
+	fn source_register() {
+		let mut cpu = Cpu::new();
+		cpu.register_bank.write_double_named(DoubleRegisters::HL, 0x1234);
+
+		let source = DoubleByteSource::DoubleRegister(DoubleRegisters::HL);
+
+		assert_eq!(source.read(&cpu).unwrap(), 0x1234);
+	}
+
+	#[test]
+	fn source_immediate() {
+		let mut cpu = Cpu::new();
+		cpu.mapped_ram.write_byte(WORKING_RAM_START + 0x20, 0x12).unwrap();
+
+		let source = DoubleByteSource::Immediate(0x1234);
+
+		assert_eq!(source.read(&cpu).unwrap(), 0x1234);
+	}
+
+	#[test]
+	fn source_sp() {
+		let mut cpu = Cpu::new();
+		cpu.sp.write(0x1234);
+
+		let source = DoubleByteSource::StackPointer;
+
+		assert_eq!(source.read(&cpu).unwrap(), 0x1234);
+	}
+
+	#[test]
+	fn source_address_in_register() {
+		let mut cpu = Cpu::new();
+		cpu.register_bank.write_double_named(DoubleRegisters::HL, WORKING_RAM_START);
+		cpu.mapped_ram.write_double_byte(WORKING_RAM_START, 0x1234).unwrap();
+
+		let source = DoubleByteSource::AddressInRegister(DoubleRegisters::HL);
+
+		assert_eq!(source.read(&cpu).unwrap(), 0x1234);
+	}
+
+	#[test]
+	fn destination_register() {
+		let dest = DoubleByteDestination::DoubleRegister(DoubleRegisters::HL);
+
+		let actual = dest.change_destination(0x1234);
+		let expected: Box<dyn Change> = Box::new(DoubleRegisterChange::new(DoubleRegisters::HL, 0x1234));
+
+		assert_eq!(actual, expected);
+	}
+
+	#[test]
+	fn destination_address_in_register() {
+		let dest = DoubleByteDestination::AddressInRegister(DoubleRegisters::HL);
+
+		let actual = dest.change_destination(0x1234);
+		let expected: Box<dyn Change> = Box::new(MemoryDoubleByteWriteChange::write_to_source(
+			DoubleByteSource::DoubleRegister(DoubleRegisters::HL), 0x1234,
+		));
+
+		assert_eq!(actual, expected);
+	}
+
+	#[test]
+	fn destination_address_immediate() {
+		let dest = DoubleByteDestination::AddressInImmediate(WORKING_RAM_START);
+
+		let actual = dest.change_destination(0x1234);
+		let expected: Box<dyn Change> = Box::new(MemoryDoubleByteWriteChange::write_to_immediate(
+			WORKING_RAM_START, 0x1234,
+		));
+
+		assert_eq!(actual, expected);
+	}
+
+	#[test]
+	fn destination_stack_pointer() {
+		let dest = DoubleByteDestination::StackPointer;
+
+		let actual = dest.change_destination(0x1234);
+		let expected: Box<dyn Change> = Box::new(SpChange::new(0x1234));
+
+		assert_eq!(actual, expected);
+	}
 }
