@@ -1,9 +1,11 @@
 use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::Ram;
 use crate::hardware::register_bank::BitFlags;
-use crate::instructions::changeset::{Change, ChangeIme, ChangeList, ChangesetInstruction, PcChange, SpChange};
-use crate::instructions::ExecutionError;
+use crate::instructions::changeset::{
+	Change, ChangeIme, ChangeList, ChangesetInstruction, PcChange, SpChange,
+};
 use crate::instructions::flow::BranchCondition;
+use crate::instructions::ExecutionError;
 
 pub(crate) struct ReturnInstruction {
 	condition: BranchCondition,
@@ -12,11 +14,20 @@ pub(crate) struct ReturnInstruction {
 
 impl ReturnInstruction {
 	pub(crate) fn new(condition: BranchCondition, enable_interrupts: bool) -> Self {
-		Self { condition, enable_interrupts }
+		Self {
+			condition,
+			enable_interrupts,
+		}
 	}
 
 	pub(crate) fn ret_conditional(flag: BitFlags, value: bool) -> Self {
-		Self::new(BranchCondition::TestFlag { flag, branch_if_equals: value }, false)
+		Self::new(
+			BranchCondition::TestFlag {
+				flag,
+				branch_if_equals: value,
+			},
+			false,
+		)
 	}
 }
 
@@ -46,14 +57,18 @@ mod tests {
 	use crate::hardware::cpu::Cpu;
 	use crate::hardware::ram::{Ram, WORKING_RAM_START};
 	use crate::hardware::register_bank::BitFlags;
-	use crate::instructions::changeset::{ChangeIme, ChangeList, ChangesetInstruction, PcChange, SpChange};
+	use crate::instructions::changeset::{
+		ChangeIme, ChangeList, ChangesetInstruction, PcChange, SpChange,
+	};
 	use crate::instructions::flow::{BranchCondition, ReturnInstruction};
 
 	fn get_cpu() -> Cpu {
 		let mut cpu = Cpu::new();
 		cpu.pc.write(0x1234);
 		cpu.sp.write(WORKING_RAM_START + 10);
-		cpu.mapped_ram.write_double_byte(WORKING_RAM_START + 10, 0x4321).unwrap();
+		cpu.mapped_ram
+			.write_double_byte(WORKING_RAM_START + 10, 0x4321)
+			.unwrap();
 		cpu
 	}
 
@@ -77,7 +92,10 @@ mod tests {
 		let cpu = get_cpu();
 
 		let instruction = ReturnInstruction::new(
-			BranchCondition::TestFlag { flag: BitFlags::Carry, branch_if_equals: false },
+			BranchCondition::TestFlag {
+				flag: BitFlags::Carry,
+				branch_if_equals: false,
+			},
 			true,
 		);
 
@@ -95,10 +113,7 @@ mod tests {
 	fn failed_conditional_return() {
 		let cpu = get_cpu();
 
-		let instruction = ReturnInstruction::ret_conditional(
-			BitFlags::Carry,
-			true,
-		);
+		let instruction = ReturnInstruction::ret_conditional(BitFlags::Carry, true);
 
 		let actual = instruction.compute_change(&cpu).unwrap();
 		let expected = ChangeList::new(vec![]);

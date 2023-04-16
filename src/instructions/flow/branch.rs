@@ -1,8 +1,8 @@
 use crate::hardware::cpu::Cpu;
 use crate::instructions::base::double_byte::DoubleByteSource;
 use crate::instructions::changeset::{Change, ChangesetInstruction, NoChange, PcChange};
-use crate::instructions::ExecutionError;
 use crate::instructions::flow::BranchCondition;
+use crate::instructions::ExecutionError;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub(crate) enum JumpInstructionDestination {
@@ -13,14 +13,11 @@ pub(crate) enum JumpInstructionDestination {
 impl JumpInstructionDestination {
 	fn resolve(&self, cpu: &Cpu) -> Result<u16, ExecutionError> {
 		match self {
-			Self::FromSource(source) => {
-				source.read(cpu)
-			}
-			Self::RelativeToPc(delta) => Ok(cpu.pc.read().wrapping_add_signed((*delta).into()))
+			Self::FromSource(source) => source.read(cpu),
+			Self::RelativeToPc(delta) => Ok(cpu.pc.read().wrapping_add_signed((*delta).into())),
 		}
 	}
 }
-
 
 pub(crate) struct JumpInstruction {
 	dst: JumpInstructionDestination,
@@ -56,8 +53,11 @@ mod tests {
 	fn get_cpu() -> Cpu {
 		let mut cpu = Cpu::new();
 		cpu.pc.write(0x1234);
-		cpu.register_bank.write_double_named(DoubleRegisters::HL, WORKING_RAM_START);
-		cpu.mapped_ram.write_double_byte(WORKING_RAM_START, 0x5678).expect("Write to RAM");
+		cpu.register_bank
+			.write_double_named(DoubleRegisters::HL, WORKING_RAM_START);
+		cpu.mapped_ram
+			.write_double_byte(WORKING_RAM_START, 0x5678)
+			.expect("Write to RAM");
 		cpu.register_bank.write_bit_flag(BitFlags::Zero, true);
 		cpu
 	}
@@ -83,7 +83,10 @@ mod tests {
 
 		let instruction = JumpInstruction::new(
 			JumpInstructionDestination::RelativeToPc(-0x7F),
-			BranchCondition::TestFlag { flag: BitFlags::Carry, branch_if_equals: false },
+			BranchCondition::TestFlag {
+				flag: BitFlags::Carry,
+				branch_if_equals: false,
+			},
 		);
 
 		let expected: Box<dyn Change> = Box::new(PcChange::new(0x11B5));
@@ -98,7 +101,10 @@ mod tests {
 
 		let instruction = JumpInstruction::new(
 			JumpInstructionDestination::RelativeToPc(-0x7F),
-			BranchCondition::TestFlag { flag: BitFlags::Carry, branch_if_equals: true },
+			BranchCondition::TestFlag {
+				flag: BitFlags::Carry,
+				branch_if_equals: true,
+			},
 		);
 
 		let expected: Box<dyn Change> = Box::new(NoChange::new());

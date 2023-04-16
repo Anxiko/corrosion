@@ -38,7 +38,8 @@ mod tests {
 	fn bigger_than() {
 		let mut cpu = Cpu::new();
 		cpu.register_bank.write_single_named(ACC_REGISTER, 0x80);
-		cpu.register_bank.write_single_named(SingleRegisters::B, 0x79);
+		cpu.register_bank
+			.write_single_named(SingleRegisters::B, 0x79);
 
 		let expected = BitFlagsChange::keep_all()
 			.with_carry_flag(false)
@@ -47,7 +48,8 @@ mod tests {
 			.with_subtraction_flag(true);
 
 		let instruction = CompareInstruction::new(
-			ByteSource::read_from_acc(), ByteSource::SingleRegister(SingleRegisters::B),
+			ByteSource::read_from_acc(),
+			ByteSource::SingleRegister(SingleRegisters::B),
 		);
 
 		let actual = instruction.compute_change(&cpu).expect("Compute changes");
@@ -59,7 +61,8 @@ mod tests {
 	fn equal() {
 		let mut cpu = Cpu::new();
 		cpu.register_bank.write_single_named(ACC_REGISTER, 0x80);
-		cpu.register_bank.write_single_named(SingleRegisters::B, 0x80);
+		cpu.register_bank
+			.write_single_named(SingleRegisters::B, 0x80);
 
 		let expected = BitFlagsChange::keep_all()
 			.with_carry_flag(false)
@@ -68,7 +71,8 @@ mod tests {
 			.with_zero_flag(true);
 
 		let instruction = CompareInstruction::new(
-			ByteSource::read_from_acc(), ByteSource::SingleRegister(SingleRegisters::B),
+			ByteSource::read_from_acc(),
+			ByteSource::SingleRegister(SingleRegisters::B),
 		);
 
 		let actual = instruction.compute_change(&cpu).expect("Compute changes");
@@ -80,7 +84,8 @@ mod tests {
 	fn less_than() {
 		let mut cpu = Cpu::new();
 		cpu.register_bank.write_single_named(ACC_REGISTER, 0x80);
-		cpu.register_bank.write_single_named(SingleRegisters::B, 0x81);
+		cpu.register_bank
+			.write_single_named(SingleRegisters::B, 0x81);
 
 		let expected = BitFlagsChange::keep_all()
 			.with_carry_flag(true)
@@ -89,7 +94,8 @@ mod tests {
 			.with_zero_flag(false);
 
 		let instruction = CompareInstruction::new(
-			ByteSource::read_from_acc(), ByteSource::SingleRegister(SingleRegisters::B),
+			ByteSource::read_from_acc(),
+			ByteSource::SingleRegister(SingleRegisters::B),
 		);
 
 		let actual = instruction.compute_change(&cpu).expect("Compute changes");

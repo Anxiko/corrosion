@@ -1,4 +1,4 @@
-use crate::hardware::alu::{add_with_carry_u8, AluU8Result, sub_u8_with_carry};
+use crate::hardware::alu::{add_with_carry_u8, sub_u8_with_carry, AluU8Result};
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::BitFlags;
 use crate::instructions::base::byte::BinaryByteInstruction;
@@ -25,12 +25,8 @@ impl BinaryArithmeticOperation {
 
 	fn alu_result(&self, left: u8, right: u8, carry: bool) -> AluU8Result {
 		match self.type_ {
-			BinaryArithmeticOperationType::Add => {
-				add_with_carry_u8(left, right, carry)
-			}
-			BinaryArithmeticOperationType::Sub => {
-				sub_u8_with_carry(left, right, carry)
-			}
+			BinaryArithmeticOperationType::Add => add_with_carry_u8(left, right, carry),
+			BinaryArithmeticOperationType::Sub => sub_u8_with_carry(left, right, carry),
 		}
 	}
 }
@@ -38,11 +34,16 @@ impl BinaryArithmeticOperation {
 impl BinaryByteOperation for BinaryArithmeticOperation {
 	type C = ChangeList;
 
-	fn compute_changes(&self, cpu: &Cpu, left: &ByteSource, right: &ByteSource, dst: &ByteDestination) -> Result<Self::C, ExecutionError> {
+	fn compute_changes(
+		&self,
+		cpu: &Cpu,
+		left: &ByteSource,
+		right: &ByteSource,
+		dst: &ByteDestination,
+	) -> Result<Self::C, ExecutionError> {
 		let carry = self.with_carry && cpu.register_bank.read_bit_flag(BitFlags::Carry);
 		let left = left.read(cpu)?;
 		let right = right.read(cpu)?;
-
 
 		let result = self.alu_result(left, right, carry);
 
@@ -59,16 +60,22 @@ pub(crate) type BinaryArithmeticInstruction = BinaryByteInstruction<BinaryArithm
 mod tests {
 	use crate::hardware::cpu::Cpu;
 	use crate::hardware::register_bank::{BitFlags, SingleRegisters};
-	use crate::instructions::arithmetic::add_or_sub::{BinaryArithmeticInstruction, BinaryArithmeticOperation, BinaryArithmeticOperationType};
+	use crate::instructions::arithmetic::add_or_sub::{
+		BinaryArithmeticInstruction, BinaryArithmeticOperation, BinaryArithmeticOperationType,
+	};
 	use crate::instructions::base::byte::{ByteDestination, ByteSource};
-	use crate::instructions::changeset::{BitFlagsChange, ChangeList, ChangesetInstruction, SingleRegisterChange};
+	use crate::instructions::changeset::{
+		BitFlagsChange, ChangeList, ChangesetInstruction, SingleRegisterChange,
+	};
 
 	#[test]
 	fn add() {
 		let mut cpu = Cpu::new();
 		cpu.register_bank.write_bit_flag(BitFlags::Carry, true);
-		cpu.register_bank.write_single_named(SingleRegisters::A, 0x12);
-		cpu.register_bank.write_single_named(SingleRegisters::B, 0x34);
+		cpu.register_bank
+			.write_single_named(SingleRegisters::A, 0x12);
+		cpu.register_bank
+			.write_single_named(SingleRegisters::B, 0x34);
 		let cpu = cpu;
 
 		let instruction = BinaryArithmeticInstruction::new(
@@ -85,7 +92,7 @@ mod tests {
 					.with_zero_flag(false)
 					.with_half_carry_flag(false)
 					.with_carry_flag(false)
-					.with_subtraction_flag(false)
+					.with_subtraction_flag(false),
 			),
 		]);
 
@@ -98,8 +105,10 @@ mod tests {
 	fn add_with_carry() {
 		let mut cpu = Cpu::new();
 		cpu.register_bank.write_bit_flag(BitFlags::Carry, true);
-		cpu.register_bank.write_single_named(SingleRegisters::A, 0x18);
-		cpu.register_bank.write_single_named(SingleRegisters::B, 0x37);
+		cpu.register_bank
+			.write_single_named(SingleRegisters::A, 0x18);
+		cpu.register_bank
+			.write_single_named(SingleRegisters::B, 0x37);
 		let cpu = cpu;
 
 		let instruction = BinaryArithmeticInstruction::new(
@@ -116,7 +125,7 @@ mod tests {
 					.with_zero_flag(false)
 					.with_half_carry_flag(true)
 					.with_carry_flag(false)
-					.with_subtraction_flag(false)
+					.with_subtraction_flag(false),
 			),
 		]);
 
@@ -129,8 +138,10 @@ mod tests {
 	fn sub() {
 		let mut cpu = Cpu::new();
 		cpu.register_bank.write_bit_flag(BitFlags::Carry, false);
-		cpu.register_bank.write_single_named(SingleRegisters::A, 0x18);
-		cpu.register_bank.write_single_named(SingleRegisters::B, 0x37);
+		cpu.register_bank
+			.write_single_named(SingleRegisters::A, 0x18);
+		cpu.register_bank
+			.write_single_named(SingleRegisters::B, 0x37);
 		let cpu = cpu;
 
 		let instruction = BinaryArithmeticInstruction::new(
@@ -147,7 +158,7 @@ mod tests {
 					.with_zero_flag(false)
 					.with_half_carry_flag(false)
 					.with_carry_flag(true)
-					.with_subtraction_flag(true)
+					.with_subtraction_flag(true),
 			),
 		]);
 

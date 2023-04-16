@@ -22,7 +22,7 @@ impl Cpu {
 			mapped_ram: MappedRam::new(),
 			pc: ProgramCounter::new(),
 			sp: StackPointer::new(),
-			ime: Ime::new()
+			ime: Ime::new(),
 		}
 	}
 

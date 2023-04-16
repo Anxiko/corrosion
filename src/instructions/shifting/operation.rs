@@ -1,6 +1,6 @@
-use crate::instructions::ACC_REGISTER;
 use crate::instructions::base::byte::ByteDestination;
 use crate::instructions::changeset::{BitFlagsChange, ChangeList};
+use crate::instructions::ACC_REGISTER;
 
 #[derive(Copy, Clone)]
 pub enum ShiftDirection {
@@ -52,9 +52,9 @@ impl ByteShiftOperation {
 
 	fn preserve_sign_bit(&self) -> bool {
 		matches!(
-            (self.type_, self.direction),
-            (ShiftType::ArithmeticShift, ShiftDirection::Right)
-        )
+			(self.type_, self.direction),
+			(ShiftType::ArithmeticShift, ShiftDirection::Right)
+		)
 	}
 
 	fn zero_flag_for_result(&self, destination: &ByteDestination, result: u8) -> bool {
@@ -90,10 +90,7 @@ impl ByteShiftOperation {
 			.with_carry_flag(new_carry)
 			.with_zero_flag(new_zero);
 
-		ChangeList::new(vec![
-			result_change,
-			Box::new(bit_flags_change),
-		])
+		ChangeList::new(vec![result_change, Box::new(bit_flags_change)])
 	}
 }
 
@@ -149,7 +146,11 @@ mod tests {
 			),
 			ChangeList::new(vec![
 				Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b0110_0101)),
-				Box::new(BitFlagsChange::zero_all().with_zero_flag(false).with_carry_flag(false)),
+				Box::new(
+					BitFlagsChange::zero_all()
+						.with_zero_flag(false)
+						.with_carry_flag(false)
+				),
 			])
 		);
 
@@ -161,7 +162,11 @@ mod tests {
 			),
 			ChangeList::new(vec![
 				Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b1001_0101)),
-				Box::new(BitFlagsChange::zero_all().with_zero_flag(false).with_carry_flag(true)),
+				Box::new(
+					BitFlagsChange::zero_all()
+						.with_zero_flag(false)
+						.with_carry_flag(true)
+				),
 			])
 		);
 	}
@@ -169,26 +174,28 @@ mod tests {
 	#[test]
 	fn rotate_with_carry() {
 		assert_eq!(
-			ByteShiftOperation::new(ShiftDirection::Right, ShiftType::RotateWithCarry).compute_changes(
-				0b0011_1010,
-				true,
-				&ByteDestination::write_to_acc(),
-			),
+			ByteShiftOperation::new(ShiftDirection::Right, ShiftType::RotateWithCarry)
+				.compute_changes(0b0011_1010, true, &ByteDestination::write_to_acc(),),
 			ChangeList::new(vec![
 				Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b1001_1101)),
-				Box::new(BitFlagsChange::zero_all().with_zero_flag(false).with_carry_flag(false)),
+				Box::new(
+					BitFlagsChange::zero_all()
+						.with_zero_flag(false)
+						.with_carry_flag(false)
+				),
 			])
 		);
 
 		assert_eq!(
-			ByteShiftOperation::new(ShiftDirection::Left, ShiftType::RotateWithCarry).compute_changes(
-				0b1001_1101,
-				false,
-				&ByteDestination::write_to_acc(),
-			),
+			ByteShiftOperation::new(ShiftDirection::Left, ShiftType::RotateWithCarry)
+				.compute_changes(0b1001_1101, false, &ByteDestination::write_to_acc(),),
 			ChangeList::new(vec![
 				Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b0011_1010)),
-				Box::new(BitFlagsChange::zero_all().with_zero_flag(false).with_carry_flag(true)),
+				Box::new(
+					BitFlagsChange::zero_all()
+						.with_zero_flag(false)
+						.with_carry_flag(true)
+				),
 			])
 		);
 	}
@@ -196,14 +203,15 @@ mod tests {
 	#[test]
 	fn shift_logical() {
 		assert_eq!(
-			ByteShiftOperation::new(ShiftDirection::Right, ShiftType::LogicalShift).compute_changes(
-				0b0011_1010,
-				false,
-				&ByteDestination::write_to_acc(),
-			),
+			ByteShiftOperation::new(ShiftDirection::Right, ShiftType::LogicalShift)
+				.compute_changes(0b0011_1010, false, &ByteDestination::write_to_acc(),),
 			ChangeList::new(vec![
 				Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b0001_1101)),
-				Box::new(BitFlagsChange::zero_all().with_zero_flag(false).with_carry_flag(false)),
+				Box::new(
+					BitFlagsChange::zero_all()
+						.with_zero_flag(false)
+						.with_carry_flag(false)
+				),
 			])
 		);
 
@@ -215,7 +223,11 @@ mod tests {
 			),
 			ChangeList::new(vec![
 				Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b0011_1010)),
-				Box::new(BitFlagsChange::zero_all().with_zero_flag(false).with_carry_flag(true)),
+				Box::new(
+					BitFlagsChange::zero_all()
+						.with_zero_flag(false)
+						.with_carry_flag(true)
+				),
 			])
 		);
 	}
@@ -223,26 +235,28 @@ mod tests {
 	#[test]
 	fn shift_arithmetic() {
 		assert_eq!(
-			ByteShiftOperation::new(ShiftDirection::Right, ShiftType::ArithmeticShift).compute_changes(
-				0b1100_1010,
-				false,
-				&ByteDestination::write_to_acc(),
-			),
+			ByteShiftOperation::new(ShiftDirection::Right, ShiftType::ArithmeticShift)
+				.compute_changes(0b1100_1010, false, &ByteDestination::write_to_acc(),),
 			ChangeList::new(vec![
 				Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b1110_0101)),
-				Box::new(BitFlagsChange::zero_all().with_zero_flag(false).with_carry_flag(false)),
+				Box::new(
+					BitFlagsChange::zero_all()
+						.with_zero_flag(false)
+						.with_carry_flag(false)
+				),
 			])
 		);
 
 		assert_eq!(
-			ByteShiftOperation::new(ShiftDirection::Left, ShiftType::ArithmeticShift).compute_changes(
-				0b1000_1101,
-				false,
-				&ByteDestination::write_to_acc(),
-			),
+			ByteShiftOperation::new(ShiftDirection::Left, ShiftType::ArithmeticShift)
+				.compute_changes(0b1000_1101, false, &ByteDestination::write_to_acc(),),
 			ChangeList::new(vec![
 				Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b0001_1010)),
-				Box::new(BitFlagsChange::zero_all().with_zero_flag(false).with_carry_flag(true)),
+				Box::new(
+					BitFlagsChange::zero_all()
+						.with_zero_flag(false)
+						.with_carry_flag(true)
+				),
 			])
 		);
 	}

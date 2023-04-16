@@ -1,7 +1,9 @@
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::BitFlags;
-use crate::instructions::{ACC_REGISTER, ExecutionError};
-use crate::instructions::changeset::{BitFlagsChange, ChangeList, ChangesetInstruction, SingleRegisterChange};
+use crate::instructions::changeset::{
+	BitFlagsChange, ChangeList, ChangesetInstruction, SingleRegisterChange,
+};
+use crate::instructions::{ExecutionError, ACC_REGISTER};
 
 pub(crate) struct DecimalAdjust;
 
@@ -11,7 +13,12 @@ impl DecimalAdjust {
 	}
 
 	// Implementation derived from here: https://forums.nesdev.org/viewtopic.php?t=15944
-	fn adjust(mut value: u8, sub_flag: bool, carry_flag: bool, half_carry_flag: bool) -> (u8, bool) {
+	fn adjust(
+		mut value: u8,
+		sub_flag: bool,
+		carry_flag: bool,
+		half_carry_flag: bool,
+	) -> (u8, bool) {
 		let mut next_carry_flag = false;
 		if !sub_flag {
 			if carry_flag || value > 0x99 {
@@ -44,14 +51,16 @@ impl ChangesetInstruction for DecimalAdjust {
 		let carry_flag = cpu.register_bank.read_bit_flag(BitFlags::Carry);
 		let half_carry_flag = cpu.register_bank.read_bit_flag(BitFlags::HalfCarry);
 
-		let (next_acc, next_carry_flag) = DecimalAdjust::adjust(acc, sub_flag, carry_flag, half_carry_flag);
+		let (next_acc, next_carry_flag) =
+			DecimalAdjust::adjust(acc, sub_flag, carry_flag, half_carry_flag);
 
 		Ok(ChangeList::new(vec![
 			Box::new(SingleRegisterChange::new(ACC_REGISTER, next_acc)),
-			Box::new(BitFlagsChange::keep_all()
-				.with_zero_flag(next_acc == 0)
-				.with_half_carry_flag(false)
-				.with_carry_flag(next_carry_flag)
+			Box::new(
+				BitFlagsChange::keep_all()
+					.with_zero_flag(next_acc == 0)
+					.with_half_carry_flag(false)
+					.with_carry_flag(next_carry_flag),
 			),
 		]))
 	}
@@ -168,7 +177,8 @@ mod tests {
 	#[test]
 	fn decimal_adjust() {
 		let mut cpu = Cpu::new();
-		cpu.register_bank.write_single_named(ACC_REGISTER, 0x32 + 0x18);
+		cpu.register_bank
+			.write_single_named(ACC_REGISTER, 0x32 + 0x18);
 		cpu.register_bank.write_bit_flag(BitFlags::HalfCarry, true);
 
 		let instruction = DecimalAdjust::new();
@@ -179,13 +189,10 @@ mod tests {
 				BitFlagsChange::keep_all()
 					.with_zero_flag(false)
 					.with_carry_flag(false)
-					.with_half_carry_flag(false)
+					.with_half_carry_flag(false),
 			),
 		]);
 
-		assert_eq!(
-			actual,
-			expected
-		);
+		assert_eq!(actual, expected);
 	}
 }

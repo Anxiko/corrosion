@@ -1,9 +1,11 @@
 use crate::hardware::alu::delta_u8;
 use crate::hardware::cpu::Cpu;
-use crate::instructions::base::byte::{ByteDestination, ByteSource, UnaryByteInstruction, UnaryByteOperation};
+use crate::instructions::base::byte::{
+	ByteDestination, ByteSource, UnaryByteInstruction, UnaryByteOperation,
+};
 use crate::instructions::changeset::{BitFlagsChange, ChangeList};
-use crate::instructions::ExecutionError;
 use crate::instructions::shared::IndexUpdateType;
+use crate::instructions::ExecutionError;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct IncOrDecOperation {
@@ -19,7 +21,12 @@ impl IncOrDecOperation {
 impl UnaryByteOperation for IncOrDecOperation {
 	type C = ChangeList;
 
-	fn execute(&self, cpu: &Cpu, src: &ByteSource, dst: &ByteDestination) -> Result<Self::C, ExecutionError> {
+	fn execute(
+		&self,
+		cpu: &Cpu,
+		src: &ByteSource,
+		dst: &ByteDestination,
+	) -> Result<Self::C, ExecutionError> {
 		let value = src.read(cpu)?;
 		let delta = self.type_.to_delta();
 
@@ -38,8 +45,8 @@ pub(crate) type IncOrDecInstruction = UnaryByteInstruction<IncOrDecOperation>;
 
 #[cfg(test)]
 mod tests {
-	use crate::instructions::ACC_REGISTER;
 	use crate::instructions::changeset::{ChangesetInstruction, SingleRegisterChange};
+	use crate::instructions::ACC_REGISTER;
 
 	use super::*;
 
@@ -60,7 +67,7 @@ mod tests {
 				BitFlagsChange::keep_all()
 					.with_subtraction_flag(false)
 					.with_zero_flag(false)
-					.with_half_carry_flag(false)
+					.with_half_carry_flag(false),
 			),
 		]);
 
@@ -85,7 +92,7 @@ mod tests {
 				BitFlagsChange::keep_all()
 					.with_subtraction_flag(true)
 					.with_zero_flag(false)
-					.with_half_carry_flag(true)
+					.with_half_carry_flag(true),
 			),
 		]);
 

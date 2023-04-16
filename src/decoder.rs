@@ -3,37 +3,54 @@ use crate::decoder::prefixed::{decode_prefixed_shifting, decode_prefixed_single_
 use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::IO_REGISTERS_MAPPING_START;
 use crate::hardware::register_bank::{BitFlags, DoubleRegisters, SingleRegisters};
-use crate::instructions::{ExecutionError, Instruction};
-use crate::instructions::arithmetic::add_or_sub::{BinaryArithmeticInstruction, BinaryArithmeticOperation, BinaryArithmeticOperationType};
+use crate::instructions::arithmetic::add_or_sub::{
+	BinaryArithmeticInstruction, BinaryArithmeticOperation, BinaryArithmeticOperationType,
+};
 use crate::instructions::arithmetic::bcd::DecimalAdjust;
 use crate::instructions::arithmetic::compare::CompareInstruction;
 use crate::instructions::arithmetic::inc_or_dec::{IncOrDecInstruction, IncOrDecOperation};
 use crate::instructions::base::byte::{ByteDestination, ByteSource};
 use crate::instructions::base::double_byte::{DoubleByteDestination, DoubleByteSource};
-use crate::instructions::control::{HaltInstruction, NopInstruction, SetImeInstruction, StopInstruction};
-use crate::instructions::double_arithmetic::{AddSignedByteToDoubleByte, BinaryDoubleByteAddInstruction, BinaryDoubleByteAddOperation, IncOrDecDoubleByteOperation, IncOrDecDoubleInstruction};
+use crate::instructions::control::{
+	HaltInstruction, NopInstruction, SetImeInstruction, StopInstruction,
+};
+use crate::instructions::double_arithmetic::{
+	AddSignedByteToDoubleByte, BinaryDoubleByteAddInstruction, BinaryDoubleByteAddOperation,
+	IncOrDecDoubleByteOperation, IncOrDecDoubleInstruction,
+};
 use crate::instructions::flags::{BitFlagChangeType, ChangeCarryFlagInstruction};
-use crate::instructions::flow::{BranchCondition, CallInstruction, JumpInstruction, JumpInstructionDestination, ReturnInstruction};
-use crate::instructions::load::byte_load::{ByteLoadInstruction, ByteLoadOperation, ByteLoadUpdate};
-use crate::instructions::load::double_byte_load::{DoubleByteLoadInstruction, DoubleByteLoadOperation, PopInstruction, PushInstruction};
-use crate::instructions::logical::{BinaryLogicalInstruction, BinaryLogicalOperation, BinaryLogicalOperationType, LogicalNegateInstruction};
+use crate::instructions::flow::{
+	BranchCondition, CallInstruction, JumpInstruction, JumpInstructionDestination,
+	ReturnInstruction,
+};
+use crate::instructions::load::byte_load::{
+	ByteLoadInstruction, ByteLoadOperation, ByteLoadUpdate,
+};
+use crate::instructions::load::double_byte_load::{
+	DoubleByteLoadInstruction, DoubleByteLoadOperation, PopInstruction, PushInstruction,
+};
+use crate::instructions::logical::{
+	BinaryLogicalInstruction, BinaryLogicalOperation, BinaryLogicalOperationType,
+	LogicalNegateInstruction,
+};
 use crate::instructions::shared::IndexUpdateType;
-use crate::instructions::shifting::ByteShiftInstruction;
 use crate::instructions::shifting::operation::{ByteShiftOperation, ShiftDirection, ShiftType};
+use crate::instructions::shifting::ByteShiftInstruction;
 use crate::instructions::single_bit::SingleBitOperation;
+use crate::instructions::{ExecutionError, Instruction};
 
 mod prefixed;
 
 #[derive(Eq, PartialEq, Copy, Clone)]
 enum DecodedInstructionPrefix {
-	CB
+	CB,
 }
 
 impl DecodedInstructionPrefix {
 	fn try_decode_prefix(maybe_prefix: u8) -> Option<DecodedInstructionPrefix> {
 		match maybe_prefix {
 			0xCB => Some(Self::CB),
-			_ => None
+			_ => None,
 		}
 	}
 }
@@ -53,7 +70,9 @@ pub fn fetch_and_decode(cpu: &mut Cpu) -> Result<Box<dyn Instruction>, Execution
 }
 
 fn decode_opcode(
-	prefix: Option<DecodedInstructionPrefix>, opcode: u8, cpu: &mut Cpu,
+	prefix: Option<DecodedInstructionPrefix>,
+	opcode: u8,
+	cpu: &mut Cpu,
 ) -> Result<Box<dyn Instruction>, ExecutionError> {
 	let (x, y, z) = decode_xyz(opcode);
 
@@ -568,23 +587,26 @@ impl DecodedInstructionOperand {
 	fn from_opcode_part(opcode_part: [bool; 3]) -> Self {
 		match opcode_part {
 			[false, false, false] => Self::SingleRegister(SingleRegisters::B), // 0 => B
-			[true, false, false] => Self::SingleRegister(SingleRegisters::C), // 1 => C
-			[false, true, false] => Self::SingleRegister(SingleRegisters::D), // 2 => D
-			[true, true, false] => Self::SingleRegister(SingleRegisters::E), // 3 => E
-			[false, false, true] => Self::SingleRegister(SingleRegisters::H), // 4 => H
-			[true, false, true] => Self::SingleRegister(SingleRegisters::L), // 5 => L
-			[false, true, true] => Self::HlMemoryAddress, // 6 => (HL)
-			[true, true, true] => Self::SingleRegister(SingleRegisters::A), // 7 => A
+			[true, false, false] => Self::SingleRegister(SingleRegisters::C),  // 1 => C
+			[false, true, false] => Self::SingleRegister(SingleRegisters::D),  // 2 => D
+			[true, true, false] => Self::SingleRegister(SingleRegisters::E),   // 3 => E
+			[false, false, true] => Self::SingleRegister(SingleRegisters::H),  // 4 => H
+			[true, false, true] => Self::SingleRegister(SingleRegisters::L),   // 5 => L
+			[false, true, true] => Self::HlMemoryAddress,                      // 6 => (HL)
+			[true, true, true] => Self::SingleRegister(SingleRegisters::A),    // 7 => A
 		}
 	}
 }
 
-
 impl From<DecodedInstructionOperand> for ByteSource {
 	fn from(value: DecodedInstructionOperand) -> Self {
 		match value {
-			DecodedInstructionOperand::SingleRegister(single_reg) => Self::SingleRegister(single_reg),
-			DecodedInstructionOperand::HlMemoryAddress => Self::AddressInRegister(DoubleRegisters::HL)
+			DecodedInstructionOperand::SingleRegister(single_reg) => {
+				Self::SingleRegister(single_reg)
+			}
+			DecodedInstructionOperand::HlMemoryAddress => {
+				Self::AddressInRegister(DoubleRegisters::HL)
+			}
 		}
 	}
 }
@@ -592,8 +614,12 @@ impl From<DecodedInstructionOperand> for ByteSource {
 impl From<DecodedInstructionOperand> for ByteDestination {
 	fn from(value: DecodedInstructionOperand) -> Self {
 		match value {
-			DecodedInstructionOperand::SingleRegister(single_reg) => Self::SingleRegister(single_reg),
-			DecodedInstructionOperand::HlMemoryAddress => Self::AddressInRegister(DoubleRegisters::HL)
+			DecodedInstructionOperand::SingleRegister(single_reg) => {
+				Self::SingleRegister(single_reg)
+			}
+			DecodedInstructionOperand::HlMemoryAddress => {
+				Self::AddressInRegister(DoubleRegisters::HL)
+			}
 		}
 	}
 }
@@ -611,27 +637,27 @@ impl DecodedInstructionDoubleOperand {
 			[false, false] => Some(DoubleRegisters::BC),
 			[true, false] => Some(DoubleRegisters::DE),
 			[false, true] => Some(DoubleRegisters::HL),
-			[true, true] => None
+			[true, true] => None,
 		}
 	}
 
 	fn from_opcode_part_double_or_sp(opcode_part: [bool; 2]) -> Self {
-		Self::from_opcode_maybe_double(opcode_part)
-			.map_or(Self::Sp, Self::DoubleRegister)
+		Self::from_opcode_maybe_double(opcode_part).map_or(Self::Sp, Self::DoubleRegister)
 	}
 
 	fn from_opcode_part_double_or_af(opcode_part: [bool; 2]) -> Self {
-		Self::from_opcode_maybe_double(opcode_part)
-			.map_or(Self::Af, Self::DoubleRegister)
+		Self::from_opcode_maybe_double(opcode_part).map_or(Self::Af, Self::DoubleRegister)
 	}
 }
 
 impl From<DecodedInstructionDoubleOperand> for DoubleByteSource {
 	fn from(value: DecodedInstructionDoubleOperand) -> Self {
 		match value {
-			DecodedInstructionDoubleOperand::DoubleRegister(double_reg) => Self::DoubleRegister(double_reg),
+			DecodedInstructionDoubleOperand::DoubleRegister(double_reg) => {
+				Self::DoubleRegister(double_reg)
+			}
 			DecodedInstructionDoubleOperand::Af => Self::DoubleRegister(DoubleRegisters::AF),
-			DecodedInstructionDoubleOperand::Sp => Self::StackPointer
+			DecodedInstructionDoubleOperand::Sp => Self::StackPointer,
 		}
 	}
 }
@@ -639,9 +665,11 @@ impl From<DecodedInstructionDoubleOperand> for DoubleByteSource {
 impl From<DecodedInstructionDoubleOperand> for DoubleByteDestination {
 	fn from(value: DecodedInstructionDoubleOperand) -> Self {
 		match value {
-			DecodedInstructionDoubleOperand::DoubleRegister(double_reg) => Self::DoubleRegister(double_reg),
+			DecodedInstructionDoubleOperand::DoubleRegister(double_reg) => {
+				Self::DoubleRegister(double_reg)
+			}
 			DecodedInstructionDoubleOperand::Af => Self::DoubleRegister(DoubleRegisters::AF),
-			DecodedInstructionDoubleOperand::Sp => Self::StackPointer
+			DecodedInstructionDoubleOperand::Sp => Self::StackPointer,
 		}
 	}
 }

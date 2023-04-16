@@ -1,7 +1,11 @@
 use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::Ram;
-use crate::instructions::base::double_byte::{UnaryDoubleByteInstruction, DoubleByteDestination, UnaryDoubleByteOperation, DoubleByteSource};
-use crate::instructions::changeset::{Change, ChangeList, ChangesetInstruction, MemoryDoubleByteWriteChange, SpChange};
+use crate::instructions::base::double_byte::{
+	DoubleByteDestination, DoubleByteSource, UnaryDoubleByteInstruction, UnaryDoubleByteOperation,
+};
+use crate::instructions::changeset::{
+	Change, ChangeList, ChangesetInstruction, MemoryDoubleByteWriteChange, SpChange,
+};
 use crate::instructions::ExecutionError;
 
 pub(crate) struct DoubleByteLoadOperation;
@@ -15,7 +19,12 @@ impl DoubleByteLoadOperation {
 impl UnaryDoubleByteOperation for DoubleByteLoadOperation {
 	type C = Box<dyn Change>;
 
-	fn execute(&self, cpu: &Cpu, src: &DoubleByteSource, dst: &DoubleByteDestination) -> Result<Self::C, ExecutionError> {
+	fn execute(
+		&self,
+		cpu: &Cpu,
+		src: &DoubleByteSource,
+		dst: &DoubleByteDestination,
+	) -> Result<Self::C, ExecutionError> {
 		let value = src.read(cpu)?;
 		Ok(dst.change_destination(value))
 	}
@@ -43,7 +52,9 @@ impl ChangesetInstruction for PushInstruction {
 
 		Ok(ChangeList::new(vec![
 			Box::new(SpChange::new(address)),
-			Box::new(MemoryDoubleByteWriteChange::write_to_immediate(address, value)),
+			Box::new(MemoryDoubleByteWriteChange::write_to_immediate(
+				address, value,
+			)),
 		]))
 	}
 }
@@ -79,8 +90,13 @@ mod tests {
 	use crate::hardware::ram::{Ram, WORKING_RAM_START};
 	use crate::hardware::register_bank::DoubleRegisters;
 	use crate::instructions::base::double_byte::{DoubleByteDestination, DoubleByteSource};
-	use crate::instructions::changeset::{Change, ChangeList, ChangesetInstruction, DoubleRegisterChange, MemoryDoubleByteWriteChange, SpChange};
-	use crate::instructions::load::double_byte_load::{DoubleByteLoadInstruction, DoubleByteLoadOperation, PopInstruction, PushInstruction};
+	use crate::instructions::changeset::{
+		Change, ChangeList, ChangesetInstruction, DoubleRegisterChange,
+		MemoryDoubleByteWriteChange, SpChange,
+	};
+	use crate::instructions::load::double_byte_load::{
+		DoubleByteLoadInstruction, DoubleByteLoadOperation, PopInstruction, PushInstruction,
+	};
 
 	#[test]
 	fn load() {
@@ -94,7 +110,8 @@ mod tests {
 		);
 
 		let expected: Box<dyn Change> = Box::new(MemoryDoubleByteWriteChange::write_to_immediate(
-			WORKING_RAM_START, 0x1234,
+			WORKING_RAM_START,
+			0x1234,
 		));
 		let actual = instruction.compute_change(&cpu).expect("Compute changes");
 
@@ -105,15 +122,18 @@ mod tests {
 	fn push() {
 		let mut cpu = Cpu::new();
 		cpu.sp.write(WORKING_RAM_START + 2);
-		cpu.register_bank.write_double_named(DoubleRegisters::BC, 0x1234);
+		cpu.register_bank
+			.write_double_named(DoubleRegisters::BC, 0x1234);
 
-		let instruction = PushInstruction::new(
-			DoubleByteSource::DoubleRegister(DoubleRegisters::BC)
-		);
+		let instruction =
+			PushInstruction::new(DoubleByteSource::DoubleRegister(DoubleRegisters::BC));
 
 		let expected = ChangeList::new(vec![
 			Box::new(SpChange::new(WORKING_RAM_START)),
-			Box::new(MemoryDoubleByteWriteChange::write_to_immediate(WORKING_RAM_START, 0x1234)),
+			Box::new(MemoryDoubleByteWriteChange::write_to_immediate(
+				WORKING_RAM_START,
+				0x1234,
+			)),
 		]);
 		let actual = instruction.compute_change(&cpu).expect("Compute changes");
 
@@ -124,11 +144,12 @@ mod tests {
 	fn pop() {
 		let mut cpu = Cpu::new();
 		cpu.sp.write(WORKING_RAM_START);
-		cpu.mapped_ram.write_double_byte(WORKING_RAM_START, 0x1234).expect("Write to RAM");
+		cpu.mapped_ram
+			.write_double_byte(WORKING_RAM_START, 0x1234)
+			.expect("Write to RAM");
 
-		let instruction = PopInstruction::new(
-			DoubleByteDestination::DoubleRegister(DoubleRegisters::BC)
-		);
+		let instruction =
+			PopInstruction::new(DoubleByteDestination::DoubleRegister(DoubleRegisters::BC));
 
 		let expected = ChangeList::new(vec![
 			Box::new(DoubleRegisterChange::new(DoubleRegisters::BC, 0x1234)),

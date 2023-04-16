@@ -3,10 +3,11 @@ pub(crate) struct Ime {
 	interruptions_enabled: bool,
 }
 
-
 impl Ime {
 	pub(crate) fn new() -> Self {
-		Self { interruptions_enabled: true }
+		Self {
+			interruptions_enabled: true,
+		}
 	}
 
 	#[allow(unused)]

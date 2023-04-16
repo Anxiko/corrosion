@@ -1,6 +1,6 @@
 use crate::hardware::cpu::Cpu;
-use crate::instructions::{ExecutionError, Instruction};
 use crate::instructions::changeset::{ChangeIme, ChangesetInstruction};
+use crate::instructions::{ExecutionError, Instruction};
 
 pub(crate) struct NopInstruction {}
 
@@ -67,7 +67,6 @@ mod tests {
 	use super::*;
 
 	use crate::hardware::cpu::Cpu;
-
 
 	#[test]
 	fn change_ime() {

@@ -8,15 +8,15 @@ use crate::hardware::register_bank::SingleRegisters;
 pub(crate) mod arithmetic;
 pub(crate) mod base;
 pub(crate) mod changeset;
-pub(crate) mod flags;
-pub(crate) mod logical;
-pub(crate) mod shifting;
-pub(crate) mod load;
-pub(crate) mod single_bit;
 pub(crate) mod control;
-pub(crate) mod flow;
 pub(crate) mod double_arithmetic;
+pub(crate) mod flags;
+pub(crate) mod flow;
+pub(crate) mod load;
+pub(crate) mod logical;
 pub(crate) mod shared;
+pub(crate) mod shifting;
+pub(crate) mod single_bit;
 
 pub trait Instruction {
 	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError>;
@@ -32,14 +32,12 @@ impl Display for ExecutionError {
 	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
 		match self {
 			Self::RamError(ram_error) => write!(f, "{ram_error}"),
-			Self::InvalidOpcode(opcode) => write!(f, "Invalid opcode {opcode:#06X}")
+			Self::InvalidOpcode(opcode) => write!(f, "Invalid opcode {opcode:#06X}"),
 		}
 	}
 }
 
-impl Error for ExecutionError {
-	
-}
+impl Error for ExecutionError {}
 
 impl From<RamError> for ExecutionError {
 	fn from(ram_error: RamError) -> Self {

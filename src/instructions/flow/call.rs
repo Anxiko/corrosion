@@ -2,9 +2,11 @@ use crate::bits::bits_to_byte;
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::BitFlags;
 use crate::instructions::base::double_byte::DoubleByteSource;
-use crate::instructions::changeset::{Change, ChangeList, ChangesetInstruction, MemoryDoubleByteWriteChange, PcChange, SpChange};
-use crate::instructions::ExecutionError;
+use crate::instructions::changeset::{
+	Change, ChangeList, ChangesetInstruction, MemoryDoubleByteWriteChange, PcChange, SpChange,
+};
 use crate::instructions::flow::BranchCondition;
+use crate::instructions::ExecutionError;
 
 pub(crate) struct CallInstruction {
 	condition: BranchCondition,
@@ -21,7 +23,13 @@ impl CallInstruction {
 	}
 
 	pub(crate) fn call_conditional(flag: BitFlags, branch_if_equals: bool, address: u16) -> Self {
-		Self::new(BranchCondition::TestFlag { flag, branch_if_equals }, address)
+		Self::new(
+			BranchCondition::TestFlag {
+				flag,
+				branch_if_equals,
+			},
+			address,
+		)
 	}
 
 	pub(crate) fn restart(bits: [bool; 3]) -> Self {
@@ -44,12 +52,11 @@ impl ChangesetInstruction for CallInstruction {
 
 			let old_pc = cpu.pc.read();
 			changes.push(Box::new(MemoryDoubleByteWriteChange::write_to_source(
-				DoubleByteSource::StackPointer, old_pc,
+				DoubleByteSource::StackPointer,
+				old_pc,
 			)));
 
-			changes.push(Box::new(PcChange::new(
-				self.address
-			)))
+			changes.push(Box::new(PcChange::new(self.address)))
 		}
 
 		Ok(ChangeList::new(changes))
@@ -79,9 +86,10 @@ mod tests {
 		let actual = instruction.compute_change(&cpu).unwrap();
 		let expected = ChangeList::new(vec![
 			Box::new(SpChange::new(WORKING_RAM_START + 8)),
-			Box::new(
-				MemoryDoubleByteWriteChange::write_to_source(DoubleByteSource::StackPointer, 0x1234)
-			),
+			Box::new(MemoryDoubleByteWriteChange::write_to_source(
+				DoubleByteSource::StackPointer,
+				0x1234,
+			)),
 			Box::new(PcChange::new(0x4321)),
 		]);
 
@@ -92,9 +100,7 @@ mod tests {
 	fn failed_call() {
 		let cpu = get_cpu();
 
-		let instruction = CallInstruction::call_conditional(
-			BitFlags::Carry, true, 0x4321,
-		);
+		let instruction = CallInstruction::call_conditional(BitFlags::Carry, true, 0x4321);
 
 		let actual = instruction.compute_change(&cpu).unwrap();
 		let expected = ChangeList::new(vec![]);

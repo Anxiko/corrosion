@@ -1,17 +1,17 @@
 use crate::bits::bits_to_byte;
 use crate::decoder::DecodedInstructionOperand;
 use crate::instructions::base::byte::ByteDestination;
-use crate::instructions::Instruction;
-use crate::instructions::shifting::{ByteShiftInstruction, ByteSwapInstruction, ByteSwapOperation};
 use crate::instructions::shifting::operation::{ByteShiftOperation, ShiftDirection, ShiftType};
+use crate::instructions::shifting::{ByteShiftInstruction, ByteSwapInstruction, ByteSwapOperation};
 use crate::instructions::single_bit::{SingleBitInstruction, SingleBitOperand, SingleBitOperation};
+use crate::instructions::Instruction;
 
 pub(super) fn decode_prefixed_shifting(y: [bool; 3], z: [bool; 3]) -> Box<dyn Instruction> {
 	let source = DecodedInstructionOperand::from_opcode_part(z).into();
 
 	let shift_direction = match y[0] {
 		false => ShiftDirection::Left,
-		true => ShiftDirection::Right
+		true => ShiftDirection::Right,
 	};
 
 	let shift_type = match y {
@@ -23,11 +23,15 @@ pub(super) fn decode_prefixed_shifting(y: [bool; 3], z: [bool; 3]) -> Box<dyn In
 
 	match (shift_type, shift_direction) {
 		(ShiftType::LogicalShift, ShiftDirection::Left) => Box::new(ByteSwapInstruction::new(
-			source, ByteDestination::write_to_acc(), ByteSwapOperation::new(),
+			source,
+			ByteDestination::write_to_acc(),
+			ByteSwapOperation::new(),
 		)), // Logical left shift does not exist, instead this encodes a swap instruction
 		(_, _) => Box::new(ByteShiftInstruction::new(
-			source, ByteDestination::write_to_acc(), ByteShiftOperation::new(shift_direction, shift_type),
-		))
+			source,
+			ByteDestination::write_to_acc(),
+			ByteShiftOperation::new(shift_direction, shift_type),
+		)),
 	}
 }
 
@@ -35,12 +39,16 @@ impl From<DecodedInstructionOperand> for SingleBitOperand {
 	fn from(value: DecodedInstructionOperand) -> Self {
 		match value {
 			DecodedInstructionOperand::SingleRegister(reg) => SingleBitOperand::SingleRegister(reg),
-			DecodedInstructionOperand::HlMemoryAddress => SingleBitOperand::MemoryAddress
+			DecodedInstructionOperand::HlMemoryAddress => SingleBitOperand::MemoryAddress,
 		}
 	}
 }
 
-pub(super) fn decode_prefixed_single_bit(operation: SingleBitOperation, y: [bool; 3], z: [bool; 3]) -> Box<dyn Instruction> {
+pub(super) fn decode_prefixed_single_bit(
+	operation: SingleBitOperation,
+	y: [bool; 3],
+	z: [bool; 3],
+) -> Box<dyn Instruction> {
 	let bitshift = bits_to_byte(&y);
 	let z = DecodedInstructionOperand::from_opcode_part(z);
 

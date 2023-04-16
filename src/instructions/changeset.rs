@@ -17,14 +17,13 @@ pub(crate) trait Change: Debug {
 	fn commit_change(&self, cpu: &mut Cpu) -> Result<(), ExecutionError>;
 }
 
+mod boxed;
+mod flags;
+mod list;
+mod memory;
+mod noop;
 mod registers;
 mod special_registers;
-mod flags;
-mod boxed;
-mod memory;
-mod list;
-mod noop;
-
 
 pub(super) trait ChangesetInstruction {
 	type C: Change;
@@ -33,8 +32,8 @@ pub(super) trait ChangesetInstruction {
 }
 
 impl<T> Instruction for T
-	where
-		T: ChangesetInstruction,
+where
+	T: ChangesetInstruction,
 {
 	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
 		let change = self.compute_change(cpu)?;

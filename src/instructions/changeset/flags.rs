@@ -134,7 +134,9 @@ mod tests {
 	fn keep_all() {
 		let mut actual = Cpu::new();
 		actual.register_bank.write_bit_flag(BitFlags::Carry, true);
-		actual.register_bank.write_bit_flag(BitFlags::HalfCarry, true);
+		actual
+			.register_bank
+			.write_bit_flag(BitFlags::HalfCarry, true);
 		let expected = actual.clone();
 
 		let change = BitFlagsChange::keep_all();
@@ -147,10 +149,16 @@ mod tests {
 	fn zero_all() {
 		let mut actual = Cpu::new();
 		actual.register_bank.write_bit_flag(BitFlags::Carry, true);
-		actual.register_bank.write_bit_flag(BitFlags::HalfCarry, true);
+		actual
+			.register_bank
+			.write_bit_flag(BitFlags::HalfCarry, true);
 		let mut expected = actual.clone();
-		expected.register_bank.write_bit_flag(BitFlags::Carry, false);
-		expected.register_bank.write_bit_flag(BitFlags::HalfCarry, false);
+		expected
+			.register_bank
+			.write_bit_flag(BitFlags::Carry, false);
+		expected
+			.register_bank
+			.write_bit_flag(BitFlags::HalfCarry, false);
 
 		let change = BitFlagsChange::zero_all();
 		change.commit_change(&mut actual).unwrap();
@@ -162,13 +170,14 @@ mod tests {
 	fn keep_some() {
 		let mut actual = Cpu::new();
 		actual.register_bank.write_bit_flag(BitFlags::Carry, true);
-		actual.register_bank.write_bit_flag(BitFlags::HalfCarry, false);
+		actual
+			.register_bank
+			.write_bit_flag(BitFlags::HalfCarry, false);
 		let expected = actual.clone();
 
-		let change =
-			BitFlagsChange::keep_all()
-				.with_half_carry_flag(false)
-				.with_carry_flag(true);
+		let change = BitFlagsChange::keep_all()
+			.with_half_carry_flag(false)
+			.with_carry_flag(true);
 
 		change.commit_change(&mut actual).unwrap();
 
@@ -179,17 +188,20 @@ mod tests {
 	fn keep_none() {
 		let mut actual = Cpu::new();
 		actual.register_bank.write_bit_flag(BitFlags::Carry, true);
-		actual.register_bank.write_bit_flag(BitFlags::HalfCarry, true);
-		actual.register_bank.write_bit_flag(BitFlags::Subtraction, true);
+		actual
+			.register_bank
+			.write_bit_flag(BitFlags::HalfCarry, true);
+		actual
+			.register_bank
+			.write_bit_flag(BitFlags::Subtraction, true);
 		actual.register_bank.write_bit_flag(BitFlags::Zero, true);
 		let expected = actual.clone();
 
-		let change =
-			BitFlagsChange::keep_all()
-				.with_half_carry_flag(true)
-				.with_carry_flag(true)
-				.with_zero_flag(true)
-				.with_subtraction_flag(true);
+		let change = BitFlagsChange::keep_all()
+			.with_half_carry_flag(true)
+			.with_carry_flag(true)
+			.with_zero_flag(true)
+			.with_subtraction_flag(true);
 
 		change.commit_change(&mut actual).unwrap();
 
@@ -200,17 +212,20 @@ mod tests {
 	fn zero_then_keep() {
 		let mut actual = Cpu::new();
 		actual.register_bank.write_bit_flag(BitFlags::Carry, true);
-		actual.register_bank.write_bit_flag(BitFlags::HalfCarry, true);
-		actual.register_bank.write_bit_flag(BitFlags::Subtraction, true);
+		actual
+			.register_bank
+			.write_bit_flag(BitFlags::HalfCarry, true);
+		actual
+			.register_bank
+			.write_bit_flag(BitFlags::Subtraction, true);
 		actual.register_bank.write_bit_flag(BitFlags::Zero, true);
 		let expected = actual.clone();
 
-		let change =
-			BitFlagsChange::zero_all()
-				.keep_zero_flag()
-				.keep_carry_flag()
-				.keep_half_carry()
-				.keep_subtraction_flag();
+		let change = BitFlagsChange::zero_all()
+			.keep_zero_flag()
+			.keep_carry_flag()
+			.keep_half_carry()
+			.keep_subtraction_flag();
 
 		change.commit_change(&mut actual).unwrap();
 

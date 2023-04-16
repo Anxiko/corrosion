@@ -44,7 +44,7 @@ impl RamError {
 	fn adjust_for_offset(self, offset: u16) -> Self {
 		match self {
 			Self::InvalidAddress(address) => Self::InvalidAddress(address + offset),
-			Self::UnmappedRegion(address) => Self::UnmappedRegion(address + offset)
+			Self::UnmappedRegion(address) => Self::UnmappedRegion(address + offset),
 		}
 	}
 }
@@ -54,7 +54,7 @@ impl Display for RamError {
 		match self {
 			Self::UnmappedRegion(address) => {
 				write!(f, "No mapped RAM region for {address}")
-			},
+			}
 			Self::InvalidAddress(address) => {
 				write!(f, "Attempted to access invalid address {address}")
 			}
@@ -110,7 +110,7 @@ const RAM_MAPPINGS: [RamMapping; 4] = [
 		region: RamRegion::Oam,
 		offset: OAM_START,
 		size: OAM_SIZE,
-	}
+	},
 ];
 
 impl MappedRam {
@@ -155,7 +155,8 @@ impl Ram for MappedRam {
 		let mapped_ram = self.get_mapped_ram(ram_mapping.region);
 
 		let region_address = address - ram_mapping.offset;
-		mapped_ram.read_byte(region_address)
+		mapped_ram
+			.read_byte(region_address)
 			.map_err(|ram_error| ram_error.adjust_for_offset(ram_mapping.offset))
 	}
 
@@ -165,7 +166,8 @@ impl Ram for MappedRam {
 		let mapped_ram = self.get_mapped_ram_mut(ram_mapping.region);
 
 		let region_address = address - ram_mapping.offset;
-		mapped_ram.write_byte(region_address, value)
+		mapped_ram
+			.write_byte(region_address, value)
 			.map_err(|ram_error| ram_error.adjust_for_offset(ram_mapping.offset))
 	}
 }
@@ -204,7 +206,7 @@ impl<const S: usize> Ram for RamChip<S> {
 
 #[derive(Copy, Clone)]
 enum IoRegisters {
-	LcdControl
+	LcdControl,
 }
 
 #[derive(Default, Debug, PartialEq, Clone)]
@@ -221,19 +223,19 @@ impl MappedIoRegisters {
 		match address {
 			0x40 => Ok(IoRegisters::LcdControl),
 			address if address < 0x80 => Err(RamError::UnmappedRegion(address)),
-			_ => Err(RamError::InvalidAddress(address))
+			_ => Err(RamError::InvalidAddress(address)),
 		}
 	}
 
 	fn get_io_register(&self, io_register: IoRegisters) -> &u8 {
 		match io_register {
-			IoRegisters::LcdControl => &self.lcd_control
+			IoRegisters::LcdControl => &self.lcd_control,
 		}
 	}
 
 	fn get_io_register_mut(&mut self, io_register: IoRegisters) -> &mut u8 {
 		match io_register {
-			IoRegisters::LcdControl => &mut self.lcd_control
+			IoRegisters::LcdControl => &mut self.lcd_control,
 		}
 	}
 }

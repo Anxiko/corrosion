@@ -1,5 +1,7 @@
 use crate::hardware::cpu::Cpu;
-use crate::instructions::base::byte::{BinaryByteInstruction, UnaryByteInstruction, UnaryByteOperation};
+use crate::instructions::base::byte::{
+	BinaryByteInstruction, UnaryByteInstruction, UnaryByteOperation,
+};
 use crate::instructions::base::byte::{BinaryByteOperation, ByteDestination, ByteSource};
 use crate::instructions::changeset::{BitFlagsChange, ChangeList};
 use crate::instructions::ExecutionError;
@@ -16,7 +18,7 @@ impl BinaryLogicalOperationType {
 		match self {
 			Self::And => left & right,
 			Self::Or => left | right,
-			Self::Xor => left ^ right
+			Self::Xor => left ^ right,
 		}
 	}
 
@@ -40,7 +42,11 @@ impl BinaryByteOperation for BinaryLogicalOperation {
 	type C = ChangeList;
 
 	fn compute_changes(
-		&self, cpu: &Cpu, left: &ByteSource, right: &ByteSource, dst: &ByteDestination,
+		&self,
+		cpu: &Cpu,
+		left: &ByteSource,
+		right: &ByteSource,
+		dst: &ByteDestination,
 	) -> Result<Self::C, ExecutionError> {
 		let left_value = left.read(cpu)?;
 		let right_value = right.read(cpu)?;
@@ -51,7 +57,7 @@ impl BinaryByteOperation for BinaryLogicalOperation {
 			Box::new(
 				BitFlagsChange::zero_all()
 					.with_zero_flag(result == 0)
-					.with_half_carry_flag(self.type_.is_and())
+					.with_half_carry_flag(self.type_.is_and()),
 			),
 		]))
 	}
@@ -64,7 +70,12 @@ pub(crate) struct LogicalNegateOperation;
 impl UnaryByteOperation for LogicalNegateOperation {
 	type C = ChangeList;
 
-	fn execute(&self, cpu: &Cpu, src: &ByteSource, dst: &ByteDestination) -> Result<Self::C, ExecutionError> {
+	fn execute(
+		&self,
+		cpu: &Cpu,
+		src: &ByteSource,
+		dst: &ByteDestination,
+	) -> Result<Self::C, ExecutionError> {
 		let value = src.read(cpu)?;
 		let new_value = !value;
 
@@ -73,7 +84,7 @@ impl UnaryByteOperation for LogicalNegateOperation {
 			Box::new(
 				BitFlagsChange::keep_all()
 					.with_subtraction_flag(true)
-					.with_half_carry_flag(true)
+					.with_half_carry_flag(true),
 			),
 		]))
 	}
@@ -94,22 +105,27 @@ impl LogicalNegateInstruction {
 #[cfg(test)]
 mod tests {
 	use crate::hardware::register_bank::SingleRegisters;
-	use crate::instructions::ACC_REGISTER;
 	use crate::instructions::changeset::{ChangesetInstruction, SingleRegisterChange};
+	use crate::instructions::ACC_REGISTER;
 
 	use super::*;
 
 	#[test]
 	fn negate() {
 		let mut cpu = Cpu::new();
-		cpu.register_bank.write_single_named(ACC_REGISTER, 0b11001010);
+		cpu.register_bank
+			.write_single_named(ACC_REGISTER, 0b11001010);
 
 		let instruction = LogicalNegateInstruction::negate_acc();
 
 		let actual = instruction.compute_change(&cpu).unwrap();
 		let expected = ChangeList::new(vec![
 			Box::new(SingleRegisterChange::new(ACC_REGISTER, !0b11001010)),
-			Box::new(BitFlagsChange::keep_all().with_subtraction_flag(true).with_half_carry_flag(true)),
+			Box::new(
+				BitFlagsChange::keep_all()
+					.with_subtraction_flag(true)
+					.with_half_carry_flag(true),
+			),
 		]);
 
 		assert_eq!(actual, expected);
@@ -118,8 +134,10 @@ mod tests {
 	#[test]
 	fn and() {
 		let mut cpu = Cpu::new();
-		cpu.register_bank.write_single_named(ACC_REGISTER, 0b11001010);
-		cpu.register_bank.write_single_named(SingleRegisters::B, 0b10101100);
+		cpu.register_bank
+			.write_single_named(ACC_REGISTER, 0b11001010);
+		cpu.register_bank
+			.write_single_named(SingleRegisters::B, 0b10101100);
 
 		let instruction = BinaryLogicalInstruction::new(
 			ByteSource::SingleRegister(ACC_REGISTER),
@@ -131,10 +149,7 @@ mod tests {
 		let actual = instruction.compute_change(&cpu).unwrap();
 		let expected = ChangeList::new(vec![
 			Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b10001000)),
-			Box::new(
-				BitFlagsChange::zero_all()
-					.with_half_carry_flag(true)
-			),
+			Box::new(BitFlagsChange::zero_all().with_half_carry_flag(true)),
 		]);
 
 		assert_eq!(actual, expected);
@@ -143,8 +158,10 @@ mod tests {
 	#[test]
 	fn or() {
 		let mut cpu = Cpu::new();
-		cpu.register_bank.write_single_named(ACC_REGISTER, 0b11001010);
-		cpu.register_bank.write_single_named(SingleRegisters::B, 0b10101100);
+		cpu.register_bank
+			.write_single_named(ACC_REGISTER, 0b11001010);
+		cpu.register_bank
+			.write_single_named(SingleRegisters::B, 0b10101100);
 
 		let instruction = BinaryLogicalInstruction::new(
 			ByteSource::SingleRegister(ACC_REGISTER),
@@ -156,9 +173,7 @@ mod tests {
 		let actual = instruction.compute_change(&cpu).unwrap();
 		let expected = ChangeList::new(vec![
 			Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b11101110)),
-			Box::new(
-				BitFlagsChange::zero_all()
-			),
+			Box::new(BitFlagsChange::zero_all()),
 		]);
 
 		assert_eq!(actual, expected);
@@ -167,8 +182,10 @@ mod tests {
 	#[test]
 	fn xor() {
 		let mut cpu = Cpu::new();
-		cpu.register_bank.write_single_named(ACC_REGISTER, 0b1100_1010);
-		cpu.register_bank.write_single_named(SingleRegisters::B, 0b1010_1100);
+		cpu.register_bank
+			.write_single_named(ACC_REGISTER, 0b1100_1010);
+		cpu.register_bank
+			.write_single_named(SingleRegisters::B, 0b1010_1100);
 
 		let instruction = BinaryLogicalInstruction::new(
 			ByteSource::SingleRegister(ACC_REGISTER),
@@ -180,9 +197,7 @@ mod tests {
 		let actual = instruction.compute_change(&cpu).unwrap();
 		let expected = ChangeList::new(vec![
 			Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b0110_0110)),
-			Box::new(
-				BitFlagsChange::zero_all()
-			),
+			Box::new(BitFlagsChange::zero_all()),
 		]);
 
 		assert_eq!(actual, expected);
