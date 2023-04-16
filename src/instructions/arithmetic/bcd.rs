@@ -1,7 +1,7 @@
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::BitFlags;
 use crate::instructions::{ACC_REGISTER, ExecutionError};
-use crate::instructions::changeset::{BitFlagsChange, Change, ChangeList, ChangesetInstruction, SingleRegisterChange};
+use crate::instructions::changeset::{BitFlagsChange, ChangeList, ChangesetInstruction, SingleRegisterChange};
 
 pub(crate) struct DecimalAdjust;
 

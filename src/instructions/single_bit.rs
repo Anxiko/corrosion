@@ -1,5 +1,5 @@
 use crate::hardware::cpu::Cpu;
-use crate::hardware::ram::{Ram, WORKING_RAM_START};
+use crate::hardware::ram::Ram;
 use crate::hardware::register_bank::{BitFlags, DoubleRegisters, SingleRegisters};
 use crate::instructions::changeset::{BitFlagsChange, Change, ChangesetInstruction, MemoryByteWriteChange, SingleRegisterChange};
 use crate::instructions::ExecutionError;
@@ -11,10 +11,6 @@ pub(crate) enum SingleBitOperand {
 }
 
 impl SingleBitOperand {
-	fn operate_on_register(reg: SingleRegisters) -> Self {
-		Self::SingleRegister(reg)
-	}
-
 	fn read_byte(&self, cpu: &Cpu) -> Result<u8, ExecutionError> {
 		match self {
 			Self::SingleRegister(reg) => {
@@ -134,82 +130,88 @@ impl ChangesetInstruction for CarryFlagInstruction {
 	}
 }
 
-#[test]
-fn test_bit() {
-	let mut cpu = Cpu::new();
+#[cfg(test)]
+mod tests {
+	use crate::hardware::ram::WORKING_RAM_START;
+	use super::*;
 
-	cpu.register_bank.write_single_named(SingleRegisters::B, 0b11001010);
-	cpu.register_bank.write_double_named(DoubleRegisters::HL, WORKING_RAM_START);
-	cpu.mapped_ram.write_byte(WORKING_RAM_START, 0b11001010).expect("Write to RAM");
+	#[test]
+	fn test_bit() {
+		let mut cpu = Cpu::new();
 
-	let cpu = cpu;
+		cpu.register_bank.write_single_named(SingleRegisters::B, 0b11001010);
+		cpu.register_bank.write_double_named(DoubleRegisters::HL, WORKING_RAM_START);
+		cpu.mapped_ram.write_byte(WORKING_RAM_START, 0b11001010).expect("Write to RAM");
 
-	let instruction = SingleBitInstruction::new(
-		SingleBitOperand::SingleRegister(SingleRegisters::B),
-		SingleBitOperation::Test,
-		3,
-	);
+		let cpu = cpu;
 
-	let actual = instruction.compute_change(&cpu).expect("Compute changes");
-	let expected: Box<dyn Change> = Box::new(
-		BitFlagsChange::keep_all()
-			.with_zero_flag(true)
-			.with_subtraction_flag(false)
-			.with_half_carry_flag(true)
-	);
+		let instruction = SingleBitInstruction::new(
+			SingleBitOperand::SingleRegister(SingleRegisters::B),
+			SingleBitOperation::Test,
+			3,
+		);
 
-	assert_eq!(actual, expected);
+		let actual = instruction.compute_change(&cpu).expect("Compute changes");
+		let expected: Box<dyn Change> = Box::new(
+			BitFlagsChange::keep_all()
+				.with_zero_flag(true)
+				.with_subtraction_flag(false)
+				.with_half_carry_flag(true)
+		);
 
-	let instruction = SingleBitInstruction::new(
-		SingleBitOperand::MemoryAddress,
-		SingleBitOperation::Test,
-		4,
-	);
+		assert_eq!(actual, expected);
 
-	let actual = instruction.compute_change(&cpu).expect("Compute changes");
-	let expected: Box<dyn Change> = Box::new(
-		BitFlagsChange::keep_all()
-			.with_zero_flag(false)
-			.with_subtraction_flag(false)
-			.with_half_carry_flag(true)
-	);
+		let instruction = SingleBitInstruction::new(
+			SingleBitOperand::MemoryAddress,
+			SingleBitOperation::Test,
+			4,
+		);
 
-	assert_eq!(actual, expected);
-}
+		let actual = instruction.compute_change(&cpu).expect("Compute changes");
+		let expected: Box<dyn Change> = Box::new(
+			BitFlagsChange::keep_all()
+				.with_zero_flag(false)
+				.with_subtraction_flag(false)
+				.with_half_carry_flag(true)
+		);
 
-#[test]
-fn write_bit() {
-	let mut cpu = Cpu::new();
+		assert_eq!(actual, expected);
+	}
 
-	cpu.register_bank.write_single_named(SingleRegisters::B, 0b11001010);
-	cpu.register_bank.write_double_named(DoubleRegisters::HL, WORKING_RAM_START);
-	cpu.mapped_ram.write_byte(WORKING_RAM_START, 0b11001010).expect("Write to RAM");
+	#[test]
+	fn write_bit() {
+		let mut cpu = Cpu::new();
 
-	let cpu = cpu;
+		cpu.register_bank.write_single_named(SingleRegisters::B, 0b11001010);
+		cpu.register_bank.write_double_named(DoubleRegisters::HL, WORKING_RAM_START);
+		cpu.mapped_ram.write_byte(WORKING_RAM_START, 0b11001010).expect("Write to RAM");
 
-	let instruction = SingleBitInstruction::new(
-		SingleBitOperand::SingleRegister(SingleRegisters::B),
-		SingleBitOperation::Write(true),
-		0,
-	);
+		let cpu = cpu;
 
-	let actual = instruction.compute_change(&cpu).expect("Compute changes");
-	let expected: Box<dyn Change> = Box::new(
-		SingleRegisterChange::new(SingleRegisters::B, 0b11001011)
-	);
+		let instruction = SingleBitInstruction::new(
+			SingleBitOperand::SingleRegister(SingleRegisters::B),
+			SingleBitOperation::Write(true),
+			0,
+		);
 
-	assert_eq!(actual, expected);
+		let actual = instruction.compute_change(&cpu).expect("Compute changes");
+		let expected: Box<dyn Change> = Box::new(
+			SingleRegisterChange::new(SingleRegisters::B, 0b11001011)
+		);
 
-	let instruction = SingleBitInstruction::new(
-		SingleBitOperand::MemoryAddress,
-		SingleBitOperation::Write(false),
-		7,
-	);
+		assert_eq!(actual, expected);
 
-	let actual = instruction.compute_change(&cpu).expect("Compute changes");
-	let expected: Box<dyn Change> = Box::new(
-		MemoryByteWriteChange::write_to_register(DoubleRegisters::HL, 0b01001010)
-	);
+		let instruction = SingleBitInstruction::new(
+			SingleBitOperand::MemoryAddress,
+			SingleBitOperation::Write(false),
+			7,
+		);
 
-	assert_eq!(actual, expected);
+		let actual = instruction.compute_change(&cpu).expect("Compute changes");
+		let expected: Box<dyn Change> = Box::new(
+			MemoryByteWriteChange::write_to_register(DoubleRegisters::HL, 0b01001010)
+		);
+
+		assert_eq!(actual, expected);
+	}
 }

@@ -1,7 +1,7 @@
 use crate::bits::bits_to_byte;
 use crate::hardware::cpu::Cpu;
-use crate::hardware::ram::{Ram, WORKING_RAM_START};
-use crate::hardware::register_bank::{BitFlags, DoubleRegisters};
+use crate::hardware::ram::Ram;
+use crate::hardware::register_bank::BitFlags;
 use crate::instructions::base::double_byte::DoubleByteSource;
 use crate::instructions::changeset::{Change, ChangeIme, ChangeList, ChangesetInstruction, MemoryDoubleByteWriteChange, NoChange, PcChange, SpChange};
 use crate::instructions::ExecutionError;
@@ -39,7 +39,6 @@ impl JumpInstructionDestination {
 		}
 	}
 }
-
 
 
 pub(crate) struct JumpInstruction {
@@ -160,52 +159,60 @@ impl ChangesetInstruction for CallInstruction {
 	}
 }
 
-#[test]
-fn jump() {
-	let mut cpu = Cpu::new();
-	cpu.pc.write(0x1234);
-	cpu.register_bank.write_double_named(DoubleRegisters::HL, WORKING_RAM_START);
-	cpu.mapped_ram.write_double_byte(WORKING_RAM_START, 0x5678).expect("Write to RAM");
-	cpu.register_bank.write_bit_flag(BitFlags::Zero, true);
-	let cpu = cpu;
+#[cfg(test)]
+mod tests {
+	use crate::hardware::ram::WORKING_RAM_START;
+	use crate::hardware::register_bank::DoubleRegisters;
 
-	let instruction = JumpInstruction::new(
-		JumpInstructionDestination::FromSource(DoubleByteSource::Immediate(0xABCD)),
-		BranchCondition::Unconditional,
-	);
+	use super::*;
 
-	let expected: Box<dyn Change> = Box::new(PcChange::new(0xABCD));
-	let actual = instruction.compute_change(&cpu).expect("Compute change");
+	#[test]
+	fn jump() {
+		let mut cpu = Cpu::new();
+		cpu.pc.write(0x1234);
+		cpu.register_bank.write_double_named(DoubleRegisters::HL, WORKING_RAM_START);
+		cpu.mapped_ram.write_double_byte(WORKING_RAM_START, 0x5678).expect("Write to RAM");
+		cpu.register_bank.write_bit_flag(BitFlags::Zero, true);
+		let cpu = cpu;
 
-	assert_eq!(actual, expected);
+		let instruction = JumpInstruction::new(
+			JumpInstructionDestination::FromSource(DoubleByteSource::Immediate(0xABCD)),
+			BranchCondition::Unconditional,
+		);
 
-	let instruction = JumpInstruction::new(
-		JumpInstructionDestination::FromSource(DoubleByteSource::AddressInRegister(DoubleRegisters::HL)),
-		BranchCondition::TestFlag { flag: BitFlags::Zero, branch_if_equals: true },
-	);
+		let expected: Box<dyn Change> = Box::new(PcChange::new(0xABCD));
+		let actual = instruction.compute_change(&cpu).expect("Compute change");
 
-	let expected: Box<dyn Change> = Box::new(PcChange::new(0x5678));
-	let actual = instruction.compute_change(&cpu).expect("Compute change");
+		assert_eq!(actual, expected);
 
-	assert_eq!(actual, expected);
+		let instruction = JumpInstruction::new(
+			JumpInstructionDestination::FromSource(DoubleByteSource::AddressInRegister(DoubleRegisters::HL)),
+			BranchCondition::TestFlag { flag: BitFlags::Zero, branch_if_equals: true },
+		);
 
-	let instruction = JumpInstruction::new(
-		JumpInstructionDestination::RelativeToPc(-0x7F),
-		BranchCondition::TestFlag { flag: BitFlags::Carry, branch_if_equals: false },
-	);
+		let expected: Box<dyn Change> = Box::new(PcChange::new(0x5678));
+		let actual = instruction.compute_change(&cpu).expect("Compute change");
 
-	let expected: Box<dyn Change> = Box::new(PcChange::new(0x11B5));
-	let actual = instruction.compute_change(&cpu).expect("Compute change");
+		assert_eq!(actual, expected);
 
-	assert_eq!(actual, expected);
+		let instruction = JumpInstruction::new(
+			JumpInstructionDestination::RelativeToPc(-0x7F),
+			BranchCondition::TestFlag { flag: BitFlags::Carry, branch_if_equals: false },
+		);
 
-	let instruction = JumpInstruction::new(
-		JumpInstructionDestination::RelativeToPc(-0x7F),
-		BranchCondition::TestFlag { flag: BitFlags::Carry, branch_if_equals: true },
-	);
+		let expected: Box<dyn Change> = Box::new(PcChange::new(0x11B5));
+		let actual = instruction.compute_change(&cpu).expect("Compute change");
 
-	let expected: Box<dyn Change> = Box::new(NoChange::new());
-	let actual = instruction.compute_change(&cpu).expect("Compute change");
+		assert_eq!(actual, expected);
 
-	assert_eq!(actual, expected);
+		let instruction = JumpInstruction::new(
+			JumpInstructionDestination::RelativeToPc(-0x7F),
+			BranchCondition::TestFlag { flag: BitFlags::Carry, branch_if_equals: true },
+		);
+
+		let expected: Box<dyn Change> = Box::new(NoChange::new());
+		let actual = instruction.compute_change(&cpu).expect("Compute change");
+
+		assert_eq!(actual, expected);
+	}
 }

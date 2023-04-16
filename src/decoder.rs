@@ -3,7 +3,7 @@ use crate::decoder::prefixed::{decode_prefixed_shifting, decode_prefixed_single_
 use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::IO_REGISTERS_MAPPING_START;
 use crate::hardware::register_bank::{BitFlags, DoubleRegisters, SingleRegisters};
-use crate::instructions::{ACC_REGISTER, ExecutionError, Instruction};
+use crate::instructions::{ExecutionError, Instruction};
 use crate::instructions::arithmetic::add_or_sub::{BinaryArithmeticInstruction, BinaryArithmeticOperation, BinaryArithmeticOperationType};
 use crate::instructions::arithmetic::bcd::DecimalAdjust;
 use crate::instructions::arithmetic::compare::CompareInstruction;
