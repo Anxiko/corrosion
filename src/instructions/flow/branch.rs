@@ -53,14 +53,18 @@ mod tests {
 
 	use super::*;
 
-	#[test]
-	fn jump() {
+	fn get_cpu() -> Cpu {
 		let mut cpu = Cpu::new();
 		cpu.pc.write(0x1234);
 		cpu.register_bank.write_double_named(DoubleRegisters::HL, WORKING_RAM_START);
 		cpu.mapped_ram.write_double_byte(WORKING_RAM_START, 0x5678).expect("Write to RAM");
 		cpu.register_bank.write_bit_flag(BitFlags::Zero, true);
-		let cpu = cpu;
+		cpu
+	}
+
+	#[test]
+	fn unconditional_jump_to_immediate() {
+		let cpu = get_cpu();
 
 		let instruction = JumpInstruction::new(
 			JumpInstructionDestination::FromSource(DoubleByteSource::Immediate(0xABCD)),
@@ -71,6 +75,11 @@ mod tests {
 		let actual = instruction.compute_change(&cpu).expect("Compute change");
 
 		assert_eq!(actual, expected);
+	}
+
+	#[test]
+	fn flag_test_relative_jump() {
+		let cpu = get_cpu();
 
 		let instruction = JumpInstruction::new(
 			JumpInstructionDestination::RelativeToPc(-0x7F),
@@ -81,6 +90,11 @@ mod tests {
 		let actual = instruction.compute_change(&cpu).expect("Compute change");
 
 		assert_eq!(actual, expected);
+	}
+
+	#[test]
+	fn flag_test_relative_jump_failed() {
+		let cpu = get_cpu();
 
 		let instruction = JumpInstruction::new(
 			JumpInstructionDestination::RelativeToPc(-0x7F),
