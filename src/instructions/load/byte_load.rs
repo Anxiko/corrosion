@@ -1,6 +1,6 @@
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::DoubleRegisters;
-use crate::instructions::base::byte::{UnaryByteInstruction, ByteDestination, UnaryByteOperation, ByteSource};
+use crate::instructions::base::byte::{ByteDestination, ByteSource, UnaryByteInstruction, UnaryByteOperation};
 use crate::instructions::changeset::{ChangeList, DoubleRegisterChange};
 use crate::instructions::ExecutionError;
 use crate::instructions::shared::IndexUpdateType;
@@ -63,18 +63,8 @@ impl UnaryByteOperation for ByteLoadOperation {
 pub(crate) type ByteLoadInstruction = UnaryByteInstruction<ByteLoadOperation>;
 
 impl ByteLoadInstruction {
-	fn just_load(src: ByteSource, dst: ByteDestination) -> Self {
+	pub(crate) fn just_load(src: ByteSource, dst: ByteDestination) -> Self {
 		Self::new(src, dst, ByteLoadOperation::no_update())
-	}
-
-	fn load_from_index_and_update(index_src: DoubleRegisters, dst: ByteDestination, update_type: IndexUpdateType) -> Self {
-		let update = ByteLoadUpdate::new(index_src, update_type);
-		Self::new(ByteSource::AddressInRegister(index_src), dst, ByteLoadOperation::with_update(update))
-	}
-
-	fn load_to_index_and_update(src: ByteSource, index_dst: DoubleRegisters, update_type: IndexUpdateType) -> Self {
-		let update = ByteLoadUpdate::new(index_dst, update_type);
-		Self::new(src, ByteDestination::AddressInRegister(index_dst), ByteLoadOperation::with_update(update))
 	}
 }
 
@@ -111,10 +101,12 @@ mod tests {
 		cpu.register_bank.write_double_named(DoubleRegisters::HL, WORKING_RAM_START);
 		cpu.mapped_ram.write_byte(WORKING_RAM_START, 0x80).expect("Write to RAM");
 
-		let instruction = ByteLoadInstruction::load_from_index_and_update(
-			DoubleRegisters::HL,
+		let instruction = ByteLoadInstruction::new(
+			ByteSource::AddressInRegister(DoubleRegisters::HL),
 			ByteDestination::write_to_acc(),
-			IndexUpdateType::Increment,
+			ByteLoadOperation::with_update(ByteLoadUpdate::new(
+				DoubleRegisters::HL, IndexUpdateType::Increment,
+			)),
 		);
 
 		let expected = ChangeList::new(vec![
@@ -132,10 +124,12 @@ mod tests {
 		cpu.register_bank.write_double_named(DoubleRegisters::HL, WORKING_RAM_START + 1);
 		cpu.register_bank.write_single_named(SingleRegisters::B, 0x80);
 
-		let instruction = ByteLoadInstruction::load_to_index_and_update(
+		let instruction = ByteLoadInstruction::new(
 			ByteSource::SingleRegister(SingleRegisters::B),
-			DoubleRegisters::HL,
-			IndexUpdateType::Decrement,
+			ByteDestination::AddressInRegister(DoubleRegisters::HL),
+			ByteLoadOperation::with_update(
+				ByteLoadUpdate::new(DoubleRegisters::HL, IndexUpdateType::Decrement)
+			),
 		);
 
 		let expected = ChangeList::new(vec![

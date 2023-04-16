@@ -181,8 +181,8 @@ fn decode_opcode(
 										}
 									};
 
-									Ok(Box::new(ByteLoadInstruction::new(
-										source, destination, ByteLoadOperation::no_update(),
+									Ok(Box::new(ByteLoadInstruction::just_load(
+										source, destination,
 									)))
 								}
 								true /* 2 <= p < 4 */ => {
