@@ -14,7 +14,7 @@ pub(crate) mod shifting;
 pub(crate) mod load;
 pub(crate) mod single_bit;
 pub(crate) mod control;
-pub(crate) mod jump;
+pub(crate) mod flow;
 pub(crate) mod double_arithmetic;
 pub(crate) mod shared;
 

@@ -13,7 +13,7 @@ use crate::instructions::base::double_byte::{DoubleByteDestination, DoubleByteSo
 use crate::instructions::control::{HaltInstruction, NopInstruction, SetImeInstruction, StopInstruction};
 use crate::instructions::double_arithmetic::{AddSignedByteToDoubleByte, BinaryDoubleByteAddInstruction, BinaryDoubleByteAddOperation, IncOrDecDoubleByteOperation, IncOrDecDoubleInstruction};
 use crate::instructions::flags::{BitFlagChangeType, ChangeCarryFlagInstruction};
-use crate::instructions::jump::{BranchCondition, CallInstruction, JumpInstruction, JumpInstructionDestination, ReturnInstruction};
+use crate::instructions::flow::{BranchCondition, CallInstruction, JumpInstruction, JumpInstructionDestination, ReturnInstruction};
 use crate::instructions::load::byte_load::{ByteLoadInstruction, ByteLoadOperation, ByteLoadUpdate};
 use crate::instructions::load::double_byte_load::{DoubleByteLoadInstruction, DoubleByteLoadOperation, PopInstruction, PushInstruction};
 use crate::instructions::logical::{BinaryLogicalInstruction, BinaryLogicalOperation, BinaryLogicalOperationType, Negate};
