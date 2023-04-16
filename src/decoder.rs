@@ -11,7 +11,7 @@ use crate::instructions::arithmetic::inc_or_dec::{IncOrDecInstruction, IncOrDecO
 use crate::instructions::base::byte::{ByteDestination, ByteSource};
 use crate::instructions::base::double_byte::{DoubleByteDestination, DoubleByteSource};
 use crate::instructions::control::{HaltInstruction, NopInstruction, SetImeInstruction, StopInstruction};
-use crate::instructions::double_arithmetic::{AddSignedByteToDouble, BinaryDoubleAddInstruction, BinaryDoubleAddOperation, IncOrDecDoubleInstruction, IncOrDecDoubleOperation, IncOrDecDoubleType};
+use crate::instructions::double_arithmetic::{AddSignedByteToDoubleByte, BinaryDoubleByteAddInstruction, BinaryDoubleByteAddOperation, IncOrDecDoubleInstruction, IncOrDecDoubleByteOperation};
 use crate::instructions::flags::ChangeCarryFlag;
 use crate::instructions::jump::{BranchCondition, CallInstruction, JumpInstruction, JumpInstructionDestination, ReturnInstruction};
 use crate::instructions::load::byte_load::{ByteLoadInstruction, ByteLoadOperation, ByteLoadUpdate};
@@ -141,11 +141,11 @@ fn decode_opcode(
 									)))
 								}
 								true => {
-									Ok(Box::new(BinaryDoubleAddInstruction::new(
+									Ok(Box::new(BinaryDoubleByteAddInstruction::new(
 										DoubleByteSource::DoubleRegister(DoubleRegisters::HL),
 										double_register_operand.into(),
 										DoubleByteDestination::DoubleRegister(DoubleRegisters::HL),
-										BinaryDoubleAddOperation::new(),
+										BinaryDoubleByteAddOperation::new(),
 									)))
 								}
 							}
@@ -230,14 +230,14 @@ fn decode_opcode(
 
 
 							let inc_or_dec_type = match q {
-								false => IncOrDecDoubleType::Increment,
-								true => IncOrDecDoubleType::Decrement
+								false => IndexUpdateType::Increment,
+								true => IndexUpdateType::Decrement
 							};
 
 							Ok(Box::new(IncOrDecDoubleInstruction::new(
 								decoded_double_operator.into(),
 								decoded_double_operator.into(),
-								IncOrDecDoubleOperation::new(inc_or_dec_type),
+								IncOrDecDoubleByteOperation::new(inc_or_dec_type),
 							)))
 						}
 						[y0, false, true] /* 4 <= z < 6 */ => {
@@ -341,7 +341,7 @@ fn decode_opcode(
 								[true, false, true] /* y = 5 */ => {
 									let delta = load_next_i8(cpu)?;
 
-									Ok(Box::new(AddSignedByteToDouble::add_to_sp(delta)))
+									Ok(Box::new(AddSignedByteToDoubleByte::add_to_sp(delta)))
 								}
 								[false, true, true] /* y = 6 */ => {
 									let offset = load_next_u8(cpu)?;
@@ -357,7 +357,7 @@ fn decode_opcode(
 								[true, true, true] /* y = 7 */ => {
 									let offset = load_next_i8(cpu)?;
 
-									Ok(Box::new(AddSignedByteToDouble::new(
+									Ok(Box::new(AddSignedByteToDoubleByte::new(
 										DoubleByteSource::StackPointer,
 										DoubleByteDestination::DoubleRegister(DoubleRegisters::HL),
 										offset,
