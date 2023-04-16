@@ -55,3 +55,50 @@ impl ChangesetInstruction for CallInstruction {
 		Ok(ChangeList::new(changes))
 	}
 }
+
+#[cfg(test)]
+mod tests {
+	use crate::hardware::cpu::Cpu;
+	use crate::hardware::ram::WORKING_RAM_START;
+
+	use super::*;
+
+	fn get_cpu() -> Cpu {
+		let mut cpu = Cpu::new();
+		cpu.pc.write(0x1234);
+		cpu.sp.write(WORKING_RAM_START + 10);
+		cpu
+	}
+
+	#[test]
+	fn call() {
+		let cpu = get_cpu();
+
+		let instruction = CallInstruction::call(0x4321);
+
+		let actual = instruction.compute_change(&cpu).unwrap();
+		let expected = ChangeList::new(vec![
+			Box::new(SpChange::new(WORKING_RAM_START + 8)),
+			Box::new(
+				MemoryDoubleByteWriteChange::write_to_source(DoubleByteSource::StackPointer, 0x1234)
+			),
+			Box::new(PcChange::new(0x4321)),
+		]);
+
+		assert_eq!(actual, expected);
+	}
+
+	#[test]
+	fn failed_call() {
+		let cpu = get_cpu();
+
+		let instruction = CallInstruction::call_conditional(
+			BitFlags::Carry, true, 0x4321,
+		);
+
+		let actual = instruction.compute_change(&cpu).unwrap();
+		let expected = ChangeList::new(vec![]);
+
+		assert_eq!(actual, expected);
+	}
+}
