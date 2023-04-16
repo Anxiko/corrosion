@@ -16,7 +16,7 @@ use crate::instructions::flags::{BitFlagChangeType, ChangeCarryFlagInstruction};
 use crate::instructions::flow::{BranchCondition, CallInstruction, JumpInstruction, JumpInstructionDestination, ReturnInstruction};
 use crate::instructions::load::byte_load::{ByteLoadInstruction, ByteLoadOperation, ByteLoadUpdate};
 use crate::instructions::load::double_byte_load::{DoubleByteLoadInstruction, DoubleByteLoadOperation, PopInstruction, PushInstruction};
-use crate::instructions::logical::{BinaryLogicalInstruction, BinaryLogicalOperation, BinaryLogicalOperationType, Negate};
+use crate::instructions::logical::{BinaryLogicalInstruction, BinaryLogicalOperation, BinaryLogicalOperationType, LogicalNegateInstruction};
 use crate::instructions::shared::IndexUpdateType;
 use crate::instructions::shifting::ByteShiftInstruction;
 use crate::instructions::shifting::operation::{ByteShiftOperation, ShiftDirection, ShiftType};
@@ -291,7 +291,9 @@ fn decode_opcode(
 									Ok(Box::new(DecimalAdjust::new()))
 								}
 								[true, false, true] /* z = 5 */ => {
-									Ok(Box::new(Negate::new()))
+									Ok(Box::new(
+										LogicalNegateInstruction::negate_acc()
+									))
 								}
 								[false, true, true] /* z = 6 */ => {
 									Ok(Box::new(ChangeCarryFlagInstruction::new(

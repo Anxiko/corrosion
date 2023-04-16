@@ -67,16 +67,19 @@ impl BitFlagsChange {
 		self
 	}
 
+	#[allow(unused)]
 	pub(crate) fn keep_zero_flag(mut self) -> Self {
 		self.zero = None;
 		self
 	}
 
+	#[allow(unused)]
 	pub(crate) fn keep_subtraction_flag(mut self) -> Self {
 		self.subtraction = None;
 		self
 	}
 
+	#[allow(unused)]
 	pub(crate) fn keep_half_carry(mut self) -> Self {
 		self.half_carry = None;
 		self
