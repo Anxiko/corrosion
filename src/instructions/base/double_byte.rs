@@ -1,5 +1,4 @@
 use crate::hardware::cpu::Cpu;
-use crate::hardware::ram::Ram;
 use crate::hardware::register_bank::DoubleRegisters;
 use crate::instructions::changeset::{Change, ChangesetInstruction, DoubleRegisterChange, MemoryDoubleByteWriteChange, SpChange};
 use crate::instructions::ExecutionError;
@@ -9,7 +8,6 @@ pub(crate) enum DoubleByteSource {
 	DoubleRegister(DoubleRegisters),
 	Immediate(u16),
 	StackPointer,
-	AddressInRegister(DoubleRegisters),
 }
 
 impl DoubleByteSource {
@@ -23,11 +21,6 @@ impl DoubleByteSource {
 			}
 			Self::StackPointer => {
 				Ok(cpu.sp.read())
-			}
-			Self::AddressInRegister(double_register) => {
-				let address = cpu.register_bank.read_double_named(*double_register);
-				let value = cpu.mapped_ram.read_double_byte(address)?;
-				Ok(value)
 			}
 		}
 	}
@@ -128,7 +121,7 @@ impl<O> ChangesetInstruction for BinaryDoubleByteInstruction<O> where
 
 #[cfg(test)]
 mod tests {
-	use crate::hardware::ram::WORKING_RAM_START;
+	use crate::hardware::ram::{Ram, WORKING_RAM_START};
 
 	use super::*;
 
@@ -158,17 +151,6 @@ mod tests {
 		cpu.sp.write(0x1234);
 
 		let source = DoubleByteSource::StackPointer;
-
-		assert_eq!(source.read(&cpu).unwrap(), 0x1234);
-	}
-
-	#[test]
-	fn source_address_in_register() {
-		let mut cpu = Cpu::new();
-		cpu.register_bank.write_double_named(DoubleRegisters::HL, WORKING_RAM_START);
-		cpu.mapped_ram.write_double_byte(WORKING_RAM_START, 0x1234).unwrap();
-
-		let source = DoubleByteSource::AddressInRegister(DoubleRegisters::HL);
 
 		assert_eq!(source.read(&cpu).unwrap(), 0x1234);
 	}

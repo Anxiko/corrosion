@@ -186,16 +186,6 @@ mod tests {
 		assert_eq!(actual, expected);
 
 		let instruction = JumpInstruction::new(
-			JumpInstructionDestination::FromSource(DoubleByteSource::AddressInRegister(DoubleRegisters::HL)),
-			BranchCondition::TestFlag { flag: BitFlags::Zero, branch_if_equals: true },
-		);
-
-		let expected: Box<dyn Change> = Box::new(PcChange::new(0x5678));
-		let actual = instruction.compute_change(&cpu).expect("Compute change");
-
-		assert_eq!(actual, expected);
-
-		let instruction = JumpInstruction::new(
 			JumpInstructionDestination::RelativeToPc(-0x7F),
 			BranchCondition::TestFlag { flag: BitFlags::Carry, branch_if_equals: false },
 		);

@@ -28,17 +28,6 @@ pub enum DoubleRegisters {
 	HL,
 }
 
-impl DoubleRegisters {
-	fn get_high_and_low(&self) -> (SingleRegisters, SingleRegisters) {
-		match self {
-			Self::AF => (SingleRegisters::A, SingleRegisters::F),
-			Self::BC => (SingleRegisters::B, SingleRegisters::C),
-			Self::DE => (SingleRegisters::D, SingleRegisters::E),
-			Self::HL => (SingleRegisters::H, SingleRegisters::L),
-		}
-	}
-}
-
 const FLAG_REGISTER: usize = 6;
 
 #[derive(IntoPrimitive, Copy, Clone, PartialEq, Debug)]

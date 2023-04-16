@@ -9,6 +9,7 @@ impl Ime {
 		Self { interruptions_enabled: true }
 	}
 
+	#[allow(unused)]
 	pub(crate) fn read(&self) -> bool {
 		self.interruptions_enabled
 	}

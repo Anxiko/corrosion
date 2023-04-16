@@ -1,6 +1,7 @@
 use std::fmt::{Display, Formatter};
 
 pub(crate) const VIDEO_RAM_START: u16 = 0x8000;
+#[allow(unused)]
 pub(crate) const VRAM_TILE_DATA_START: u16 = 0x800;
 
 pub(crate) const WORKING_RAM_START: u16 = 0xC000;
