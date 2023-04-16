@@ -96,40 +96,6 @@ impl ChangesetInstruction for SingleBitInstruction {
 	}
 }
 
-enum CarryFlagOperation {
-	Toggle,
-	Set,
-}
-
-impl CarryFlagOperation {
-	fn new_carry(&self, old_carry: bool) -> bool {
-		match self {
-			Self::Toggle => !old_carry,
-			Self::Set => true
-		}
-	}
-}
-
-struct CarryFlagInstruction {
-	operation: CarryFlagOperation,
-}
-
-impl ChangesetInstruction for CarryFlagInstruction {
-	type C = BitFlagsChange;
-
-	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError> {
-		let old_carry = cpu.register_bank.read_bit_flag(BitFlags::Carry);
-		let new_carry = self.operation.new_carry(old_carry);
-
-		Ok(
-			BitFlagsChange::keep_all()
-				.with_subtraction_flag(false)
-				.with_half_carry_flag(false)
-				.with_carry_flag(new_carry)
-		)
-	}
-}
-
 #[cfg(test)]
 mod tests {
 	use crate::hardware::ram::WORKING_RAM_START;
