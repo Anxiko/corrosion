@@ -1,7 +1,7 @@
 use crate::hardware::cpu::Cpu;
 use crate::instructions::base::byte::{BinaryByteInstruction, UnaryByteInstruction, UnaryByteOperation};
 use crate::instructions::base::byte::{BinaryByteOperation, ByteDestination, ByteSource};
-use crate::instructions::changeset::{BitFlagsChange, Change, ChangeList};
+use crate::instructions::changeset::{BitFlagsChange, ChangeList};
 use crate::instructions::ExecutionError;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
