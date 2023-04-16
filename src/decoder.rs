@@ -42,13 +42,12 @@ pub fn fetch_and_decode(cpu: &mut Cpu) -> Result<Box<dyn Instruction>, Execution
 	let first_byte = cpu.next_byte()?;
 
 	let prefix = DecodedInstructionPrefix::try_decode_prefix(first_byte);
-	let opcode: u8;
 
-	if prefix.is_some() {
-		opcode = cpu.next_byte()?;
+	let opcode = if prefix.is_some() {
+		cpu.next_byte()?
 	} else {
-		opcode = first_byte;
-	}
+		first_byte
+	};
 
 	decode_opcode(prefix, opcode, cpu)
 }
@@ -618,12 +617,12 @@ impl DecodedInstructionDoubleOperand {
 
 	fn from_opcode_part_double_or_sp(opcode_part: [bool; 2]) -> Self {
 		Self::from_opcode_maybe_double(opcode_part)
-			.map_or(Self::Sp, |double_register| Self::DoubleRegister(double_register))
+			.map_or(Self::Sp, Self::DoubleRegister)
 	}
 
 	fn from_opcode_part_double_or_af(opcode_part: [bool; 2]) -> Self {
 		Self::from_opcode_maybe_double(opcode_part)
-			.map_or(Self::Af, |double_register| Self::DoubleRegister(double_register))
+			.map_or(Self::Af, Self::DoubleRegister)
 	}
 }
 
