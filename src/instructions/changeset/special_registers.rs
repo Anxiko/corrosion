@@ -48,8 +48,6 @@ mod tests {
 	use crate::hardware::cpu::Cpu;
 	use crate::instructions::changeset::{Change, PcChange, SpChange};
 
-	use super::*;
-
 	#[test]
 	fn stack_pointer() {
 		let mut actual = Cpu::new();
