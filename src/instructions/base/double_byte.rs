@@ -31,7 +31,6 @@ pub(crate) enum DoubleByteDestination {
 	DoubleRegister(DoubleRegisters),
 	StackPointer,
 	AddressInImmediate(u16),
-	AddressInRegister(DoubleRegisters),
 }
 
 impl DoubleByteDestination {
@@ -45,12 +44,6 @@ impl DoubleByteDestination {
 			}
 			Self::AddressInImmediate(address) => {
 				Box::new(MemoryDoubleByteWriteChange::write_to_immediate(*address, value))
-			}
-			Self::AddressInRegister(double_register) => {
-				Box::new(MemoryDoubleByteWriteChange::write_to_source(
-					DoubleByteSource::DoubleRegister(*double_register),
-					value,
-				))
 			}
 		}
 	}
@@ -161,18 +154,6 @@ mod tests {
 
 		let actual = dest.change_destination(0x1234);
 		let expected: Box<dyn Change> = Box::new(DoubleRegisterChange::new(DoubleRegisters::HL, 0x1234));
-
-		assert_eq!(actual, expected);
-	}
-
-	#[test]
-	fn destination_address_in_register() {
-		let dest = DoubleByteDestination::AddressInRegister(DoubleRegisters::HL);
-
-		let actual = dest.change_destination(0x1234);
-		let expected: Box<dyn Change> = Box::new(MemoryDoubleByteWriteChange::write_to_source(
-			DoubleByteSource::DoubleRegister(DoubleRegisters::HL), 0x1234,
-		));
 
 		assert_eq!(actual, expected);
 	}
