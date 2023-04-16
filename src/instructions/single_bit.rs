@@ -104,8 +104,9 @@ impl ChangesetInstruction for SingleBitInstruction {
 
 #[cfg(test)]
 mod tests {
-	use super::*;
 	use crate::hardware::ram::WORKING_RAM_START;
+
+	use super::*;
 
 	#[test]
 	fn test_bit() {

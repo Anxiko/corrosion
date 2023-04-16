@@ -175,7 +175,7 @@ mod tests {
 	fn rotate_with_carry() {
 		assert_eq!(
 			ByteShiftOperation::new(ShiftDirection::Right, ShiftType::RotateWithCarry)
-				.compute_changes(0b0011_1010, true, &ByteDestination::write_to_acc(),),
+				.compute_changes(0b0011_1010, true, &ByteDestination::write_to_acc()),
 			ChangeList::new(vec![
 				Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b1001_1101)),
 				Box::new(
@@ -188,7 +188,7 @@ mod tests {
 
 		assert_eq!(
 			ByteShiftOperation::new(ShiftDirection::Left, ShiftType::RotateWithCarry)
-				.compute_changes(0b1001_1101, false, &ByteDestination::write_to_acc(),),
+				.compute_changes(0b1001_1101, false, &ByteDestination::write_to_acc()),
 			ChangeList::new(vec![
 				Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b0011_1010)),
 				Box::new(
@@ -204,7 +204,7 @@ mod tests {
 	fn shift_logical() {
 		assert_eq!(
 			ByteShiftOperation::new(ShiftDirection::Right, ShiftType::LogicalShift)
-				.compute_changes(0b0011_1010, false, &ByteDestination::write_to_acc(),),
+				.compute_changes(0b0011_1010, false, &ByteDestination::write_to_acc()),
 			ChangeList::new(vec![
 				Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b0001_1101)),
 				Box::new(
@@ -236,7 +236,7 @@ mod tests {
 	fn shift_arithmetic() {
 		assert_eq!(
 			ByteShiftOperation::new(ShiftDirection::Right, ShiftType::ArithmeticShift)
-				.compute_changes(0b1100_1010, false, &ByteDestination::write_to_acc(),),
+				.compute_changes(0b1100_1010, false, &ByteDestination::write_to_acc()),
 			ChangeList::new(vec![
 				Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b1110_0101)),
 				Box::new(
@@ -249,7 +249,7 @@ mod tests {
 
 		assert_eq!(
 			ByteShiftOperation::new(ShiftDirection::Left, ShiftType::ArithmeticShift)
-				.compute_changes(0b1000_1101, false, &ByteDestination::write_to_acc(),),
+				.compute_changes(0b1000_1101, false, &ByteDestination::write_to_acc()),
 			ChangeList::new(vec![
 				Box::new(SingleRegisterChange::new(ACC_REGISTER, 0b0001_1010)),
 				Box::new(

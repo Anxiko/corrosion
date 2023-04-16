@@ -64,9 +64,9 @@ impl ChangesetInstruction for SetImeInstruction {
 
 #[cfg(test)]
 mod tests {
-	use super::*;
-
 	use crate::hardware::cpu::Cpu;
+
+	use super::*;
 
 	#[test]
 	fn change_ime() {
