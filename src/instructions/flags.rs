@@ -1,71 +1,84 @@
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::BitFlags;
-use crate::instructions::{ExecutionError, Instruction};
+use crate::instructions::ExecutionError;
+use crate::instructions::changeset::{BitFlagsChange, ChangesetInstruction};
 
-pub(crate) struct ToggleCarry {}
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub(crate) enum BitFlagChangeType {
+	Write(bool),
+	Toggle,
+}
 
-impl ToggleCarry {
-	pub(crate) fn new() -> Self {
-		Self {}
+impl BitFlagChangeType {
+	fn new_value(&self, current_value: bool) -> bool {
+		match self {
+			Self::Toggle => !current_value,
+			Self::Write(new_value) => *new_value
+		}
 	}
 }
 
-impl Instruction for ToggleCarry {
-	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
-		let carry = cpu.register_bank.read_bit_flag(BitFlags::Carry);
+pub(crate) struct ChangeCarryFlagInstruction {
+	change_type: BitFlagChangeType,
+}
 
-		cpu.register_bank.write_bit_flag(BitFlags::Carry, !carry);
-
-		Ok(())
+impl ChangeCarryFlagInstruction {
+	pub(crate) fn new(change_type: BitFlagChangeType) -> Self {
+		Self { change_type }
 	}
 }
 
-pub(crate) struct ChangeCarryFlag {
-	value: bool,
-}
+impl ChangesetInstruction for ChangeCarryFlagInstruction {
+	type C = BitFlagsChange;
 
-impl ChangeCarryFlag {
-	pub(crate) fn new(value: bool) -> Self {
-		Self { value }
-	}
+	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError> {
+		let current_value = cpu.register_bank.read_bit_flag(BitFlags::Carry);
+		let new_value = self.change_type.new_value(current_value);
 
-	pub(crate) fn set() -> Self {
-		Self::new(true)
-	}
-
-	pub(crate) fn clear() -> Self {
-		Self::new(false)
+		Ok(
+			BitFlagsChange::keep_all()
+				.with_carry_flag(new_value)
+				.with_half_carry_flag(false)
+				.with_subtraction_flag(false)
+		)
 	}
 }
 
-impl Instruction for ChangeCarryFlag {
-	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
-		cpu.register_bank.write_bit_flag(BitFlags::Carry, self.value);
-		Ok(())
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn toggle_carry() {
+		let mut cpu = Cpu::new();
+		cpu.register_bank.write_bit_flag(BitFlags::Carry, true);
+
+		let instruction = ChangeCarryFlagInstruction::new(BitFlagChangeType::Toggle);
+
+		let actual = instruction.compute_change(&cpu).unwrap();
+		let expected = BitFlagsChange::keep_all()
+			.with_carry_flag(false)
+			.with_half_carry_flag(false)
+			.with_subtraction_flag(false);
+
+		assert_eq!(actual, expected);
 	}
-}
 
-#[test]
-fn toggle_carry() {
-	let mut cpu = Cpu::new();
-	cpu.register_bank.write_bit_flag(BitFlags::Carry, true);
+	#[test]
+	fn set_carry() {
+		let cpu = Cpu::new();
 
-	let mut expected = cpu.clone();
-	expected
-		.register_bank
-		.write_bit_flag(BitFlags::Carry, false);
+		let instruction = ChangeCarryFlagInstruction::new(
+			BitFlagChangeType::Write(true)
+		);
 
-	assert!(ToggleCarry::new().execute(&mut cpu).is_ok());
-	assert_eq!(cpu, expected);
-}
+		let actual = instruction.compute_change(&cpu).unwrap();
+		let expected = BitFlagsChange::keep_all()
+			.with_carry_flag(true)
+			.with_half_carry_flag(false)
+			.with_subtraction_flag(false);
 
-#[test]
-fn set_carry() {
-	let mut cpu = Cpu::new();
-
-	let mut expected = cpu.clone();
-	expected.register_bank.write_bit_flag(BitFlags::Carry, true);
-
-	assert!(ChangeCarryFlag::set().execute(&mut cpu).is_ok());
-	assert_eq!(cpu, expected);
+		assert_eq!(actual, expected);
+	}
 }
