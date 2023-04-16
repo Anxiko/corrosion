@@ -1,6 +1,6 @@
 use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::Ram;
-use crate::hardware::register_bank::{BitFlags, DoubleRegisters, SingleRegisters};
+use crate::hardware::register_bank::{DoubleRegisters, SingleRegisters};
 use crate::instructions::changeset::{BitFlagsChange, Change, ChangesetInstruction, MemoryByteWriteChange, SingleRegisterChange};
 use crate::instructions::ExecutionError;
 

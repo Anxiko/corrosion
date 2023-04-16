@@ -24,11 +24,6 @@ use crate::instructions::single_bit::SingleBitOperation;
 
 mod prefixed;
 
-enum DecoderState {
-	Empty,
-	WithPrefix { prefix: DecodedInstructionPrefix },
-}
-
 #[derive(Eq, PartialEq, Copy, Clone)]
 enum DecodedInstructionPrefix {
 	CB
