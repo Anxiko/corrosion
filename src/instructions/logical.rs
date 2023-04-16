@@ -1,10 +1,8 @@
 use crate::hardware::cpu::Cpu;
-use crate::hardware::register_bank::SingleRegisters;
-use crate::instructions::{ExecutionError, Instruction};
-use crate::instructions::ACC_REGISTER;
 use crate::instructions::base::byte::{BinaryByteInstruction, UnaryByteInstruction, UnaryByteOperation};
 use crate::instructions::base::byte::{BinaryByteOperation, ByteDestination, ByteSource};
-use crate::instructions::changeset::{BitFlagsChange, Change, ChangeList, SingleRegisterChange};
+use crate::instructions::changeset::{BitFlagsChange, Change, ChangeList};
+use crate::instructions::ExecutionError;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub(crate) enum BinaryLogicalOperationType {
@@ -75,5 +73,26 @@ impl LogicalNegateInstruction {
 			ByteDestination::write_to_acc(),
 			LogicalNegateOperation,
 		)
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use crate::instructions::ACC_REGISTER;
+	use crate::instructions::changeset::{ChangesetInstruction, SingleRegisterChange};
+
+	use super::*;
+
+	#[test]
+	fn negate() {
+		let mut cpu = Cpu::new();
+		cpu.register_bank.write_single_named(ACC_REGISTER, 0b11001010);
+
+		let instruction = LogicalNegateInstruction::negate_acc();
+
+		let actual = instruction.compute_change(&cpu).unwrap();
+		let expected: Box<dyn Change> = Box::new(SingleRegisterChange::new(ACC_REGISTER, !0b11001010));
+
+		assert_eq!(actual, expected);
 	}
 }
