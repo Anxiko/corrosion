@@ -91,8 +91,8 @@ fn decode_opcode(
 									let address = load_next_u16(cpu)?;
 
 									Ok(Box::new(DoubleByteLoadInstruction::new(
-										DoubleByteSource::Immediate(address),
-										DoubleByteDestination::StackPointer,
+										DoubleByteSource::StackPointer,
+										DoubleByteDestination::AddressInImmediate(address),
 										DoubleByteLoadOperation,
 									)))
 								}
