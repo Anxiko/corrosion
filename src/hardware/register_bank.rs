@@ -154,7 +154,7 @@ pub enum RegisterBankError {
 	InvalidDoubleRegister { address: usize },
 }
 
-const PC_START: u16 = 0x100;
+const PC_START: u16 = 0x0000;
 
 #[derive(Debug, PartialEq, Clone)]
 pub(crate) struct ProgramCounter {
