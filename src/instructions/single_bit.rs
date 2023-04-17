@@ -1,5 +1,5 @@
 use crate::hardware::cpu::Cpu;
-use crate::hardware::ram::Ram;
+use crate::hardware::ram::Rom;
 use crate::hardware::register_bank::{DoubleRegisters, SingleRegisters};
 use crate::instructions::changeset::{
 	BitFlagsChange, Change, ChangesetInstruction, MemoryByteWriteChange, SingleRegisterChange,

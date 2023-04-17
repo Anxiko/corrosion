@@ -1,10 +1,10 @@
 use crate::hardware::cpu::Cpu;
-use crate::hardware::ram::Ram;
+use crate::hardware::ram::Rom;
 use crate::hardware::register_bank::{DoubleRegisters, SingleRegisters};
+use crate::instructions::{ACC_REGISTER, ExecutionError};
 use crate::instructions::changeset::{
 	Change, ChangesetInstruction, MemoryByteWriteChange, SingleRegisterChange,
 };
-use crate::instructions::{ExecutionError, ACC_REGISTER};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub(crate) enum ByteSource {

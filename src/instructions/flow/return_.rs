@@ -1,11 +1,11 @@
 use crate::hardware::cpu::Cpu;
-use crate::hardware::ram::Ram;
+use crate::hardware::ram::Rom;
 use crate::hardware::register_bank::BitFlags;
 use crate::instructions::changeset::{
 	Change, ChangeIme, ChangeList, ChangesetInstruction, PcChange, SpChange,
 };
-use crate::instructions::flow::BranchCondition;
 use crate::instructions::ExecutionError;
+use crate::instructions::flow::BranchCondition;
 
 pub(crate) struct ReturnInstruction {
 	condition: BranchCondition,

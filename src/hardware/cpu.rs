@@ -1,5 +1,5 @@
 use crate::hardware::ime::Ime;
-use crate::hardware::ram::Ram;
+use crate::hardware::ram::Rom;
 use crate::hardware::register_bank::{ProgramCounter, StackPointer};
 use crate::instructions::ExecutionError;
 
@@ -8,8 +8,8 @@ use super::register_bank::RegisterBank;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Cpu {
-	pub register_bank: RegisterBank,
-	pub mapped_ram: MappedRam,
+	pub(crate) register_bank: RegisterBank,
+	pub(crate) mapped_ram: MappedRam,
 	pub(crate) pc: ProgramCounter,
 	pub(crate) sp: StackPointer,
 	pub(crate) ime: Ime,

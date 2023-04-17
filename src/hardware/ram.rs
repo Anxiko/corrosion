@@ -1,5 +1,9 @@
 use std::fmt::{Display, Formatter};
 
+use crate::hardware::ram::bootstrap::BOOTSTRAP_DATA;
+
+pub(crate) const BOOSTRAP_RAM_START: u16 = 0x0000;
+
 pub(crate) const VIDEO_RAM_START: u16 = 0x8000;
 #[allow(unused)]
 pub(crate) const VRAM_TILE_DATA_START: u16 = 0x800;
@@ -11,21 +15,17 @@ pub(crate) const OAM_START: u16 = 0xFE00;
 
 pub(crate) const IO_REGISTERS_MAPPING_START: u16 = 0xFF80;
 
+mod bootstrap;
+
+const BOOTSTRAP_RAM_SIZE: usize = 0x100;
 const WORKING_RAM_SIZE: usize = (ECHO_RAM_START - WORKING_RAM_START) as usize;
 const VIDEO_RAM_SIZE: usize = 8 * 1024;
 const IO_REGISTERS_MAPPING_SIZE: usize = 0x80;
 const OAM_SIZE: usize = 0xA0;
 
-pub(crate) trait Ram {
+pub(crate) trait Rom {
 	fn read_byte(&self, address: u16) -> Result<u8, RamError>;
-	fn write_byte(&mut self, address: u16, value: u8) -> Result<(), RamError>;
-	fn write_double_byte(&mut self, address: u16, value: u16) -> Result<(), RamError> {
-		let [high, low] = value.to_be_bytes();
-		self.write_byte(address, low)?;
-		self.write_byte(address.wrapping_add(1), high)?;
 
-		Ok(())
-	}
 	fn read_double_byte(&self, address: u16) -> Result<u16, RamError> {
 		let low = self.read_byte(address)?;
 		let high = self.read_byte(address.wrapping_add(1))?;
@@ -34,10 +34,22 @@ pub(crate) trait Ram {
 	}
 }
 
+pub(crate) trait Ram: Rom {
+	fn write_byte(&mut self, address: u16, value: u8) -> Result<(), RamError>;
+	fn write_double_byte(&mut self, address: u16, value: u16) -> Result<(), RamError> {
+		let [high, low] = value.to_be_bytes();
+		self.write_byte(address, low)?;
+		self.write_byte(address.wrapping_add(1), high)?;
+
+		Ok(())
+	}
+}
+
 #[derive(Debug, Copy, Clone)]
 pub enum RamError {
 	InvalidAddress(u16),
 	UnmappedRegion(u16),
+	WriteOnRom(u16),
 }
 
 impl RamError {
@@ -45,6 +57,7 @@ impl RamError {
 		match self {
 			Self::InvalidAddress(address) => Self::InvalidAddress(address + offset),
 			Self::UnmappedRegion(address) => Self::UnmappedRegion(address + offset),
+			Self::WriteOnRom(address) => Self::WriteOnRom(address + offset),
 		}
 	}
 }
@@ -58,12 +71,16 @@ impl Display for RamError {
 			Self::InvalidAddress(address) => {
 				write!(f, "Attempted to access invalid address {address}")
 			}
+			Self::WriteOnRom(address) => {
+				write!(f, "Attempted write to ROM address {address}")
+			}
 		}
 	}
 }
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct MappedRam {
+	boostrap_ram: RomChip<'static, BOOTSTRAP_RAM_SIZE>,
 	working_ram: RamChip<WORKING_RAM_SIZE>,
 	video_ram: RamChip<VIDEO_RAM_SIZE>,
 	mapped_io_registers: MappedIoRegisters,
@@ -72,6 +89,7 @@ pub struct MappedRam {
 
 #[derive(Copy, Clone)]
 enum RamRegion {
+	Bootstrap,
 	WorkingRam,
 	VideoRam,
 	IoRegisters,
@@ -90,7 +108,12 @@ impl RamMapping {
 	}
 }
 
-const RAM_MAPPINGS: [RamMapping; 4] = [
+const RAM_MAPPINGS: [RamMapping; 5] = [
+	RamMapping {
+		region: RamRegion::Bootstrap,
+		offset: BOOSTRAP_RAM_START,
+		size: BOOTSTRAP_RAM_SIZE,
+	},
 	RamMapping {
 		region: RamRegion::WorkingRam,
 		offset: WORKING_RAM_START,
@@ -116,6 +139,7 @@ const RAM_MAPPINGS: [RamMapping; 4] = [
 impl MappedRam {
 	pub(crate) fn new() -> Self {
 		Self {
+			boostrap_ram: RomChip::new(BOOTSTRAP_DATA),
 			working_ram: RamChip::new(),
 			video_ram: RamChip::new(),
 			mapped_io_registers: MappedIoRegisters::new(),
@@ -129,8 +153,9 @@ impl MappedRam {
 			.find(|mapping| mapping.mapped_here(address))
 	}
 
-	fn get_mapped_ram(&self, region: RamRegion) -> &dyn Ram {
+	fn get_mapped_ram(&self, region: RamRegion) -> &dyn Rom {
 		match region {
+			RamRegion::Bootstrap => &self.boostrap_ram,
 			RamRegion::WorkingRam => &self.working_ram,
 			RamRegion::VideoRam => &self.video_ram,
 			RamRegion::IoRegisters => &self.mapped_io_registers,
@@ -140,6 +165,7 @@ impl MappedRam {
 
 	fn get_mapped_ram_mut(&mut self, region: RamRegion) -> &mut dyn Ram {
 		match region {
+			RamRegion::Bootstrap => panic!("Attempted to obtain write access to a ROM chip"),
 			RamRegion::WorkingRam => &mut self.working_ram,
 			RamRegion::VideoRam => &mut self.video_ram,
 			RamRegion::IoRegisters => &mut self.mapped_io_registers,
@@ -148,7 +174,7 @@ impl MappedRam {
 	}
 }
 
-impl Ram for MappedRam {
+impl Rom for MappedRam {
 	fn read_byte(&self, address: u16) -> Result<u8, RamError> {
 		let ram_mapping =
 			MappedRam::mapping_for_address(address).ok_or(RamError::UnmappedRegion(address))?;
@@ -159,7 +185,9 @@ impl Ram for MappedRam {
 			.read_byte(region_address)
 			.map_err(|ram_error| ram_error.adjust_for_offset(ram_mapping.offset))
 	}
+}
 
+impl Ram for MappedRam {
 	fn write_byte(&mut self, address: u16, value: u8) -> Result<(), RamError> {
 		let ram_mapping =
 			MappedRam::mapping_for_address(address).ok_or(RamError::UnmappedRegion(address))?;
@@ -169,6 +197,26 @@ impl Ram for MappedRam {
 		mapped_ram
 			.write_byte(region_address, value)
 			.map_err(|ram_error| ram_error.adjust_for_offset(ram_mapping.offset))
+	}
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct RomChip<'a, const S: usize> {
+	ref_memory: &'a [u8; S],
+}
+
+impl<'a, const S: usize> RomChip<'a, S> {
+	fn new(ref_memory: &'a [u8; S]) -> Self {
+		Self { ref_memory }
+	}
+}
+
+impl<'a, const S: usize> Rom for RomChip<'a, S> {
+	fn read_byte(&self, address: u16) -> Result<u8, RamError> {
+		self.ref_memory
+			.get(usize::from(address))
+			.copied()
+			.ok_or(RamError::InvalidAddress(address))
 	}
 }
 
@@ -185,14 +233,16 @@ impl<const S: usize> RamChip<S> {
 	}
 }
 
-impl<const S: usize> Ram for RamChip<S> {
+impl<const S: usize> Rom for RamChip<S> {
 	fn read_byte(&self, address: u16) -> Result<u8, RamError> {
 		self.memory
 			.get(usize::from(address))
 			.copied()
 			.ok_or(RamError::InvalidAddress(address))
 	}
+}
 
+impl<const S: usize> Ram for RamChip<S> {
 	fn write_byte(&mut self, address: u16, value: u8) -> Result<(), RamError> {
 		let ptr = self
 			.memory
@@ -240,12 +290,14 @@ impl MappedIoRegisters {
 	}
 }
 
-impl Ram for MappedIoRegisters {
+impl Rom for MappedIoRegisters {
 	fn read_byte(&self, address: u16) -> Result<u8, RamError> {
 		MappedIoRegisters::resolve_address(address)
 			.map(|io_register| *self.get_io_register(io_register))
 	}
+}
 
+impl Ram for MappedIoRegisters {
 	fn write_byte(&mut self, address: u16, value: u8) -> Result<(), RamError> {
 		MappedIoRegisters::resolve_address(address)
 			.map(|io_register| self.get_io_register_mut(io_register))
