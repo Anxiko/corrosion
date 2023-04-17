@@ -45,7 +45,7 @@ pub(crate) type IncOrDecInstruction = UnaryByteInstruction<IncOrDecOperation>;
 
 #[cfg(test)]
 mod tests {
-	use crate::instructions::changeset::{ChangesetInstruction, SingleRegisterChange};
+	use crate::instructions::changeset::{ChangesetExecutable, SingleRegisterChange};
 	use crate::instructions::ACC_REGISTER;
 
 	use super::*;

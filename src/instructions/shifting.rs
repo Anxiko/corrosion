@@ -28,6 +28,7 @@ impl UnaryByteOperation for ByteShiftOperation {
 
 pub(crate) type ByteShiftInstruction = UnaryByteInstruction<ByteShiftOperation>;
 
+#[derive(Debug)]
 pub(crate) struct ByteSwapOperation {}
 
 impl ByteSwapOperation {
@@ -60,7 +61,7 @@ pub(crate) type ByteSwapInstruction = UnaryByteInstruction<ByteSwapOperation>;
 mod tests {
 	use crate::hardware::register_bank::SingleRegisters;
 	use crate::instructions::changeset::{
-		BitFlagsChange, ChangesetInstruction, SingleRegisterChange,
+		BitFlagsChange, ChangesetExecutable, SingleRegisterChange,
 	};
 	use crate::instructions::shifting::operation::{ShiftDirection, ShiftType};
 	use crate::instructions::ACC_REGISTER;

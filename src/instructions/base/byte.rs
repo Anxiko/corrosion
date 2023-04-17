@@ -3,7 +3,7 @@ use crate::hardware::ram::Rom;
 use crate::hardware::register_bank::{DoubleRegisters, SingleRegisters};
 use crate::instructions::{ACC_REGISTER, ExecutionError};
 use crate::instructions::changeset::{
-	Change, ChangesetInstruction, MemoryByteWriteChange, SingleRegisterChange,
+	Change, ChangesetExecutable, MemoryByteWriteChange, SingleRegisterChange,
 };
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -87,6 +87,7 @@ pub(crate) trait UnaryByteOperation {
 	) -> Result<Self::C, ExecutionError>;
 }
 
+#[derive(Debug)]
 pub(crate) struct UnaryByteInstruction<O>
 where
 	O: UnaryByteOperation,
@@ -105,9 +106,9 @@ where
 	}
 }
 
-impl<O> ChangesetInstruction for UnaryByteInstruction<O>
-where
-	O: UnaryByteOperation,
+impl<O> ChangesetExecutable for UnaryByteInstruction<O>
+	where
+		O: UnaryByteOperation,
 {
 	type C = O::C;
 
@@ -127,6 +128,7 @@ pub(crate) trait BinaryByteOperation {
 	) -> Result<Self::C, ExecutionError>;
 }
 
+#[derive(Debug)]
 pub(crate) struct BinaryByteInstruction<O: BinaryByteOperation> {
 	left: ByteSource,
 	right: ByteSource,
@@ -145,7 +147,7 @@ impl<O: BinaryByteOperation> BinaryByteInstruction<O> {
 	}
 }
 
-impl<O: BinaryByteOperation> ChangesetInstruction for BinaryByteInstruction<O> {
+impl<O: BinaryByteOperation> ChangesetExecutable for BinaryByteInstruction<O> {
 	type C = O::C;
 
 	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError> {

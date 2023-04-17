@@ -1,9 +1,10 @@
 use crate::hardware::alu::sub_u8;
 use crate::hardware::cpu::Cpu;
 use crate::instructions::base::byte::ByteSource;
-use crate::instructions::changeset::{BitFlagsChange, ChangesetInstruction};
+use crate::instructions::changeset::{BitFlagsChange, ChangesetExecutable};
 use crate::instructions::ExecutionError;
 
+#[derive(Debug)]
 pub struct CompareInstruction {
 	left: ByteSource,
 	right: ByteSource,
@@ -15,7 +16,7 @@ impl CompareInstruction {
 	}
 }
 
-impl ChangesetInstruction for CompareInstruction {
+impl ChangesetExecutable for CompareInstruction {
 	type C = BitFlagsChange;
 
 	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError> {

@@ -1,7 +1,8 @@
 use crate::hardware::cpu::Cpu;
-use crate::instructions::changeset::{ChangeIme, ChangesetInstruction};
-use crate::instructions::{ExecutionError, Instruction};
+use crate::instructions::{Executable, ExecutionError};
+use crate::instructions::changeset::{ChangeIme, ChangesetExecutable};
 
+#[derive(Debug)]
 pub(crate) struct NopInstruction {}
 
 impl NopInstruction {
@@ -10,12 +11,13 @@ impl NopInstruction {
 	}
 }
 
-impl Instruction for NopInstruction {
+impl Executable for NopInstruction {
 	fn execute(&self, _cpu: &mut Cpu) -> Result<(), ExecutionError> {
 		Ok(())
 	}
 }
 
+#[derive(Debug)]
 pub(crate) struct StopInstruction {}
 
 impl StopInstruction {
@@ -24,12 +26,13 @@ impl StopInstruction {
 	}
 }
 
-impl Instruction for StopInstruction {
+impl Executable for StopInstruction {
 	fn execute(&self, _cpu: &mut Cpu) -> Result<(), ExecutionError> {
 		todo!("Implement STOP instruction")
 	}
 }
 
+#[derive(Debug)]
 pub(crate) struct HaltInstruction;
 
 impl HaltInstruction {
@@ -38,12 +41,13 @@ impl HaltInstruction {
 	}
 }
 
-impl Instruction for HaltInstruction {
+impl Executable for HaltInstruction {
 	fn execute(&self, _cpu: &mut Cpu) -> Result<(), ExecutionError> {
 		todo!("Implement HALT instruction")
 	}
 }
 
+#[derive(Debug)]
 pub(crate) struct SetImeInstruction {
 	value: bool,
 }
@@ -54,7 +58,7 @@ impl SetImeInstruction {
 	}
 }
 
-impl ChangesetInstruction for SetImeInstruction {
+impl ChangesetExecutable for SetImeInstruction {
 	type C = ChangeIme;
 
 	fn compute_change(&self, _cpu: &Cpu) -> Result<Self::C, ExecutionError> {

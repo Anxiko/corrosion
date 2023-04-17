@@ -65,6 +65,7 @@ impl BinaryByteOperation for BinaryLogicalOperation {
 
 pub(crate) type BinaryLogicalInstruction = BinaryByteInstruction<BinaryLogicalOperation>;
 
+#[derive(Debug)]
 pub(crate) struct LogicalNegateOperation;
 
 impl UnaryByteOperation for LogicalNegateOperation {
@@ -105,7 +106,7 @@ impl LogicalNegateInstruction {
 #[cfg(test)]
 mod tests {
 	use crate::hardware::register_bank::SingleRegisters;
-	use crate::instructions::changeset::{ChangesetInstruction, SingleRegisterChange};
+	use crate::instructions::changeset::{ChangesetExecutable, SingleRegisterChange};
 	use crate::instructions::ACC_REGISTER;
 
 	use super::*;

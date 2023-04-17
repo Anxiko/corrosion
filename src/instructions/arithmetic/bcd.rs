@@ -1,10 +1,11 @@
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::BitFlags;
 use crate::instructions::changeset::{
-	BitFlagsChange, ChangeList, ChangesetInstruction, SingleRegisterChange,
+	BitFlagsChange, ChangeList, ChangesetExecutable, SingleRegisterChange,
 };
 use crate::instructions::{ExecutionError, ACC_REGISTER};
 
+#[derive(Debug)]
 pub(crate) struct DecimalAdjust;
 
 impl DecimalAdjust {
@@ -42,7 +43,7 @@ impl DecimalAdjust {
 	}
 }
 
-impl ChangesetInstruction for DecimalAdjust {
+impl ChangesetExecutable for DecimalAdjust {
 	type C = ChangeList;
 
 	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError> {

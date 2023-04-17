@@ -1,6 +1,6 @@
 use crate::hardware::cpu::Cpu;
 use crate::instructions::base::double_byte::DoubleByteSource;
-use crate::instructions::changeset::{Change, ChangesetInstruction, NoChange, PcChange};
+use crate::instructions::changeset::{Change, ChangesetExecutable, NoChange, PcChange};
 use crate::instructions::flow::BranchCondition;
 use crate::instructions::ExecutionError;
 
@@ -19,6 +19,7 @@ impl JumpInstructionDestination {
 	}
 }
 
+#[derive(Debug)]
 pub(crate) struct JumpInstruction {
 	dst: JumpInstructionDestination,
 	condition: BranchCondition,
@@ -30,7 +31,7 @@ impl JumpInstruction {
 	}
 }
 
-impl ChangesetInstruction for JumpInstruction {
+impl ChangesetExecutable for JumpInstruction {
 	type C = Box<dyn Change>;
 
 	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError> {

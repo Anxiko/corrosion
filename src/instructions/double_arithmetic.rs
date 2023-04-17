@@ -4,10 +4,11 @@ use crate::instructions::base::double_byte::{
 	BinaryDoubleByteInstruction, BinaryDoubleByteOperation, DoubleByteDestination,
 	DoubleByteSource, UnaryDoubleByteInstruction, UnaryDoubleByteOperation,
 };
-use crate::instructions::changeset::{BitFlagsChange, Change, ChangeList, ChangesetInstruction};
-use crate::instructions::shared::IndexUpdateType;
+use crate::instructions::changeset::{BitFlagsChange, Change, ChangeList, ChangesetExecutable};
 use crate::instructions::ExecutionError;
+use crate::instructions::shared::IndexUpdateType;
 
+#[derive(Debug)]
 pub(crate) struct BinaryDoubleByteAddOperation;
 
 impl BinaryDoubleByteAddOperation {
@@ -51,6 +52,7 @@ impl BinaryDoubleByteOperation for BinaryDoubleByteAddOperation {
 pub(crate) type BinaryDoubleByteAddInstruction =
 	BinaryDoubleByteInstruction<BinaryDoubleByteAddOperation>;
 
+#[derive(Debug)]
 pub(crate) struct IncOrDecDoubleByteOperation {
 	type_: IndexUpdateType,
 }
@@ -80,6 +82,7 @@ impl UnaryDoubleByteOperation for IncOrDecDoubleByteOperation {
 
 pub(crate) type IncOrDecDoubleInstruction = UnaryDoubleByteInstruction<IncOrDecDoubleByteOperation>;
 
+#[derive(Debug)]
 pub(crate) struct AddSignedByteToDoubleByte {
 	src: DoubleByteSource,
 	dst: DoubleByteDestination,
@@ -100,7 +103,7 @@ impl AddSignedByteToDoubleByte {
 	}
 }
 
-impl ChangesetInstruction for AddSignedByteToDoubleByte {
+impl ChangesetExecutable for AddSignedByteToDoubleByte {
 	type C = ChangeList;
 
 	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError> {

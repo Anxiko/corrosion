@@ -2,7 +2,7 @@ use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::Rom;
 use crate::hardware::register_bank::{DoubleRegisters, SingleRegisters};
 use crate::instructions::changeset::{
-	BitFlagsChange, Change, ChangesetInstruction, MemoryByteWriteChange, SingleRegisterChange,
+	BitFlagsChange, Change, ChangesetExecutable, MemoryByteWriteChange, SingleRegisterChange,
 };
 use crate::instructions::ExecutionError;
 
@@ -91,7 +91,7 @@ impl SingleBitInstruction {
 	}
 }
 
-impl ChangesetInstruction for SingleBitInstruction {
+impl ChangesetExecutable for SingleBitInstruction {
 	type C = Box<dyn Change>;
 
 	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError> {

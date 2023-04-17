@@ -1,10 +1,10 @@
 use crate::bits::bits_to_byte;
 use crate::decoder::DecodedInstructionOperand;
-use crate::instructions::base::byte::ByteDestination;
-use crate::instructions::shifting::operation::{ByteShiftOperation, ShiftDirection, ShiftType};
-use crate::instructions::shifting::{ByteShiftInstruction, ByteSwapInstruction, ByteSwapOperation};
-use crate::instructions::single_bit::{SingleBitInstruction, SingleBitOperand, SingleBitOperation};
 use crate::instructions::Instruction;
+use crate::instructions::base::byte::ByteDestination;
+use crate::instructions::shifting::{ByteShiftInstruction, ByteSwapInstruction, ByteSwapOperation};
+use crate::instructions::shifting::operation::{ByteShiftOperation, ShiftDirection, ShiftType};
+use crate::instructions::single_bit::{SingleBitInstruction, SingleBitOperand, SingleBitOperation};
 
 pub(super) fn decode_prefixed_shifting(y: [bool; 3], z: [bool; 3]) -> Box<dyn Instruction> {
 	let source = DecodedInstructionOperand::from_opcode_part(z).into();

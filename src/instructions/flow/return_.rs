@@ -2,11 +2,12 @@ use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::Rom;
 use crate::hardware::register_bank::BitFlags;
 use crate::instructions::changeset::{
-	Change, ChangeIme, ChangeList, ChangesetInstruction, PcChange, SpChange,
+	Change, ChangeIme, ChangeList, ChangesetExecutable, PcChange, SpChange,
 };
 use crate::instructions::ExecutionError;
 use crate::instructions::flow::BranchCondition;
 
+#[derive(Debug)]
 pub(crate) struct ReturnInstruction {
 	condition: BranchCondition,
 	enable_interrupts: bool,
@@ -31,7 +32,7 @@ impl ReturnInstruction {
 	}
 }
 
-impl ChangesetInstruction for ReturnInstruction {
+impl ChangesetExecutable for ReturnInstruction {
 	type C = ChangeList;
 
 	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError> {
@@ -58,7 +59,7 @@ mod tests {
 	use crate::hardware::ram::{Ram, WORKING_RAM_START};
 	use crate::hardware::register_bank::BitFlags;
 	use crate::instructions::changeset::{
-		ChangeIme, ChangeList, ChangesetInstruction, PcChange, SpChange,
+		ChangeIme, ChangeList, ChangesetExecutable, PcChange, SpChange,
 	};
 	use crate::instructions::flow::{BranchCondition, ReturnInstruction};
 

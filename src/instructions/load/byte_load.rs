@@ -26,6 +26,7 @@ impl ByteLoadUpdate {
 	}
 }
 
+#[derive(Debug)]
 pub(crate) struct ByteLoadOperation {
 	update: Option<ByteLoadUpdate>,
 }
@@ -79,7 +80,7 @@ mod tests {
 	use crate::hardware::ram::{Ram, WORKING_RAM_START};
 	use crate::hardware::register_bank::SingleRegisters;
 	use crate::instructions::changeset::{
-		ChangesetInstruction, MemoryByteWriteChange, SingleRegisterChange,
+		ChangesetExecutable, MemoryByteWriteChange, SingleRegisterChange,
 	};
 	use crate::instructions::ACC_REGISTER;
 

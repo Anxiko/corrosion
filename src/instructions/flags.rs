@@ -1,6 +1,6 @@
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::BitFlags;
-use crate::instructions::changeset::{BitFlagsChange, ChangesetInstruction};
+use crate::instructions::changeset::{BitFlagsChange, ChangesetExecutable};
 use crate::instructions::ExecutionError;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -18,6 +18,7 @@ impl BitFlagChangeType {
 	}
 }
 
+#[derive(Debug)]
 pub(crate) struct ChangeCarryFlagInstruction {
 	change_type: BitFlagChangeType,
 }
@@ -28,7 +29,7 @@ impl ChangeCarryFlagInstruction {
 	}
 }
 
-impl ChangesetInstruction for ChangeCarryFlagInstruction {
+impl ChangesetExecutable for ChangeCarryFlagInstruction {
 	type C = BitFlagsChange;
 
 	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError> {

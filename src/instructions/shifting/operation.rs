@@ -2,7 +2,7 @@ use crate::instructions::base::byte::ByteDestination;
 use crate::instructions::changeset::{BitFlagsChange, ChangeList};
 use crate::instructions::ACC_REGISTER;
 
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub enum ShiftDirection {
 	Left,
 	Right,
@@ -17,7 +17,7 @@ impl ShiftDirection {
 	}
 }
 
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub enum ShiftType {
 	Rotate,
 	RotateWithCarry,
@@ -25,6 +25,7 @@ pub enum ShiftType {
 	ArithmeticShift,
 }
 
+#[derive(Debug)]
 pub struct ByteShiftOperation {
 	direction: ShiftDirection,
 	type_: ShiftType,

@@ -4,10 +4,11 @@ use crate::instructions::base::double_byte::{
 	DoubleByteDestination, DoubleByteSource, UnaryDoubleByteInstruction, UnaryDoubleByteOperation,
 };
 use crate::instructions::changeset::{
-	Change, ChangeList, ChangesetInstruction, MemoryDoubleByteWriteChange, SpChange,
+	Change, ChangeList, ChangesetExecutable, MemoryDoubleByteWriteChange, SpChange,
 };
 use crate::instructions::ExecutionError;
 
+#[derive(Debug)]
 pub(crate) struct DoubleByteLoadOperation;
 
 impl DoubleByteLoadOperation {
@@ -32,6 +33,7 @@ impl UnaryDoubleByteOperation for DoubleByteLoadOperation {
 
 pub(crate) type DoubleByteLoadInstruction = UnaryDoubleByteInstruction<DoubleByteLoadOperation>;
 
+#[derive(Debug)]
 pub(crate) struct PushInstruction {
 	source: DoubleByteSource,
 }
@@ -42,7 +44,7 @@ impl PushInstruction {
 	}
 }
 
-impl ChangesetInstruction for PushInstruction {
+impl ChangesetExecutable for PushInstruction {
 	type C = ChangeList;
 
 	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError> {
@@ -59,6 +61,7 @@ impl ChangesetInstruction for PushInstruction {
 	}
 }
 
+#[derive(Debug)]
 pub(crate) struct PopInstruction {
 	destination: DoubleByteDestination,
 }
@@ -69,7 +72,7 @@ impl PopInstruction {
 	}
 }
 
-impl ChangesetInstruction for PopInstruction {
+impl ChangesetExecutable for PopInstruction {
 	type C = ChangeList;
 
 	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError> {
@@ -91,7 +94,7 @@ mod tests {
 	use crate::hardware::register_bank::DoubleRegisters;
 	use crate::instructions::base::double_byte::{DoubleByteDestination, DoubleByteSource};
 	use crate::instructions::changeset::{
-		Change, ChangeList, ChangesetInstruction, DoubleRegisterChange,
+		Change, ChangeList, ChangesetExecutable, DoubleRegisterChange,
 		MemoryDoubleByteWriteChange, SpChange,
 	};
 	use crate::instructions::load::double_byte_load::{

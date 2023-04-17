@@ -1,7 +1,7 @@
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::DoubleRegisters;
 use crate::instructions::changeset::{
-	Change, ChangesetInstruction, DoubleRegisterChange, MemoryDoubleByteWriteChange, SpChange,
+	Change, ChangesetExecutable, DoubleRegisterChange, MemoryDoubleByteWriteChange, SpChange,
 };
 use crate::instructions::ExecutionError;
 
@@ -56,6 +56,7 @@ pub(crate) trait UnaryDoubleByteOperation {
 	) -> Result<Self::C, ExecutionError>;
 }
 
+#[derive(Debug)]
 pub(crate) struct UnaryDoubleByteInstruction<O>
 where
 	O: UnaryDoubleByteOperation,
@@ -74,7 +75,7 @@ where
 	}
 }
 
-impl<O> ChangesetInstruction for UnaryDoubleByteInstruction<O>
+impl<O> ChangesetExecutable for UnaryDoubleByteInstruction<O>
 where
 	O: UnaryDoubleByteOperation,
 {
@@ -97,6 +98,7 @@ pub(crate) trait BinaryDoubleByteOperation {
 	) -> Result<Self::C, ExecutionError>;
 }
 
+#[derive(Debug)]
 pub(crate) struct BinaryDoubleByteInstruction<O: BinaryDoubleByteOperation> {
 	left: DoubleByteSource,
 	right: DoubleByteSource,
@@ -120,7 +122,7 @@ impl<O: BinaryDoubleByteOperation> BinaryDoubleByteInstruction<O> {
 	}
 }
 
-impl<O> ChangesetInstruction for BinaryDoubleByteInstruction<O>
+impl<O> ChangesetExecutable for BinaryDoubleByteInstruction<O>
 where
 	O: BinaryDoubleByteOperation,
 {

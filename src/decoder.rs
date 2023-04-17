@@ -3,6 +3,7 @@ use crate::decoder::prefixed::{decode_prefixed_shifting, decode_prefixed_single_
 use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::IO_REGISTERS_MAPPING_START;
 use crate::hardware::register_bank::{BitFlags, DoubleRegisters, SingleRegisters};
+use crate::instructions::{ExecutionError, Instruction};
 use crate::instructions::arithmetic::add_or_sub::{
 	BinaryArithmeticInstruction, BinaryArithmeticOperation, BinaryArithmeticOperationType,
 };
@@ -34,10 +35,9 @@ use crate::instructions::logical::{
 	LogicalNegateInstruction,
 };
 use crate::instructions::shared::IndexUpdateType;
-use crate::instructions::shifting::operation::{ByteShiftOperation, ShiftDirection, ShiftType};
 use crate::instructions::shifting::ByteShiftInstruction;
+use crate::instructions::shifting::operation::{ByteShiftOperation, ShiftDirection, ShiftType};
 use crate::instructions::single_bit::SingleBitOperation;
-use crate::instructions::{ExecutionError, Instruction};
 
 mod prefixed;
 

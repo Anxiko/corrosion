@@ -3,11 +3,12 @@ use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::BitFlags;
 use crate::instructions::base::double_byte::DoubleByteSource;
 use crate::instructions::changeset::{
-	Change, ChangeList, ChangesetInstruction, MemoryDoubleByteWriteChange, PcChange, SpChange,
+	Change, ChangeList, ChangesetExecutable, MemoryDoubleByteWriteChange, PcChange, SpChange,
 };
 use crate::instructions::flow::BranchCondition;
 use crate::instructions::ExecutionError;
 
+#[derive(Debug)]
 pub(crate) struct CallInstruction {
 	condition: BranchCondition,
 	address: u16,
@@ -39,7 +40,7 @@ impl CallInstruction {
 	}
 }
 
-impl ChangesetInstruction for CallInstruction {
+impl ChangesetExecutable for CallInstruction {
 	type C = ChangeList;
 
 	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError> {

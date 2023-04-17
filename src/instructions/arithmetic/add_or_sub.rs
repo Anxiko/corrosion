@@ -65,7 +65,7 @@ mod tests {
 	};
 	use crate::instructions::base::byte::{ByteDestination, ByteSource};
 	use crate::instructions::changeset::{
-		BitFlagsChange, ChangeList, ChangesetInstruction, SingleRegisterChange,
+		BitFlagsChange, ChangeList, ChangesetExecutable, SingleRegisterChange,
 	};
 
 	#[test]

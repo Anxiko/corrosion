@@ -1,5 +1,5 @@
 use std::error::Error;
-use std::fmt::{Display, Formatter};
+use std::fmt::{Debug, Display, Formatter};
 
 use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::RamError;
@@ -18,9 +18,13 @@ pub(crate) mod shared;
 pub(crate) mod shifting;
 pub(crate) mod single_bit;
 
-pub trait Instruction {
+pub trait Executable {
 	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError>;
 }
+
+pub trait Instruction: Executable + Debug {}
+
+impl<T> Instruction for T where T: Executable + Debug {}
 
 #[derive(Debug)]
 pub enum ExecutionError {
