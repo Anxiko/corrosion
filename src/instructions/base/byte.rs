@@ -156,7 +156,7 @@ impl<O: BinaryByteOperation> ChangesetInstruction for BinaryByteInstruction<O> {
 
 #[cfg(test)]
 mod tests {
-	use crate::hardware::ram::WORKING_RAM_START;
+	use crate::hardware::ram::{Ram, WORKING_RAM_START};
 
 	use super::*;
 
