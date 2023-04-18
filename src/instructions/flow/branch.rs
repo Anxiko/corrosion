@@ -71,7 +71,7 @@ impl Display for JumpInstruction {
 		}
 
 		if let Some(condition) = self.condition.as_maybe_string() {
-			write!(f, "{condition}, ")?;
+			write!(f, " {condition}, ")?;
 		}
 
 		write!(f, "{}", self.dst)?;

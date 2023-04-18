@@ -4,7 +4,7 @@ use corrosion::instructions::ExecutionError;
 
 fn update_cpu(cpu: &mut Cpu) -> Result<(), ExecutionError> {
 	let instruction = fetch_and_decode(cpu)?;
-	println!("{instruction:?}");
+	println!("{instruction}");
 	instruction.execute(cpu)?;
 	Ok(())
 }
@@ -16,7 +16,7 @@ fn main() -> Result<(), String> {
 
 		let execution_result = update_cpu(&mut cpu);
 		if let Err(err) = execution_result {
-			println!("{err}");
+			println!("ERROR: {err}");
 			break;
 		}
 	}
