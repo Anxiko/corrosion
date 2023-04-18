@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter};
+
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::DoubleRegisters;
 use crate::instructions::changeset::{
@@ -24,6 +26,22 @@ impl DoubleByteSource {
 	}
 }
 
+impl Display for DoubleByteSource {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Self::DoubleRegister(r) => {
+				write!(f, "{r}")
+			},
+			Self::Immediate(i) => {
+				write!(f, "{i:#06X}")
+			},
+			Self::StackPointer => {
+				write!(f, "SP")
+			}
+		}
+	}
+}
+
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub(crate) enum DoubleByteDestination {
 	DoubleRegister(DoubleRegisters),
@@ -41,6 +59,22 @@ impl DoubleByteDestination {
 			Self::AddressInImmediate(address) => Box::new(
 				MemoryDoubleByteWriteChange::write_to_immediate(*address, value),
 			),
+		}
+	}
+}
+
+impl Display for DoubleByteDestination {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Self::DoubleRegister(r) => {
+				write!(f, "{r}")
+			},
+			Self::StackPointer => {
+				write!(f, "SP")
+			},
+			Self::AddressInImmediate(a) => {
+				write!(f, "({a:#06X})")
+			}
 		}
 	}
 }
@@ -76,13 +110,19 @@ where
 }
 
 impl<O> ChangesetExecutable for UnaryDoubleByteInstruction<O>
-where
-	O: UnaryDoubleByteOperation,
+	where
+		O: UnaryDoubleByteOperation,
 {
 	type C = O::C;
 
 	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError> {
 		self.op.execute(cpu, &self.src, &self.dst)
+	}
+}
+
+impl<O: UnaryDoubleByteOperation + Display> Display for UnaryDoubleByteInstruction<O> {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		write!(f, "{} {} <- {}", self.op, self.dst, self.src)
 	}
 }
 
@@ -123,14 +163,20 @@ impl<O: BinaryDoubleByteOperation> BinaryDoubleByteInstruction<O> {
 }
 
 impl<O> ChangesetExecutable for BinaryDoubleByteInstruction<O>
-where
-	O: BinaryDoubleByteOperation,
+	where
+		O: BinaryDoubleByteOperation,
 {
 	type C = O::C;
 
 	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError> {
 		self.op
 			.compute_changes(cpu, &self.left, &self.right, &self.dst)
+	}
+}
+
+impl<O: BinaryDoubleByteOperation + Display> Display for BinaryDoubleByteInstruction<O> {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		write!(f, "{} {} <- {}, {}", self.op, self.dst, self.left, self.right)
 	}
 }
 

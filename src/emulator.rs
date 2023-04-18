@@ -1,11 +1,3 @@
-extern crate sdl2;
-
-use std::time::Duration;
-
-use sdl2::event::Event;
-use sdl2::keyboard::Keycode;
-use sdl2::pixels::Color;
-
 use corrosion::decoder::fetch_and_decode;
 use corrosion::hardware::cpu::Cpu;
 use corrosion::instructions::ExecutionError;

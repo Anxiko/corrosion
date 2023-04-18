@@ -1,8 +1,10 @@
-use crate::hardware::alu::{add_with_carry_u8, sub_u8_with_carry, AluU8Result};
+use std::fmt::{Display, Formatter};
+
+use crate::hardware::alu::{add_with_carry_u8, AluU8Result, sub_u8_with_carry};
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::BitFlags;
-use crate::instructions::base::byte::BinaryByteInstruction;
 use crate::instructions::base::byte::{BinaryByteOperation, ByteDestination, ByteSource};
+use crate::instructions::base::byte::BinaryByteInstruction;
 use crate::instructions::changeset::ChangeList;
 use crate::instructions::ExecutionError;
 
@@ -29,6 +31,15 @@ impl BinaryArithmeticOperation {
 			BinaryArithmeticOperationType::Sub => sub_u8_with_carry(left, right, carry),
 		}
 	}
+
+	fn as_str(&self) -> &str {
+		match self {
+			Self { type_: BinaryArithmeticOperationType::Add, with_carry: false } => "add",
+			Self { type_: BinaryArithmeticOperationType::Add, with_carry: true } => "adc",
+			Self { type_: BinaryArithmeticOperationType::Sub, with_carry: false } => "sub",
+			Self { type_: BinaryArithmeticOperationType::Sub, with_carry: true } => "sbc"
+		}
+	}
 }
 
 impl BinaryByteOperation for BinaryArithmeticOperation {
@@ -51,6 +62,12 @@ impl BinaryByteOperation for BinaryArithmeticOperation {
 			result.change_dst(dst),
 			Box::new(result.change_flags()),
 		]))
+	}
+}
+
+impl Display for BinaryArithmeticOperation {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		write!(f, "{}", self.as_str())
 	}
 }
 

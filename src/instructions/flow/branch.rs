@@ -1,8 +1,10 @@
+use std::fmt::{Display, Formatter};
+
 use crate::hardware::cpu::Cpu;
 use crate::instructions::base::double_byte::DoubleByteSource;
 use crate::instructions::changeset::{Change, ChangesetExecutable, NoChange, PcChange};
-use crate::instructions::flow::BranchCondition;
 use crate::instructions::ExecutionError;
+use crate::instructions::flow::BranchCondition;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub(crate) enum JumpInstructionDestination {
@@ -15,6 +17,22 @@ impl JumpInstructionDestination {
 		match self {
 			Self::FromSource(source) => source.read(cpu),
 			Self::RelativeToPc(delta) => Ok(cpu.pc.read().wrapping_add_signed((*delta).into())),
+		}
+	}
+
+	fn is_relative(&self) -> bool {
+		match self {
+			Self::FromSource(_) => false,
+			Self::RelativeToPc(_) => true
+		}
+	}
+}
+
+impl Display for JumpInstructionDestination {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Self::FromSource(s) => write!(f, "{s}"),
+			Self::RelativeToPc(r) => write!(f, "PC+{r:#04X}")
 		}
 	}
 }
@@ -41,6 +59,24 @@ impl ChangesetExecutable for JumpInstruction {
 		} else {
 			Ok(Box::new(NoChange::new()))
 		}
+	}
+}
+
+impl Display for JumpInstruction {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		if self.dst.is_relative() {
+			write!(f, "jr")?;
+		} else {
+			write!(f, "jp")?;
+		}
+
+		if let Some(condition) = self.condition.as_maybe_string() {
+			write!(f, "{condition}, ")?;
+		}
+
+		write!(f, "{}", self.dst)?;
+
+		Ok(())
 	}
 }
 

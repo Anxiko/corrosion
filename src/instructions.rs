@@ -22,9 +22,9 @@ pub trait Executable {
 	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError>;
 }
 
-pub trait Instruction: Executable + Debug {}
+pub trait Instruction: Executable + Debug + Display {}
 
-impl<T> Instruction for T where T: Executable + Debug {}
+impl<T> Instruction for T where T: Executable + Debug + Display {}
 
 #[derive(Debug)]
 pub enum ExecutionError {

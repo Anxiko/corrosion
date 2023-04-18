@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter};
+
 use num_enum::IntoPrimitive;
 
 #[cfg(test)]
@@ -19,6 +21,28 @@ pub enum SingleRegisters {
 	L,
 }
 
+impl SingleRegisters {
+	fn as_str(&self) -> &str {
+		match self {
+			SingleRegisters::A => "A",
+			SingleRegisters::B => "B",
+			SingleRegisters::C => "C",
+			SingleRegisters::D => "D",
+			SingleRegisters::E => "E",
+			SingleRegisters::F => "F",
+			SingleRegisters::H => "H",
+			SingleRegisters::L => "L",
+		}
+	}
+}
+
+impl Display for SingleRegisters {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		let str = self.as_str();
+		write!(f, "{str}")
+	}
+}
+
 #[derive(IntoPrimitive, Copy, Clone, Debug, PartialEq, Eq)]
 #[repr(u8)]
 pub enum DoubleRegisters {
@@ -26,6 +50,24 @@ pub enum DoubleRegisters {
 	BC,
 	DE,
 	HL,
+}
+
+impl DoubleRegisters {
+	fn as_str(&self) -> &str {
+		match self {
+			Self::AF => "AF",
+			Self::BC => "BC",
+			Self::DE => "DE",
+			Self::HL => "HL",
+		}
+	}
+}
+
+impl Display for DoubleRegisters {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		let str = self.as_str();
+		write!(f, "{str}")
+	}
 }
 
 const FLAG_REGISTER: usize = 6;
@@ -37,6 +79,17 @@ pub enum BitFlags {
 	Subtraction = 6,
 	HalfCarry = 5,
 	Carry = 4,
+}
+
+impl BitFlags {
+	pub(crate) fn as_str(&self) -> &str {
+		match self {
+			Self::Zero => "z",
+			Self::Subtraction => "s",
+			Self::HalfCarry => "h",
+			Self::Carry => "c"
+		}
+	}
 }
 
 #[derive(Default, Debug, PartialEq, Eq, Clone)]

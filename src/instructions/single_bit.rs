@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter};
+
 use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::Rom;
 use crate::hardware::register_bank::{DoubleRegisters, SingleRegisters};
@@ -10,6 +12,15 @@ use crate::instructions::ExecutionError;
 pub(crate) enum SingleBitOperand {
 	SingleRegister(SingleRegisters),
 	MemoryAddress,
+}
+
+impl Display for SingleBitOperand {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Self::SingleRegister(r) => write!(f, "{r}"),
+			Self::MemoryAddress => write!(f, "(HL)")
+		}
+	}
 }
 
 impl SingleBitOperand {
@@ -39,6 +50,23 @@ impl SingleBitOperand {
 pub(crate) enum SingleBitOperation {
 	Test,
 	Write(bool),
+}
+
+impl SingleBitOperation {
+	fn as_str(&self) -> &str {
+		match self {
+			Self::Test => "bit",
+			Self::Write(false) => "res",
+			Self::Write(true) => "set",
+		}
+	}
+}
+
+impl Display for SingleBitOperation {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		let str = self.as_str();
+		write!(f, "{str}")
+	}
 }
 
 impl SingleBitOperation {
@@ -88,6 +116,12 @@ impl SingleBitInstruction {
 
 	fn get_bit(&self) -> u8 {
 		1 << self.bit_shift
+	}
+}
+
+impl Display for SingleBitInstruction {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		write!(f, "{} {}, {}", self.operation, self.bit_shift, self.operand)
 	}
 }
 

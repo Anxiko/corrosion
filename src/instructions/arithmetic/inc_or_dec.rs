@@ -1,24 +1,33 @@
+use std::fmt::{Display, Formatter};
+
 use crate::hardware::alu::delta_u8;
 use crate::hardware::cpu::Cpu;
 use crate::instructions::base::byte::{
 	ByteDestination, ByteSource, UnaryByteInstruction, UnaryByteOperation,
 };
 use crate::instructions::changeset::{BitFlagsChange, ChangeList};
-use crate::instructions::shared::IndexUpdateType;
 use crate::instructions::ExecutionError;
+use crate::instructions::shared::IndexUpdateType;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub struct IncOrDecOperation {
+pub struct IncOrDecByteOperation {
 	type_: IndexUpdateType,
 }
 
-impl IncOrDecOperation {
+impl IncOrDecByteOperation {
 	pub fn new(type_: IndexUpdateType) -> Self {
 		Self { type_ }
 	}
+
+	fn as_str(&self) -> &str {
+		match self.type_ {
+			IndexUpdateType::Increment => "inc",
+			IndexUpdateType::Decrement => "dec",
+		}
+	}
 }
 
-impl UnaryByteOperation for IncOrDecOperation {
+impl UnaryByteOperation for IncOrDecByteOperation {
 	type C = ChangeList;
 
 	fn execute(
@@ -41,12 +50,18 @@ impl UnaryByteOperation for IncOrDecOperation {
 	}
 }
 
-pub(crate) type IncOrDecInstruction = UnaryByteInstruction<IncOrDecOperation>;
+impl Display for IncOrDecByteOperation {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		write!(f, "{}", self.as_str())
+	}
+}
+
+pub(crate) type IncOrDecByteInstruction = UnaryByteInstruction<IncOrDecByteOperation>;
 
 #[cfg(test)]
 mod tests {
-	use crate::instructions::changeset::{ChangesetExecutable, SingleRegisterChange};
 	use crate::instructions::ACC_REGISTER;
+	use crate::instructions::changeset::{ChangesetExecutable, SingleRegisterChange};
 
 	use super::*;
 
@@ -55,10 +70,10 @@ mod tests {
 		let mut cpu = Cpu::new();
 		cpu.register_bank.write_single_named(ACC_REGISTER, 0x80);
 
-		let instruction = IncOrDecInstruction::new(
+		let instruction = IncOrDecByteInstruction::new(
 			ByteSource::read_from_acc(),
 			ByteDestination::write_to_acc(),
-			IncOrDecOperation::new(IndexUpdateType::Increment),
+			IncOrDecByteOperation::new(IndexUpdateType::Increment),
 		);
 
 		let expected = ChangeList::new(vec![
@@ -80,10 +95,10 @@ mod tests {
 		let mut cpu = Cpu::new();
 		cpu.register_bank.write_single_named(ACC_REGISTER, 0x80);
 
-		let instruction = IncOrDecInstruction::new(
+		let instruction = IncOrDecByteInstruction::new(
 			ByteSource::read_from_acc(),
 			ByteDestination::write_to_acc(),
-			IncOrDecOperation::new(IndexUpdateType::Decrement),
+			IncOrDecByteOperation::new(IndexUpdateType::Decrement),
 		);
 
 		let expected = ChangeList::new(vec![

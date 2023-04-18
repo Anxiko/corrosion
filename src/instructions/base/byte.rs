@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter};
+
 use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::Rom;
 use crate::hardware::register_bank::{DoubleRegisters, SingleRegisters};
@@ -13,6 +15,28 @@ pub(crate) enum ByteSource {
 	OffsetAddressInRegister { base: u16, offset: SingleRegisters },
 	AddressInImmediate(u16),
 	Immediate(u8),
+}
+
+impl Display for ByteSource {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Self::SingleRegister(r) => {
+				write!(f, "{r}")
+			},
+			Self::AddressInRegister(r) => {
+				write!(f, "({r})")
+			},
+			Self::OffsetAddressInRegister { base, offset } => {
+				write!(f, "({offset} + {base:#06X})")
+			},
+			Self::AddressInImmediate(a) => {
+				write!(f, "({a:#06X})")
+			},
+			Self::Immediate(i) => {
+				write!(f, "({i:#04X})")
+			}
+		}
+	}
 }
 
 impl ByteSource {
@@ -76,6 +100,25 @@ impl ByteDestination {
 	}
 }
 
+impl Display for ByteDestination {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Self::SingleRegister(r) => {
+				write!(f, "{r}")
+			},
+			Self::AddressImmediate(a) => {
+				write!(f, "({a:#06X})")
+			},
+			Self::AddressInRegister(r) => {
+				write!(f, "({r})")
+			},
+			Self::OffsetAddressInRegister { base, offset } => {
+				write!(f, "({offset} + {base:#06X})")
+			}
+		}
+	}
+}
+
 pub(crate) trait UnaryByteOperation {
 	type C: Change;
 
@@ -89,17 +132,23 @@ pub(crate) trait UnaryByteOperation {
 
 #[derive(Debug)]
 pub(crate) struct UnaryByteInstruction<O>
-where
-	O: UnaryByteOperation,
+	where
+		O: UnaryByteOperation,
 {
 	src: ByteSource,
 	dst: ByteDestination,
 	op: O,
 }
 
+impl<O: Display + UnaryByteOperation> Display for UnaryByteInstruction<O> {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		write!(f, "{} {} <- {}", self.op, self.dst, self.src)
+	}
+}
+
 impl<O> UnaryByteInstruction<O>
-where
-	O: UnaryByteOperation,
+	where
+		O: UnaryByteOperation,
 {
 	pub(crate) fn new(src: ByteSource, dst: ByteDestination, op: O) -> Self {
 		Self { src, dst, op }
@@ -153,6 +202,12 @@ impl<O: BinaryByteOperation> ChangesetExecutable for BinaryByteInstruction<O> {
 	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError> {
 		self.op
 			.compute_changes(cpu, &self.left, &self.right, &self.dst)
+	}
+}
+
+impl<O: BinaryByteOperation + Display> Display for BinaryByteInstruction<O> {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		write!(f, "{} {} <- {}, {}", self.op, self.dst, self.left, self.right)
 	}
 }
 

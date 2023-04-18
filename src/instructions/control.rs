@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter};
+
 use crate::hardware::cpu::Cpu;
 use crate::instructions::{Executable, ExecutionError};
 use crate::instructions::changeset::{ChangeIme, ChangesetExecutable};
@@ -17,6 +19,12 @@ impl Executable for NopInstruction {
 	}
 }
 
+impl Display for NopInstruction {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		write!(f, "nop")
+	}
+}
+
 #[derive(Debug)]
 pub(crate) struct StopInstruction {}
 
@@ -29,6 +37,12 @@ impl StopInstruction {
 impl Executable for StopInstruction {
 	fn execute(&self, _cpu: &mut Cpu) -> Result<(), ExecutionError> {
 		todo!("Implement STOP instruction")
+	}
+}
+
+impl Display for StopInstruction {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		write!(f, "stop")
 	}
 }
 
@@ -47,6 +61,12 @@ impl Executable for HaltInstruction {
 	}
 }
 
+impl Display for HaltInstruction {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		write!(f, "halt")
+	}
+}
+
 #[derive(Debug)]
 pub(crate) struct SetImeInstruction {
 	value: bool,
@@ -58,11 +78,27 @@ impl SetImeInstruction {
 	}
 }
 
+impl SetImeInstruction {
+	fn as_str(&self) -> &str {
+		match self.value {
+			true => "ei",
+			false => "di"
+		}
+	}
+}
+
 impl ChangesetExecutable for SetImeInstruction {
 	type C = ChangeIme;
 
 	fn compute_change(&self, _cpu: &Cpu) -> Result<Self::C, ExecutionError> {
 		Ok(ChangeIme::new(self.value))
+	}
+}
+
+impl Display for SetImeInstruction {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		let str = self.as_str();
+		write!(f, "{str}")
 	}
 }
 

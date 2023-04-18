@@ -1,11 +1,13 @@
+use std::fmt::{Display, Formatter};
+
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::DoubleRegisters;
 use crate::instructions::base::byte::{
 	ByteDestination, ByteSource, UnaryByteInstruction, UnaryByteOperation,
 };
 use crate::instructions::changeset::{ChangeList, DoubleRegisterChange};
-use crate::instructions::shared::IndexUpdateType;
 use crate::instructions::ExecutionError;
+use crate::instructions::shared::IndexUpdateType;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub(crate) struct ByteLoadUpdate {
@@ -23,6 +25,13 @@ impl ByteLoadUpdate {
 		let delta = self.type_.to_delta();
 		let index_value = index_value.wrapping_add_signed(delta.into());
 		DoubleRegisterChange::new(self.index, index_value)
+	}
+
+	fn as_str(&self) -> &str {
+		match self.type_ {
+			IndexUpdateType::Increment => "i",
+			IndexUpdateType::Decrement => "d"
+		}
 	}
 }
 
@@ -67,6 +76,17 @@ impl UnaryByteOperation for ByteLoadOperation {
 	}
 }
 
+impl Display for ByteLoadOperation {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		write!(f, "ld")?;
+		if let Some(update) = self.update {
+			write!(f, "{}", update.as_str())?;
+		}
+
+		Ok(())
+	}
+}
+
 pub(crate) type ByteLoadInstruction = UnaryByteInstruction<ByteLoadOperation>;
 
 impl ByteLoadInstruction {
@@ -79,10 +99,10 @@ impl ByteLoadInstruction {
 mod tests {
 	use crate::hardware::ram::{Ram, WORKING_RAM_START};
 	use crate::hardware::register_bank::SingleRegisters;
+	use crate::instructions::ACC_REGISTER;
 	use crate::instructions::changeset::{
 		ChangesetExecutable, MemoryByteWriteChange, SingleRegisterChange,
 	};
-	use crate::instructions::ACC_REGISTER;
 
 	use super::*;
 

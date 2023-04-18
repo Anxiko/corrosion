@@ -1,6 +1,8 @@
+use std::fmt::{Display, Formatter};
+
+use crate::instructions::ACC_REGISTER;
 use crate::instructions::base::byte::ByteDestination;
 use crate::instructions::changeset::{BitFlagsChange, ChangeList};
-use crate::instructions::ACC_REGISTER;
 
 #[derive(Debug, Copy, Clone)]
 pub enum ShiftDirection {
@@ -92,6 +94,34 @@ impl ByteShiftOperation {
 			.with_zero_flag(new_zero);
 
 		ChangeList::new(vec![result_change, Box::new(bit_flags_change)])
+	}
+}
+
+impl Display for ByteShiftOperation {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		let direction = match self.direction {
+			ShiftDirection::Left => {
+				"l"
+			},
+			ShiftDirection::Right => {
+				"r"
+			}
+		};
+
+		match self.type_ {
+			ShiftType::Rotate => {
+				write!(f, "r{direction}c")
+			},
+			ShiftType::RotateWithCarry => {
+				write!(f, "r{direction}")
+			},
+			ShiftType::ArithmeticShift => {
+				write!(f, "s{direction}a")
+			},
+			ShiftType::LogicalShift => {
+				write!(f, "s{direction}l")
+			}
+		}
 	}
 }
 

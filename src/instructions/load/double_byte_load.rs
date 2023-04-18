@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter};
+
 use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::Rom;
 use crate::instructions::base::double_byte::{
@@ -31,6 +33,12 @@ impl UnaryDoubleByteOperation for DoubleByteLoadOperation {
 	}
 }
 
+impl Display for DoubleByteLoadOperation {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		write!(f, "ld")
+	}
+}
+
 pub(crate) type DoubleByteLoadInstruction = UnaryDoubleByteInstruction<DoubleByteLoadOperation>;
 
 #[derive(Debug)]
@@ -61,6 +69,12 @@ impl ChangesetExecutable for PushInstruction {
 	}
 }
 
+impl Display for PushInstruction {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		write!(f, "push {}", self.source)
+	}
+}
+
 #[derive(Debug)]
 pub(crate) struct PopInstruction {
 	destination: DoubleByteDestination,
@@ -84,6 +98,12 @@ impl ChangesetExecutable for PopInstruction {
 			self.destination.change_destination(value),
 			Box::new(SpChange::new(address)),
 		]))
+	}
+}
+
+impl Display for PopInstruction {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		write!(f, "pop {}", self.destination)
 	}
 }
 

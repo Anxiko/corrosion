@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter};
+
 use crate::hardware::alu::{add_u8, delta_u8};
 use crate::hardware::cpu::Cpu;
 use crate::instructions::base::double_byte::{
@@ -49,8 +51,13 @@ impl BinaryDoubleByteOperation for BinaryDoubleByteAddOperation {
 	}
 }
 
-pub(crate) type BinaryDoubleByteAddInstruction =
-	BinaryDoubleByteInstruction<BinaryDoubleByteAddOperation>;
+impl Display for BinaryDoubleByteAddOperation {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		write!(f, "add")
+	}
+}
+
+pub(crate) type BinaryDoubleByteAddInstruction = BinaryDoubleByteInstruction<BinaryDoubleByteAddOperation>;
 
 #[derive(Debug)]
 pub(crate) struct IncOrDecDoubleByteOperation {
@@ -60,6 +67,13 @@ pub(crate) struct IncOrDecDoubleByteOperation {
 impl IncOrDecDoubleByteOperation {
 	pub(crate) fn new(type_: IndexUpdateType) -> Self {
 		Self { type_ }
+	}
+
+	fn as_str(&self) -> &str {
+		match self.type_ {
+			IndexUpdateType::Increment => "inc",
+			IndexUpdateType::Decrement => "dec"
+		}
 	}
 }
 
@@ -77,6 +91,13 @@ impl UnaryDoubleByteOperation for IncOrDecDoubleByteOperation {
 		let result = value.wrapping_add_signed(delta);
 
 		Ok(dst.change_destination(result))
+	}
+}
+
+impl Display for IncOrDecDoubleByteOperation {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		let str = self.as_str();
+		write!(f, "{str}")
 	}
 }
 
@@ -121,6 +142,12 @@ impl ChangesetExecutable for AddSignedByteToDoubleByte {
 			self.dst.change_destination(result),
 			Box::new(bitflag_changes),
 		]))
+	}
+}
+
+impl Display for AddSignedByteToDoubleByte {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		write!(f, "add {} <- {}, {:#04X}", self.delta, self.src, self.delta)
 	}
 }
 

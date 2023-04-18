@@ -9,7 +9,7 @@ use crate::instructions::arithmetic::add_or_sub::{
 };
 use crate::instructions::arithmetic::bcd::DecimalAdjust;
 use crate::instructions::arithmetic::compare::CompareInstruction;
-use crate::instructions::arithmetic::inc_or_dec::{IncOrDecInstruction, IncOrDecOperation};
+use crate::instructions::arithmetic::inc_or_dec::{IncOrDecByteInstruction, IncOrDecByteOperation};
 use crate::instructions::base::byte::{ByteDestination, ByteSource};
 use crate::instructions::base::double_byte::{DoubleByteDestination, DoubleByteSource};
 use crate::instructions::control::{
@@ -265,10 +265,10 @@ fn decode_opcode(
 
 							let decoded_operand = DecodedInstructionOperand::from_opcode_part(y);
 
-							Ok(Box::new(IncOrDecInstruction::new(
+							Ok(Box::new(IncOrDecByteInstruction::new(
 								decoded_operand.into(),
 								decoded_operand.into(),
-								IncOrDecOperation::new(inc_dec_op_type),
+								IncOrDecByteOperation::new(inc_dec_op_type),
 							)))
 						}
 						[false, true, true] /* z = 6 */ => {

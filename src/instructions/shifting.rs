@@ -1,3 +1,4 @@
+use std::fmt::{Display, Formatter};
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::BitFlags;
 use crate::instructions::base::byte::{
@@ -52,6 +53,12 @@ impl UnaryByteOperation for ByteSwapOperation {
 
 		let result = (high >> 4) | (low << 4);
 		Ok(dst.change_destination(result))
+	}
+}
+
+impl Display for ByteSwapOperation {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		write!(f, "SWAP")
 	}
 }
 

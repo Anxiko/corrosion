@@ -20,6 +20,21 @@ impl BranchCondition {
 			} => cpu.register_bank.read_bit_flag(*flag) == *branch_if_equals,
 		}
 	}
+
+	pub(super) fn as_maybe_string(&self) -> Option<String> {
+		match self {
+			Self::Unconditional => None,
+			Self::TestFlag { flag, branch_if_equals } => {
+				let mut string = String::new();
+				if !branch_if_equals {
+					string += "n";
+				}
+				string += flag.as_str();
+
+				Some(string)
+			}
+		}
+	}
 }
 
 #[cfg(test)]

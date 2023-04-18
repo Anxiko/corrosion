@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter};
+
 use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::Rom;
 use crate::hardware::register_bank::BitFlags;
@@ -29,6 +31,20 @@ impl ReturnInstruction {
 			},
 			false,
 		)
+	}
+}
+
+impl Display for ReturnInstruction {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		write!(f, "ret")?;
+		if self.enable_interrupts {
+			write!(f, "i")?;
+		}
+		if let Some(condition) = self.condition.as_maybe_string() {
+			write!(f, " {condition}")?;
+		}
+
+		Ok(())
 	}
 }
 

@@ -1,9 +1,11 @@
+use std::fmt::{Display, Formatter};
+
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::BitFlags;
+use crate::instructions::{ACC_REGISTER, ExecutionError};
 use crate::instructions::changeset::{
 	BitFlagsChange, ChangeList, ChangesetExecutable, SingleRegisterChange,
 };
-use crate::instructions::{ExecutionError, ACC_REGISTER};
 
 #[derive(Debug)]
 pub(crate) struct DecimalAdjust;
@@ -64,6 +66,12 @@ impl ChangesetExecutable for DecimalAdjust {
 					.with_carry_flag(next_carry_flag),
 			),
 		]))
+	}
+}
+
+impl Display for DecimalAdjust {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		write!(f, "daa")
 	}
 }
 

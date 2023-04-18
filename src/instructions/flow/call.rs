@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter};
+
 use crate::bits::bits_to_byte;
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::BitFlags;
@@ -5,8 +7,8 @@ use crate::instructions::base::double_byte::DoubleByteSource;
 use crate::instructions::changeset::{
 	Change, ChangeList, ChangesetExecutable, MemoryDoubleByteWriteChange, PcChange, SpChange,
 };
-use crate::instructions::flow::BranchCondition;
 use crate::instructions::ExecutionError;
+use crate::instructions::flow::BranchCondition;
 
 #[derive(Debug)]
 pub(crate) struct CallInstruction {
@@ -61,6 +63,18 @@ impl ChangesetExecutable for CallInstruction {
 		}
 
 		Ok(ChangeList::new(changes))
+	}
+}
+
+impl Display for CallInstruction {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		write!(f, "call")?;
+		if let Some(condition) = self.condition.as_maybe_string() {
+			write!(f, "{condition}, ")?;
+		}
+		write!(f, "{:#06X}", self.address)?;
+
+		Ok(())
 	}
 }
 

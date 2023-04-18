@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter};
+
 use crate::hardware::cpu::Cpu;
 use crate::instructions::base::byte::{
 	BinaryByteInstruction, UnaryByteInstruction, UnaryByteOperation,
@@ -36,6 +38,14 @@ impl BinaryLogicalOperation {
 	pub(crate) fn new(type_: BinaryLogicalOperationType) -> Self {
 		Self { type_ }
 	}
+
+	fn as_str(&self) -> &str {
+		match self.type_ {
+			BinaryLogicalOperationType::And => "and",
+			BinaryLogicalOperationType::Or => "or",
+			BinaryLogicalOperationType::Xor => "xor"
+		}
+	}
 }
 
 impl BinaryByteOperation for BinaryLogicalOperation {
@@ -60,6 +70,12 @@ impl BinaryByteOperation for BinaryLogicalOperation {
 					.with_half_carry_flag(self.type_.is_and()),
 			),
 		]))
+	}
+}
+
+impl Display for BinaryLogicalOperation {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		write!(f, "{}", self.as_str())
 	}
 }
 
@@ -103,11 +119,17 @@ impl LogicalNegateInstruction {
 	}
 }
 
+impl Display for LogicalNegateOperation {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		write!(f, "cpl")
+	}
+}
+
 #[cfg(test)]
 mod tests {
 	use crate::hardware::register_bank::SingleRegisters;
-	use crate::instructions::changeset::{ChangesetExecutable, SingleRegisterChange};
 	use crate::instructions::ACC_REGISTER;
+	use crate::instructions::changeset::{ChangesetExecutable, SingleRegisterChange};
 
 	use super::*;
 

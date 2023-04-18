@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter};
+
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::BitFlags;
 use crate::instructions::changeset::{BitFlagsChange, ChangesetExecutable};
@@ -27,6 +29,14 @@ impl ChangeCarryFlagInstruction {
 	pub(crate) fn new(change_type: BitFlagChangeType) -> Self {
 		Self { change_type }
 	}
+
+	fn as_str(&self) -> &str {
+		match self.change_type {
+			BitFlagChangeType::Toggle => "ccf",
+			BitFlagChangeType::Write(true) => "scf",
+			BitFlagChangeType::Write(false) => "rcf"
+		}
+	}
 }
 
 impl ChangesetExecutable for ChangeCarryFlagInstruction {
@@ -40,6 +50,12 @@ impl ChangesetExecutable for ChangeCarryFlagInstruction {
 			.with_carry_flag(new_value)
 			.with_half_carry_flag(false)
 			.with_subtraction_flag(false))
+	}
+}
+
+impl Display for ChangeCarryFlagInstruction {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		write!(f, "{}", self.as_str())
 	}
 }
 

@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter};
+
 use crate::hardware::alu::sub_u8;
 use crate::hardware::cpu::Cpu;
 use crate::instructions::base::byte::ByteSource;
@@ -25,6 +27,12 @@ impl ChangesetExecutable for CompareInstruction {
 		let result = sub_u8(left_value, right_value);
 
 		Ok(result.change_flags())
+	}
+}
+
+impl Display for CompareInstruction {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		write!(f, "cp {}, {}", self.left, self.right)
 	}
 }
 
