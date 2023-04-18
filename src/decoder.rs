@@ -563,7 +563,7 @@ fn load_next_u16(cpu: &mut Cpu) -> Result<u16, ExecutionError> {
 	let low = cpu.next_byte()?;
 	let high = cpu.next_byte()?;
 
-	Ok(u16::from_be_bytes([low, high]))
+	Ok(u16::from_le_bytes([low, high]))
 }
 
 fn load_next_i8(cpu: &mut Cpu) -> Result<i8, ExecutionError> {
