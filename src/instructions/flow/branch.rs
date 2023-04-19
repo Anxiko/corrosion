@@ -1,4 +1,4 @@
-use std::fmt::{Display, Formatter};
+use std::fmt::{Display, Formatter, LowerHex, UpperHex};
 
 use crate::hardware::cpu::Cpu;
 use crate::instructions::base::double_byte::DoubleByteSource;
@@ -28,11 +28,46 @@ impl JumpInstructionDestination {
 	}
 }
 
+struct SignedI8 {
+	value: i8,
+}
+
+impl SignedI8 {
+	fn signed_hex_format(&self, f: &mut Formatter<'_>, use_upper: bool) -> std::fmt::Result {
+		if self.value < 0 {
+			write!(f, "-")?;
+		} else {
+			write!(f, "+")?;
+		}
+
+		if use_upper {
+			write!(f, "{:#X}", self.value.abs())
+		} else {
+			write!(f, "{:#x}", self.value.abs())
+		}
+	}
+}
+
+impl LowerHex for SignedI8 {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		self.signed_hex_format(f, false)
+	}
+}
+
+impl UpperHex for SignedI8 {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		self.signed_hex_format(f, true)
+	}
+}
+
 impl Display for JumpInstructionDestination {
 	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
 		match self {
 			Self::FromSource(s) => write!(f, "{s}"),
-			Self::RelativeToPc(r) => write!(f, "PC+{r:#04X}")
+			Self::RelativeToPc(r) => {
+				let signed_i8 = SignedI8 { value: *r };
+				write!(f, "PC{signed_i8:#04X}")
+			}
 		}
 	}
 }
