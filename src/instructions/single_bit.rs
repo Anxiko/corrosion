@@ -73,7 +73,8 @@ impl SingleBitOperation {
 	fn compute_change(&self, byte: u8, bitmask: u8, operand: &SingleBitOperand) -> Box<dyn Change> {
 		match self {
 			Self::Test => {
-				let test = byte & bitmask != 0;
+				// Since we're setting the zero flag, the zero flag is set (zero == true) if the bit is zero
+				let test = byte & bitmask == 0;
 
 				let flags_change = BitFlagsChange::keep_all()
 					.with_zero_flag(test)
