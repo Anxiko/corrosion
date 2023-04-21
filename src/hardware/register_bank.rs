@@ -70,7 +70,7 @@ impl Display for DoubleRegisters {
 	}
 }
 
-const FLAG_REGISTER: usize = 6;
+const FLAG_REGISTER: usize = 5;
 
 #[derive(IntoPrimitive, Copy, Clone, PartialEq, Debug)]
 #[repr(u8)]
