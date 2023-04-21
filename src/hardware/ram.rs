@@ -16,6 +16,7 @@ pub(crate) const OAM_START: u16 = 0xFE00;
 pub(crate) const IO_REGISTERS_MAPPING_START: u16 = 0xFF00;
 
 mod bootstrap;
+mod memory_mapping;
 
 const BOOTSTRAP_RAM_SIZE: usize = 0x100;
 const WORKING_RAM_SIZE: usize = (ECHO_RAM_START - WORKING_RAM_START) as usize;
