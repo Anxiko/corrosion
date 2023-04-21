@@ -9,13 +9,15 @@ use super::Change;
 
 impl DynPartialEq for Box<dyn Change> {
 	fn box_eq(&self, other: &dyn Any) -> bool {
-		let other: Option<&Self> = other.downcast_ref();
-		other.is_some_and(|other| {
-			let boxed_self = &(**self);
-			let boxed_other = &(**other);
+		match other.downcast_ref::<Self>() {
+			None => false,
+			Some(other) => {
+				let boxed_self = &(**self);
+				let boxed_other = &(**other);
 
-			boxed_self.box_eq(boxed_other.as_any())
-		})
+				boxed_self.box_eq(boxed_other.as_any())
+			}
+		}
 	}
 
 	fn as_any(&self) -> &dyn Any {
@@ -33,8 +35,8 @@ impl Change for Box<dyn Change> {
 #[cfg(test)]
 mod tests {
 	use crate::hardware::register_bank::DoubleRegisters;
-	use crate::instructions::changeset::{DoubleRegisterChange, SingleRegisterChange};
 	use crate::instructions::ACC_REGISTER;
+	use crate::instructions::changeset::{DoubleRegisterChange, SingleRegisterChange};
 
 	use super::*;
 
