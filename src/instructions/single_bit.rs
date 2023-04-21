@@ -166,7 +166,7 @@ mod tests {
 		let actual = instruction.compute_change(&cpu).expect("Compute changes");
 		let expected: Box<dyn Change> = Box::new(
 			BitFlagsChange::keep_all()
-				.with_zero_flag(true)
+				.with_zero_flag(false)
 				.with_subtraction_flag(false)
 				.with_half_carry_flag(true),
 		);
@@ -179,7 +179,7 @@ mod tests {
 		let actual = instruction.compute_change(&cpu).expect("Compute changes");
 		let expected: Box<dyn Change> = Box::new(
 			BitFlagsChange::keep_all()
-				.with_zero_flag(false)
+				.with_zero_flag(true)
 				.with_subtraction_flag(false)
 				.with_half_carry_flag(true),
 		);
