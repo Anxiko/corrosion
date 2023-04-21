@@ -13,7 +13,7 @@ pub(crate) const ECHO_RAM_START: u16 = 0xE000;
 
 pub(crate) const OAM_START: u16 = 0xFE00;
 
-pub(crate) const IO_REGISTERS_MAPPING_START: u16 = 0xFF80;
+pub(crate) const IO_REGISTERS_MAPPING_START: u16 = 0xFF00;
 
 mod bootstrap;
 
