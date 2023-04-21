@@ -4,16 +4,18 @@ use crate::hardware::ram::{Ram, Rom};
 
 use super::RamError;
 
-trait MemoryMappingEntryRegion: Copy + Clone + PartialEq + Eq + Debug {}
+pub(super) trait MemoryMappingEntryRegion: Copy + Clone + PartialEq + Eq + Debug {}
 
-struct MemoryMappingEntry<R: MemoryMappingEntryRegion> {
+impl<T: Copy + Clone + PartialEq + Eq + Debug> MemoryMappingEntryRegion for T {}
+
+pub(super) struct MemoryMappingEntry<R: MemoryMappingEntryRegion> {
 	region: R,
 	offset: u16,
 	size: usize,
 }
 
 impl<R: MemoryMappingEntryRegion> MemoryMappingEntry<R> {
-	fn new(region: R, offset: u16, size: usize) -> Self {
+	pub(super) const fn new(region: R, offset: u16, size: usize) -> Self {
 		Self {
 			region,
 			offset,
@@ -34,7 +36,7 @@ impl<R: MemoryMappingEntryRegion> MemoryMappingEntry<R> {
 	}
 }
 
-struct MemoryMapping<const S: usize, R: MemoryMappingEntryRegion> {
+pub(super) struct MemoryMapping<const S: usize, R: MemoryMappingEntryRegion> {
 	regions: [MemoryMappingEntry<R>; S],
 }
 
@@ -43,7 +45,7 @@ impl<const S: usize, R: MemoryMappingEntryRegion> MemoryMapping<S, R> {
 		Self { regions }
 	}
 
-	fn find_mapping(&self, address: u16) -> Result<&MemoryMappingEntry<R>, RamError> {
+	pub(super) fn find_mapping(&self, address: u16) -> Result<&MemoryMappingEntry<R>, RamError> {
 		self.regions
 			.iter()
 			.find(|entry| entry.mapped_here(address))
@@ -51,9 +53,9 @@ impl<const S: usize, R: MemoryMappingEntryRegion> MemoryMapping<S, R> {
 	}
 }
 
-trait RegionToMemoryMapper {
+pub(super) trait RegionToMemoryMapper {
 	type R: MemoryMappingEntryRegion;
-	fn matching_entry(&self, address: u16) -> Result<MemoryMappingEntry<Self::R>, RamError>;
+	fn matching_entry(&self, address: u16) -> Result<&MemoryMappingEntry<Self::R>, RamError>;
 
 	fn get_rom(&self, region: Self::R) -> Result<Box<dyn Rom>, RamError>;
 	fn get_ram(&self, region: Self::R) -> Result<Box<dyn Ram>, RamError>;

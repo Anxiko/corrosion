@@ -17,6 +17,7 @@ pub(crate) const IO_REGISTERS_MAPPING_START: u16 = 0xFF00;
 
 mod bootstrap;
 mod memory_mapping;
+mod io_registers;
 
 const BOOTSTRAP_RAM_SIZE: usize = 0x100;
 const WORKING_RAM_SIZE: usize = (ECHO_RAM_START - WORKING_RAM_START) as usize;
@@ -305,5 +306,34 @@ impl Ram for MappedIoRegisters {
 			.map(|ptr| {
 				*ptr = value;
 			})
+	}
+}
+
+impl Rom for u8 {
+	fn read_byte(&self, address: u16) -> Result<u8, RamError> {
+		if address == 0 {
+			Ok(*self)
+		} else {
+			Err(RamError::InvalidAddress(address))
+		}
+	}
+
+	fn read_double_byte(&self, address: u16) -> Result<u16, RamError> {
+		Err(RamError::InvalidAddress(address))
+	}
+}
+
+impl Ram for u8 {
+	fn write_byte(&mut self, address: u16, value: u8) -> Result<(), RamError> {
+		if address == 0 {
+			*self = value;
+			Ok(())
+		} else {
+			Err(RamError::InvalidAddress(address))
+		}
+	}
+
+	fn write_double_byte(&mut self, address: u16, value: u16) -> Result<(), RamError> {
+		Err(RamError::InvalidAddress(address))
 	}
 }
