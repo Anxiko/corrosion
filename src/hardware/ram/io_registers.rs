@@ -13,9 +13,10 @@ enum IoRegistersMemoryMappingRegion {
 	Timers,
 	Audio,
 	Wave,
+	LcdControl,
 }
 
-const IO_REGISTER_MAPPING_SIZE: usize = 6;
+const IO_REGISTER_MAPPING_SIZE: usize = 7;
 const IO_REGISTER_MAPPING_ENTRIES: [MemoryMappingEntry<IoRegistersMemoryMappingRegion>; IO_REGISTER_MAPPING_SIZE] = [
 	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::JoypadInput, 0x0, 1),
 	MemoryMappingEntry::new(
@@ -27,6 +28,7 @@ const IO_REGISTER_MAPPING_ENTRIES: [MemoryMappingEntry<IoRegistersMemoryMappingR
 	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::Timers, 0x5, IO_REGISTER_MAPPING_SIZE),
 	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::Audio, 0x10, IO_REGISTER_AUDIO_SIZE),
 	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::Wave, 0x30, IO_REGISTER_WAVE_SIZE),
+	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::LcdControl, 0x40, 0x1),
 ];
 
 const IO_REGISTER_SERIAL_TRANSFER_SIZE: usize = 0x2;
@@ -42,6 +44,7 @@ struct IoRegistersMemoryMapping {
 	timer: Timer,
 	audio: Audio,
 	wave: RamChip<IO_REGISTER_WAVE_SIZE>,
+	lcd_control: u8,
 }
 
 impl RegionToMemoryMapper for IoRegistersMemoryMapping {
@@ -59,6 +62,7 @@ impl RegionToMemoryMapper for IoRegistersMemoryMapping {
 			IoRegistersMemoryMappingRegion::Timers => Ok(&self.timer),
 			IoRegistersMemoryMappingRegion::Audio => Ok(&self.audio),
 			IoRegistersMemoryMappingRegion::Wave => Ok(&self.wave),
+			IoRegistersMemoryMappingRegion::LcdControl => Ok(&self.lcd_control),
 		}
 	}
 
@@ -70,6 +74,7 @@ impl RegionToMemoryMapper for IoRegistersMemoryMapping {
 			IoRegistersMemoryMappingRegion::Timers => Ok(&mut self.timer),
 			IoRegistersMemoryMappingRegion::Audio => Ok(&mut self.audio),
 			IoRegistersMemoryMappingRegion::Wave => Ok(&mut self.wave),
+			IoRegistersMemoryMappingRegion::LcdControl => Ok(&mut self.lcd_control),
 		}
 	}
 }
