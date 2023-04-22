@@ -21,7 +21,7 @@ impl<R: MemoryMappingEntryRegion> MemoryMappingEntry<R> {
 	}
 
 	fn mapped_here(&self, address: u16) -> bool {
-		(address >= self.offset) && (address - self.offset < self.offset)
+		(address >= self.offset) && (usize::from(address - self.offset) < self.size)
 	}
 
 	fn adjust_address(&self, address: u16) -> u16 {

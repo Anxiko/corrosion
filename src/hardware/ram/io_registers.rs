@@ -33,7 +33,7 @@ const IO_REGISTER_MAPPING_ENTRIES: [MemoryMappingEntry<IoRegistersMemoryMappingR
 
 const IO_REGISTER_SERIAL_TRANSFER_SIZE: usize = 0x2;
 const IO_REGISTER_TIMERS_SIZE: usize = 0x3;
-const IO_REGISTER_AUDIO_SIZE: usize = 0x16;
+const IO_REGISTER_AUDIO_SIZE: usize = 0x17;
 const IO_REGISTER_WAVE_SIZE: usize = 0x10;
 
 #[derive(Debug, Eq, PartialEq, Clone, Default)]
@@ -83,5 +83,26 @@ impl RegionToMemoryMapper for IoRegistersMemoryMapping {
 			IoRegistersMemoryMappingRegion::Wave => Ok(&mut self.wave),
 			IoRegistersMemoryMappingRegion::LcdControl => Ok(&mut self.lcd_control),
 		}
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn get_audio_entry() {
+		let memory_mapping = IoRegistersMemoryMapping::default();
+
+		let actual = memory_mapping.matching_entry(0x26).expect("Get mapping entry");
+		let expected = IO_REGISTER_MAPPING_ENTRIES[4];
+
+		assert_eq!(actual, expected);
+	}
+
+	#[test]
+	fn write_to_audio() {
+		let mut memory_mapping = IoRegistersMemoryMapping::default();
+		memory_mapping.write_byte(0x26, 0x0).expect("Write to Audio")
 	}
 }
