@@ -69,13 +69,13 @@ impl Display for RamError {
 	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
 		match self {
 			Self::UnmappedRegion(address) => {
-				write!(f, "No mapped RAM region for {address}")
+				write!(f, "No mapped RAM region for {address:#06X}")
 			}
 			Self::InvalidAddress(address) => {
-				write!(f, "Attempted to access invalid address {address}")
+				write!(f, "Attempted to access invalid address {address:#06X}")
 			}
 			Self::WriteOnRom(address) => {
-				write!(f, "Attempted write to ROM address {address}")
+				write!(f, "Attempted write to ROM address {address:#06X}")
 			}
 		}
 	}
