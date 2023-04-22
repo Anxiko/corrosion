@@ -11,5 +11,5 @@ path = "src/emulator.rs"
 
 [dependencies]
 dyn_partial_eq = "0.1.2"
-num_enum = "0.5.7"
+num_enum = "0.6.1"
 sdl2 = "0.35.2"
