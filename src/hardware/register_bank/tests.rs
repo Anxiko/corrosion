@@ -1,6 +1,6 @@
 use crate::hardware::register_bank::{
-	BitFlags, DoubleRegisters, RegisterBank, RegisterBankError, SingleRegisters,
-	DOUBLE_REGISTER_BANK_SIZE, SINGLE_REGISTER_BANK_SIZE,
+	BitFlags, DOUBLE_REGISTER_BANK_SIZE, DoubleRegisters, RegisterBank, RegisterBankError,
+	SINGLE_REGISTER_BANK_SIZE, SingleRegisters,
 };
 
 #[test]

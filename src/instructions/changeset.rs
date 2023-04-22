@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use dyn_partial_eq::{dyn_partial_eq, DynPartialEq};
 
 use crate::hardware::cpu::Cpu;
-use crate::instructions::{ExecutionError, Executable};
+use crate::instructions::{Executable, ExecutionError};
 
 pub(crate) use self::flags::{BitFlagsChange, ChangeIme};
 pub(crate) use self::list::ChangeList;
@@ -32,8 +32,8 @@ pub(super) trait ChangesetExecutable {
 }
 
 impl<T> Executable for T
-where
-	T: ChangesetExecutable,
+	where
+		T: ChangesetExecutable,
 {
 	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
 		let change = self.compute_change(cpu)?;

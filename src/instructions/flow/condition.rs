@@ -59,12 +59,12 @@ mod tests {
 			flag: BitFlags::Carry,
 			branch_if_equals: true,
 		}
-		.satisfied(&cpu));
+			.satisfied(&cpu));
 		assert!(BranchCondition::TestFlag {
 			flag: BitFlags::Zero,
 			branch_if_equals: false,
 		}
-		.satisfied(&cpu));
+			.satisfied(&cpu));
 	}
 
 	#[test]
@@ -76,11 +76,11 @@ mod tests {
 			flag: BitFlags::Carry,
 			branch_if_equals: false,
 		}
-		.satisfied(&cpu));
+			.satisfied(&cpu));
 		assert!(!BranchCondition::TestFlag {
 			flag: BitFlags::Zero,
 			branch_if_equals: true,
 		}
-		.satisfied(&cpu));
+			.satisfied(&cpu));
 	}
 }

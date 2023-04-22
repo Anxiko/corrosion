@@ -31,10 +31,10 @@ impl Display for DoubleByteSource {
 		match self {
 			Self::DoubleRegister(r) => {
 				write!(f, "{r}")
-			},
+			}
 			Self::Immediate(i) => {
 				write!(f, "{i:#06X}")
-			},
+			}
 			Self::StackPointer => {
 				write!(f, "SP")
 			}
@@ -68,10 +68,10 @@ impl Display for DoubleByteDestination {
 		match self {
 			Self::DoubleRegister(r) => {
 				write!(f, "{r}")
-			},
+			}
 			Self::StackPointer => {
 				write!(f, "SP")
-			},
+			}
 			Self::AddressInImmediate(a) => {
 				write!(f, "({a:#06X})")
 			}
@@ -92,8 +92,8 @@ pub(crate) trait UnaryDoubleByteOperation {
 
 #[derive(Debug)]
 pub(crate) struct UnaryDoubleByteInstruction<O>
-where
-	O: UnaryDoubleByteOperation,
+	where
+		O: UnaryDoubleByteOperation,
 {
 	src: DoubleByteSource,
 	dst: DoubleByteDestination,
@@ -101,8 +101,8 @@ where
 }
 
 impl<O> UnaryDoubleByteInstruction<O>
-where
-	O: UnaryDoubleByteOperation,
+	where
+		O: UnaryDoubleByteOperation,
 {
 	pub(crate) fn new(src: DoubleByteSource, dst: DoubleByteDestination, op: O) -> Self {
 		Self { src, dst, op }

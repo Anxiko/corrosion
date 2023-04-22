@@ -102,7 +102,7 @@ impl Display for ByteShiftOperation {
 		let direction = match self.direction {
 			ShiftDirection::Left => {
 				"l"
-			},
+			}
 			ShiftDirection::Right => {
 				"r"
 			}
@@ -111,13 +111,13 @@ impl Display for ByteShiftOperation {
 		match self.type_ {
 			ShiftType::Rotate => {
 				write!(f, "r{direction}c")
-			},
+			}
 			ShiftType::RotateWithCarry => {
 				write!(f, "r{direction}")
-			},
+			}
 			ShiftType::ArithmeticShift => {
 				write!(f, "s{direction}a")
-			},
+			}
 			ShiftType::LogicalShift => {
 				write!(f, "s{direction}l")
 			}

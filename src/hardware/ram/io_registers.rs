@@ -8,12 +8,12 @@ enum IoRegistersMemoryMappingRegion {
 }
 
 const IO_REGISTER_MAPPING_SIZE: usize = 1;
-const IO_REGISTER_MAPPING_ENTRIES: [MemoryMappingEntry<IoRegistersMemoryMappingRegion>;
-	IO_REGISTER_MAPPING_SIZE] = [MemoryMappingEntry::new(
-	IoRegistersMemoryMappingRegion::JoypadInput,
-	0,
-	1,
-)];
+const IO_REGISTER_MAPPING_ENTRIES: [MemoryMappingEntry<IoRegistersMemoryMappingRegion>; IO_REGISTER_MAPPING_SIZE] =
+	[MemoryMappingEntry::new(
+		IoRegistersMemoryMappingRegion::JoypadInput,
+		0,
+		1,
+	)];
 
 struct IoRegistersMemoryMapping {
 	mapping: MemoryMapping<1, IoRegistersMemoryMappingRegion>,

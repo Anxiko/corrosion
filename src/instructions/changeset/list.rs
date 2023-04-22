@@ -28,8 +28,8 @@ impl Change for ChangeList {
 #[cfg(test)]
 mod tests {
 	use crate::hardware::ram::{Ram, WORKING_RAM_START};
-	use crate::instructions::changeset::{MemoryByteWriteChange, SingleRegisterChange};
 	use crate::instructions::ACC_REGISTER;
+	use crate::instructions::changeset::{MemoryByteWriteChange, SingleRegisterChange};
 
 	use super::*;
 

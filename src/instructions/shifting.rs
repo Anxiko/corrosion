@@ -1,12 +1,13 @@
 use std::fmt::{Display, Formatter};
+
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::BitFlags;
 use crate::instructions::base::byte::{
 	ByteDestination, ByteSource, UnaryByteInstruction, UnaryByteOperation,
 };
 use crate::instructions::changeset::{Change, ChangeList};
-use crate::instructions::shifting::operation::ByteShiftOperation;
 use crate::instructions::ExecutionError;
+use crate::instructions::shifting::operation::ByteShiftOperation;
 
 pub(crate) mod operation;
 
@@ -67,11 +68,11 @@ pub(crate) type ByteSwapInstruction = UnaryByteInstruction<ByteSwapOperation>;
 #[cfg(test)]
 mod tests {
 	use crate::hardware::register_bank::SingleRegisters;
+	use crate::instructions::ACC_REGISTER;
 	use crate::instructions::changeset::{
 		BitFlagsChange, ChangesetExecutable, SingleRegisterChange,
 	};
 	use crate::instructions::shifting::operation::{ShiftDirection, ShiftType};
-	use crate::instructions::ACC_REGISTER;
 
 	use super::*;
 

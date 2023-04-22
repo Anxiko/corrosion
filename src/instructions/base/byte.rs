@@ -22,16 +22,16 @@ impl Display for ByteSource {
 		match self {
 			Self::SingleRegister(r) => {
 				write!(f, "{r}")
-			},
+			}
 			Self::AddressInRegister(r) => {
 				write!(f, "({r})")
-			},
+			}
 			Self::OffsetAddressInRegister { base, offset } => {
 				write!(f, "({offset} + {base:#06X})")
-			},
+			}
 			Self::AddressInImmediate(a) => {
 				write!(f, "({a:#06X})")
-			},
+			}
 			Self::Immediate(i) => {
 				write!(f, "({i:#04X})")
 			}
@@ -105,13 +105,13 @@ impl Display for ByteDestination {
 		match self {
 			Self::SingleRegister(r) => {
 				write!(f, "{r}")
-			},
+			}
 			Self::AddressImmediate(a) => {
 				write!(f, "({a:#06X})")
-			},
+			}
 			Self::AddressInRegister(r) => {
 				write!(f, "({r})")
-			},
+			}
 			Self::OffsetAddressInRegister { base, offset } => {
 				write!(f, "({offset} + {base:#06X})")
 			}

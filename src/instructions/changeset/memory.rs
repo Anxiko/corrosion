@@ -125,8 +125,8 @@ mod tests {
 			MemoryWriteAddress::DoubleByteSource(DoubleByteSource::DoubleRegister(
 				DoubleRegisters::HL
 			))
-			.resolve(&cpu)
-			.unwrap(),
+				.resolve(&cpu)
+				.unwrap(),
 			WORKING_RAM_START
 		);
 	}
@@ -154,8 +154,8 @@ mod tests {
 				offset: ACC_REGISTER,
 				base: WORKING_RAM_START,
 			}
-			.resolve(&cpu)
-			.unwrap(),
+				.resolve(&cpu)
+				.unwrap(),
 			WORKING_RAM_START + 1
 		);
 	}

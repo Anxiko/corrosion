@@ -12,7 +12,6 @@ fn main() -> Result<(), String> {
 	let mut cpu = Cpu::new();
 
 	loop {
-
 		let execution_result = update_cpu(&mut cpu);
 		if let Err(err) = execution_result {
 			println!("ERROR: {err}");
