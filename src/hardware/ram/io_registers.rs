@@ -1,6 +1,6 @@
 use crate::hardware::counters::divider::DividerRegister;
+use crate::hardware::counters::timer::Timer;
 use crate::hardware::ram::{Ram, RamChip, RamError, Rom};
-
 
 use super::memory_mapping::{MemoryMapping, MemoryMappingEntry, RegionToMemoryMapper};
 
@@ -9,9 +9,10 @@ enum IoRegistersMemoryMappingRegion {
 	JoypadInput,
 	SerialTransfer,
 	DividerRegister,
+	Timers,
 }
 
-const IO_REGISTER_MAPPING_SIZE: usize = 3;
+const IO_REGISTER_MAPPING_SIZE: usize = 4;
 const IO_REGISTER_MAPPING_ENTRIES: [MemoryMappingEntry<IoRegistersMemoryMappingRegion>; IO_REGISTER_MAPPING_SIZE] = [
 	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::JoypadInput, 0, 1),
 	MemoryMappingEntry::new(
@@ -20,6 +21,7 @@ const IO_REGISTER_MAPPING_ENTRIES: [MemoryMappingEntry<IoRegistersMemoryMappingR
 		IO_REGISTER_SERIAL_TRANSFER_SIZE,
 	),
 	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::DividerRegister, 4, 1),
+	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::Timers, 5, 3),
 ];
 
 const IO_REGISTER_SERIAL_TRANSFER_SIZE: usize = 2;
@@ -29,6 +31,7 @@ struct IoRegistersMemoryMapping {
 	joypad_input: u8,
 	serial_transfer: RamChip<IO_REGISTER_SERIAL_TRANSFER_SIZE>,
 	divider_register: DividerRegister,
+	timer: Timer,
 }
 
 impl RegionToMemoryMapper for IoRegistersMemoryMapping {
@@ -43,6 +46,7 @@ impl RegionToMemoryMapper for IoRegistersMemoryMapping {
 			IoRegistersMemoryMappingRegion::JoypadInput => Ok(&self.joypad_input),
 			IoRegistersMemoryMappingRegion::SerialTransfer => Ok(&self.serial_transfer),
 			IoRegistersMemoryMappingRegion::DividerRegister => Ok(&self.divider_register),
+			IoRegistersMemoryMappingRegion::Timers => Ok(&self.timer),
 		}
 	}
 
@@ -51,6 +55,7 @@ impl RegionToMemoryMapper for IoRegistersMemoryMapping {
 			IoRegistersMemoryMappingRegion::JoypadInput => Ok(&mut self.joypad_input),
 			IoRegistersMemoryMappingRegion::SerialTransfer => Ok(&mut self.serial_transfer),
 			IoRegistersMemoryMappingRegion::DividerRegister => Ok(&mut self.serial_transfer),
+			IoRegistersMemoryMappingRegion::Timers => Ok(&mut self.timer),
 		}
 	}
 }
