@@ -44,9 +44,7 @@ impl MemoryByteWriteChange {
 
 	pub(crate) fn write_to_register(double_register: DoubleRegisters, value: u8) -> Self {
 		Self {
-			address: MemoryWriteAddress::DoubleByteSource(DoubleByteSource::DoubleRegister(
-				double_register,
-			)),
+			address: MemoryWriteAddress::DoubleByteSource(DoubleByteSource::DoubleRegister(double_register)),
 			value,
 		}
 	}
@@ -108,9 +106,7 @@ mod tests {
 		let cpu = Cpu::new();
 
 		assert_eq!(
-			MemoryWriteAddress::Immediate(WORKING_RAM_START)
-				.resolve(&cpu)
-				.unwrap(),
+			MemoryWriteAddress::Immediate(WORKING_RAM_START).resolve(&cpu).unwrap(),
 			WORKING_RAM_START
 		)
 	}
@@ -122,9 +118,7 @@ mod tests {
 			.write_double_named(DoubleRegisters::HL, WORKING_RAM_START);
 
 		assert_eq!(
-			MemoryWriteAddress::DoubleByteSource(DoubleByteSource::DoubleRegister(
-				DoubleRegisters::HL
-			))
+			MemoryWriteAddress::DoubleByteSource(DoubleByteSource::DoubleRegister(DoubleRegisters::HL))
 				.resolve(&cpu)
 				.unwrap(),
 			WORKING_RAM_START
@@ -154,8 +148,8 @@ mod tests {
 				offset: ACC_REGISTER,
 				base: WORKING_RAM_START,
 			}
-				.resolve(&cpu)
-				.unwrap(),
+			.resolve(&cpu)
+			.unwrap(),
 			WORKING_RAM_START + 1
 		);
 	}
@@ -164,10 +158,7 @@ mod tests {
 	fn write_byte() {
 		let mut actual = Cpu::new();
 		let mut expected = actual.clone();
-		expected
-			.mapped_ram
-			.write_byte(WORKING_RAM_START, 0x12)
-			.unwrap();
+		expected.mapped_ram.write_byte(WORKING_RAM_START, 0x12).unwrap();
 
 		let change = MemoryByteWriteChange::write_to_immediate(WORKING_RAM_START, 0x12);
 		change.commit_change(&mut actual).unwrap();
@@ -185,8 +176,7 @@ mod tests {
 			.write_double_byte(WORKING_RAM_START, 0x1234)
 			.unwrap();
 
-		let change =
-			MemoryDoubleByteWriteChange::write_to_source(DoubleByteSource::StackPointer, 0x1234);
+		let change = MemoryDoubleByteWriteChange::write_to_source(DoubleByteSource::StackPointer, 0x1234);
 		change.commit_change(&mut actual).unwrap();
 
 		assert_eq!(actual, expected);

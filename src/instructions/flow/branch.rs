@@ -3,8 +3,8 @@ use std::fmt::{Display, Formatter, LowerHex, UpperHex};
 use crate::hardware::cpu::Cpu;
 use crate::instructions::base::double_byte::DoubleByteSource;
 use crate::instructions::changeset::{Change, ChangesetExecutable, NoChange, PcChange};
-use crate::instructions::ExecutionError;
 use crate::instructions::flow::BranchCondition;
+use crate::instructions::ExecutionError;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub(crate) enum JumpInstructionDestination {
@@ -23,7 +23,7 @@ impl JumpInstructionDestination {
 	fn is_relative(&self) -> bool {
 		match self {
 			Self::FromSource(_) => false,
-			Self::RelativeToPc(_) => true
+			Self::RelativeToPc(_) => true,
 		}
 	}
 }

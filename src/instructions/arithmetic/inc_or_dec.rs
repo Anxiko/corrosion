@@ -2,12 +2,10 @@ use std::fmt::{Display, Formatter};
 
 use crate::hardware::alu::delta_u8;
 use crate::hardware::cpu::Cpu;
-use crate::instructions::base::byte::{
-	ByteDestination, ByteSource, UnaryByteInstruction, UnaryByteOperation,
-};
+use crate::instructions::base::byte::{ByteDestination, ByteSource, UnaryByteInstruction, UnaryByteOperation};
 use crate::instructions::changeset::{BitFlagsChange, ChangeList};
-use crate::instructions::ExecutionError;
 use crate::instructions::shared::IndexUpdateType;
+use crate::instructions::ExecutionError;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct IncOrDecByteOperation {
@@ -30,12 +28,7 @@ impl IncOrDecByteOperation {
 impl UnaryByteOperation for IncOrDecByteOperation {
 	type C = ChangeList;
 
-	fn execute(
-		&self,
-		cpu: &Cpu,
-		src: &ByteSource,
-		dst: &ByteDestination,
-	) -> Result<Self::C, ExecutionError> {
+	fn execute(&self, cpu: &Cpu, src: &ByteSource, dst: &ByteDestination) -> Result<Self::C, ExecutionError> {
 		let value = src.read(cpu)?;
 		let delta = self.type_.to_delta();
 
@@ -60,8 +53,8 @@ pub(crate) type IncOrDecByteInstruction = UnaryByteInstruction<IncOrDecByteOpera
 
 #[cfg(test)]
 mod tests {
-	use crate::instructions::ACC_REGISTER;
 	use crate::instructions::changeset::{ChangesetExecutable, SingleRegisterChange};
+	use crate::instructions::ACC_REGISTER;
 
 	use super::*;
 

@@ -1,6 +1,6 @@
 use crate::hardware::register_bank::{
-	BitFlags, DOUBLE_REGISTER_BANK_SIZE, DoubleRegisters, RegisterBank, RegisterBankError,
-	SINGLE_REGISTER_BANK_SIZE, SingleRegisters,
+	BitFlags, DoubleRegisters, RegisterBank, RegisterBankError, SingleRegisters, DOUBLE_REGISTER_BANK_SIZE,
+	SINGLE_REGISTER_BANK_SIZE,
 };
 
 #[test]
@@ -14,10 +14,7 @@ fn single_register() {
 
 	for register in 0..SINGLE_REGISTER_BANK_SIZE {
 		let expected_register_value = 0x12u8 + register as u8;
-		assert_eq!(
-			register_bank.read_single(register),
-			Ok(expected_register_value)
-		);
+		assert_eq!(register_bank.read_single(register), Ok(expected_register_value));
 	}
 
 	assert_eq!(
@@ -46,10 +43,7 @@ fn double_register() {
 
 	for register in 0..DOUBLE_REGISTER_BANK_SIZE {
 		let expected_register_value = 0xab12u16 + register as u16;
-		assert_eq!(
-			register_bank.read_double(register),
-			Ok(expected_register_value)
-		);
+		assert_eq!(register_bank.read_double(register), Ok(expected_register_value));
 	}
 
 	assert_eq!(

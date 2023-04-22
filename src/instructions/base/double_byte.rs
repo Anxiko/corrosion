@@ -17,9 +17,7 @@ pub(crate) enum DoubleByteSource {
 impl DoubleByteSource {
 	pub(crate) fn read(&self, cpu: &Cpu) -> Result<u16, ExecutionError> {
 		match self {
-			Self::DoubleRegister(double_register) => {
-				Ok(cpu.register_bank.read_double_named(*double_register))
-			}
+			Self::DoubleRegister(double_register) => Ok(cpu.register_bank.read_double_named(*double_register)),
 			Self::Immediate(immediate) => Ok(*immediate),
 			Self::StackPointer => Ok(cpu.sp.read()),
 		}
@@ -52,13 +50,11 @@ pub(crate) enum DoubleByteDestination {
 impl DoubleByteDestination {
 	pub(crate) fn change_destination(&self, value: u16) -> Box<dyn Change> {
 		match self {
-			Self::DoubleRegister(double_register) => {
-				Box::new(DoubleRegisterChange::new(*double_register, value))
-			}
+			Self::DoubleRegister(double_register) => Box::new(DoubleRegisterChange::new(*double_register, value)),
 			Self::StackPointer => Box::new(SpChange::new(value)),
-			Self::AddressInImmediate(address) => Box::new(
-				MemoryDoubleByteWriteChange::write_to_immediate(*address, value),
-			),
+			Self::AddressInImmediate(address) => {
+				Box::new(MemoryDoubleByteWriteChange::write_to_immediate(*address, value))
+			}
 		}
 	}
 }
@@ -92,8 +88,8 @@ pub(crate) trait UnaryDoubleByteOperation {
 
 #[derive(Debug)]
 pub(crate) struct UnaryDoubleByteInstruction<O>
-	where
-		O: UnaryDoubleByteOperation,
+where
+	O: UnaryDoubleByteOperation,
 {
 	src: DoubleByteSource,
 	dst: DoubleByteDestination,
@@ -101,8 +97,8 @@ pub(crate) struct UnaryDoubleByteInstruction<O>
 }
 
 impl<O> UnaryDoubleByteInstruction<O>
-	where
-		O: UnaryDoubleByteOperation,
+where
+	O: UnaryDoubleByteOperation,
 {
 	pub(crate) fn new(src: DoubleByteSource, dst: DoubleByteDestination, op: O) -> Self {
 		Self { src, dst, op }
@@ -110,8 +106,8 @@ impl<O> UnaryDoubleByteInstruction<O>
 }
 
 impl<O> ChangesetExecutable for UnaryDoubleByteInstruction<O>
-	where
-		O: UnaryDoubleByteOperation,
+where
+	O: UnaryDoubleByteOperation,
 {
 	type C = O::C;
 
@@ -147,30 +143,19 @@ pub(crate) struct BinaryDoubleByteInstruction<O: BinaryDoubleByteOperation> {
 }
 
 impl<O: BinaryDoubleByteOperation> BinaryDoubleByteInstruction<O> {
-	pub(crate) fn new(
-		left: DoubleByteSource,
-		right: DoubleByteSource,
-		dst: DoubleByteDestination,
-		op: O,
-	) -> Self {
-		Self {
-			left,
-			right,
-			dst,
-			op,
-		}
+	pub(crate) fn new(left: DoubleByteSource, right: DoubleByteSource, dst: DoubleByteDestination, op: O) -> Self {
+		Self { left, right, dst, op }
 	}
 }
 
 impl<O> ChangesetExecutable for BinaryDoubleByteInstruction<O>
-	where
-		O: BinaryDoubleByteOperation,
+where
+	O: BinaryDoubleByteOperation,
 {
 	type C = O::C;
 
 	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError> {
-		self.op
-			.compute_changes(cpu, &self.left, &self.right, &self.dst)
+		self.op.compute_changes(cpu, &self.left, &self.right, &self.dst)
 	}
 }
 
@@ -189,8 +174,7 @@ mod tests {
 	#[test]
 	fn source_register() {
 		let mut cpu = Cpu::new();
-		cpu.register_bank
-			.write_double_named(DoubleRegisters::HL, 0x1234);
+		cpu.register_bank.write_double_named(DoubleRegisters::HL, 0x1234);
 
 		let source = DoubleByteSource::DoubleRegister(DoubleRegisters::HL);
 
@@ -200,9 +184,7 @@ mod tests {
 	#[test]
 	fn source_immediate() {
 		let mut cpu = Cpu::new();
-		cpu.mapped_ram
-			.write_byte(WORKING_RAM_START + 0x20, 0x12)
-			.unwrap();
+		cpu.mapped_ram.write_byte(WORKING_RAM_START + 0x20, 0x12).unwrap();
 
 		let source = DoubleByteSource::Immediate(0x1234);
 
@@ -224,8 +206,7 @@ mod tests {
 		let dest = DoubleByteDestination::DoubleRegister(DoubleRegisters::HL);
 
 		let actual = dest.change_destination(0x1234);
-		let expected: Box<dyn Change> =
-			Box::new(DoubleRegisterChange::new(DoubleRegisters::HL, 0x1234));
+		let expected: Box<dyn Change> = Box::new(DoubleRegisterChange::new(DoubleRegisters::HL, 0x1234));
 
 		assert_eq!(actual, expected);
 	}

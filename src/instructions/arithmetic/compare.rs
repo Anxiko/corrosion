@@ -47,8 +47,7 @@ mod tests {
 	fn bigger_than() {
 		let mut cpu = Cpu::new();
 		cpu.register_bank.write_single_named(ACC_REGISTER, 0x80);
-		cpu.register_bank
-			.write_single_named(SingleRegisters::B, 0x79);
+		cpu.register_bank.write_single_named(SingleRegisters::B, 0x79);
 
 		let expected = BitFlagsChange::keep_all()
 			.with_carry_flag(false)
@@ -70,8 +69,7 @@ mod tests {
 	fn equal() {
 		let mut cpu = Cpu::new();
 		cpu.register_bank.write_single_named(ACC_REGISTER, 0x80);
-		cpu.register_bank
-			.write_single_named(SingleRegisters::B, 0x80);
+		cpu.register_bank.write_single_named(SingleRegisters::B, 0x80);
 
 		let expected = BitFlagsChange::keep_all()
 			.with_carry_flag(false)
@@ -93,8 +91,7 @@ mod tests {
 	fn less_than() {
 		let mut cpu = Cpu::new();
 		cpu.register_bank.write_single_named(ACC_REGISTER, 0x80);
-		cpu.register_bank
-			.write_single_named(SingleRegisters::B, 0x81);
+		cpu.register_bank.write_single_named(SingleRegisters::B, 0x81);
 
 		let expected = BitFlagsChange::keep_all()
 			.with_carry_flag(true)

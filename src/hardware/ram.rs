@@ -16,8 +16,8 @@ pub(crate) const OAM_START: u16 = 0xFE00;
 pub(crate) const IO_REGISTERS_MAPPING_START: u16 = 0xFF00;
 
 mod bootstrap;
-mod memory_mapping;
 mod io_registers;
+mod memory_mapping;
 
 const BOOTSTRAP_RAM_SIZE: usize = 0x100;
 const WORKING_RAM_SIZE: usize = (ECHO_RAM_START - WORKING_RAM_START) as usize;
@@ -150,9 +150,7 @@ impl MappedRam {
 	}
 
 	fn mapping_for_address(address: u16) -> Option<&'static RamMapping> {
-		RAM_MAPPINGS
-			.iter()
-			.find(|mapping| mapping.mapped_here(address))
+		RAM_MAPPINGS.iter().find(|mapping| mapping.mapped_here(address))
 	}
 
 	fn get_mapped_ram(&self, region: RamRegion) -> &dyn Rom {
@@ -178,8 +176,7 @@ impl MappedRam {
 
 impl Rom for MappedRam {
 	fn read_byte(&self, address: u16) -> Result<u8, RamError> {
-		let ram_mapping =
-			MappedRam::mapping_for_address(address).ok_or(RamError::UnmappedRegion(address))?;
+		let ram_mapping = MappedRam::mapping_for_address(address).ok_or(RamError::UnmappedRegion(address))?;
 		let mapped_ram = self.get_mapped_ram(ram_mapping.region);
 
 		let region_address = address - ram_mapping.offset;
@@ -191,8 +188,7 @@ impl Rom for MappedRam {
 
 impl Ram for MappedRam {
 	fn write_byte(&mut self, address: u16, value: u8) -> Result<(), RamError> {
-		let ram_mapping =
-			MappedRam::mapping_for_address(address).ok_or(RamError::UnmappedRegion(address))?;
+		let ram_mapping = MappedRam::mapping_for_address(address).ok_or(RamError::UnmappedRegion(address))?;
 		let mapped_ram = self.get_mapped_ram_mut(ram_mapping.region);
 
 		let region_address = address - ram_mapping.offset;
@@ -294,8 +290,7 @@ impl MappedIoRegisters {
 
 impl Rom for MappedIoRegisters {
 	fn read_byte(&self, address: u16) -> Result<u8, RamError> {
-		MappedIoRegisters::resolve_address(address)
-			.map(|io_register| *self.get_io_register(io_register))
+		MappedIoRegisters::resolve_address(address).map(|io_register| *self.get_io_register(io_register))
 	}
 }
 

@@ -87,7 +87,7 @@ impl BitFlags {
 			Self::Zero => "z",
 			Self::Subtraction => "s",
 			Self::HalfCarry => "h",
-			Self::Carry => "c"
+			Self::Carry => "c",
 		}
 	}
 }
@@ -131,30 +131,28 @@ impl RegisterBank {
 	}
 
 	pub fn read_double(&self, address: usize) -> Result<u16, RegisterBankError> {
-		let (high_address, low_address) = Self::get_double_address(address)
-			.ok_or(RegisterBankError::InvalidDoubleRegister { address })?;
+		let (high_address, low_address) =
+			Self::get_double_address(address).ok_or(RegisterBankError::InvalidDoubleRegister { address })?;
 		let high = self.read_single(high_address)?;
 		let low = self.read_single(low_address)?;
 		Ok(u16::from_be_bytes([high, low]))
 	}
 
 	pub fn write_double(&mut self, address: usize, value: u16) -> Result<(), RegisterBankError> {
-		let (high_address, low_address) = Self::get_double_address(address)
-			.ok_or(RegisterBankError::InvalidDoubleRegister { address })?;
+		let (high_address, low_address) =
+			Self::get_double_address(address).ok_or(RegisterBankError::InvalidDoubleRegister { address })?;
 		let [high, low] = value.to_be_bytes();
 
-		let high_register = self.register_bank.get_mut(high_address).ok_or(
-			RegisterBankError::AddressOutOfRange {
-				address: high_address,
-			},
-		)?;
+		let high_register = self
+			.register_bank
+			.get_mut(high_address)
+			.ok_or(RegisterBankError::AddressOutOfRange { address: high_address })?;
 		*high_register = high;
 
-		let low_register = self.register_bank.get_mut(low_address).ok_or(
-			RegisterBankError::AddressOutOfRange {
-				address: low_address,
-			},
-		)?;
+		let low_register = self
+			.register_bank
+			.get_mut(low_address)
+			.ok_or(RegisterBankError::AddressOutOfRange { address: low_address })?;
 		*low_register = low;
 
 		Ok(())

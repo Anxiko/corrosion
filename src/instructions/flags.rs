@@ -34,7 +34,7 @@ impl ChangeCarryFlagInstruction {
 		match self.change_type {
 			BitFlagChangeType::Toggle => "ccf",
 			BitFlagChangeType::Write(true) => "scf",
-			BitFlagChangeType::Write(false) => "rcf"
+			BitFlagChangeType::Write(false) => "rcf",
 		}
 	}
 }

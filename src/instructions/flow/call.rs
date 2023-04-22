@@ -7,8 +7,8 @@ use crate::instructions::base::double_byte::DoubleByteSource;
 use crate::instructions::changeset::{
 	Change, ChangeList, ChangesetExecutable, MemoryDoubleByteWriteChange, PcChange, SpChange,
 };
-use crate::instructions::ExecutionError;
 use crate::instructions::flow::BranchCondition;
+use crate::instructions::ExecutionError;
 
 #[derive(Debug)]
 pub(crate) struct CallInstruction {
@@ -26,13 +26,7 @@ impl CallInstruction {
 	}
 
 	pub(crate) fn call_conditional(flag: BitFlags, branch_if_equals: bool, address: u16) -> Self {
-		Self::new(
-			BranchCondition::TestFlag {
-				flag,
-				branch_if_equals,
-			},
-			address,
-		)
+		Self::new(BranchCondition::TestFlag { flag, branch_if_equals }, address)
 	}
 
 	pub(crate) fn restart(bits: [bool; 3]) -> Self {

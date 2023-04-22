@@ -16,11 +16,7 @@ pub(super) struct MemoryMappingEntry<R: MemoryMappingEntryRegion> {
 
 impl<R: MemoryMappingEntryRegion> MemoryMappingEntry<R> {
 	pub(super) const fn new(region: R, offset: u16, size: usize) -> Self {
-		Self {
-			region,
-			offset,
-			size,
-		}
+		Self { region, offset, size }
 	}
 
 	fn mapped_here(&self, address: u16) -> bool {

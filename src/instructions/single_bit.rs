@@ -18,7 +18,7 @@ impl Display for SingleBitOperand {
 	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
 		match self {
 			Self::SingleRegister(r) => write!(f, "{r}"),
-			Self::MemoryAddress => write!(f, "(HL)")
+			Self::MemoryAddress => write!(f, "(HL)"),
 		}
 	}
 }
@@ -38,10 +38,7 @@ impl SingleBitOperand {
 	fn write_change(&self, byte: u8) -> Box<dyn Change> {
 		match self {
 			Self::SingleRegister(reg) => Box::new(SingleRegisterChange::new(*reg, byte)),
-			Self::MemoryAddress => Box::new(MemoryByteWriteChange::write_to_register(
-				DoubleRegisters::HL,
-				byte,
-			)),
+			Self::MemoryAddress => Box::new(MemoryByteWriteChange::write_to_register(DoubleRegisters::HL, byte)),
 		}
 	}
 }
@@ -84,11 +81,7 @@ impl SingleBitOperation {
 				Box::new(flags_change)
 			}
 			Self::Write(bit) => {
-				let result = if *bit {
-					byte | bitmask
-				} else {
-					byte & (!bitmask)
-				};
+				let result = if *bit { byte | bitmask } else { byte & (!bitmask) };
 				operand.write_change(result)
 			}
 		}
@@ -103,11 +96,7 @@ pub(crate) struct SingleBitInstruction {
 }
 
 impl SingleBitInstruction {
-	pub(crate) fn new(
-		operand: SingleBitOperand,
-		operation: SingleBitOperation,
-		bit_shift: u8,
-	) -> Self {
+	pub(crate) fn new(operand: SingleBitOperand, operation: SingleBitOperation, bit_shift: u8) -> Self {
 		Self {
 			operand,
 			operation,
@@ -147,8 +136,7 @@ mod tests {
 	fn test_bit() {
 		let mut cpu = Cpu::new();
 
-		cpu.register_bank
-			.write_single_named(SingleRegisters::B, 0b11001010);
+		cpu.register_bank.write_single_named(SingleRegisters::B, 0b11001010);
 		cpu.register_bank
 			.write_double_named(DoubleRegisters::HL, WORKING_RAM_START);
 		cpu.mapped_ram
@@ -173,8 +161,7 @@ mod tests {
 
 		assert_eq!(actual, expected);
 
-		let instruction =
-			SingleBitInstruction::new(SingleBitOperand::MemoryAddress, SingleBitOperation::Test, 4);
+		let instruction = SingleBitInstruction::new(SingleBitOperand::MemoryAddress, SingleBitOperation::Test, 4);
 
 		let actual = instruction.compute_change(&cpu).expect("Compute changes");
 		let expected: Box<dyn Change> = Box::new(
@@ -191,8 +178,7 @@ mod tests {
 	fn write_bit() {
 		let mut cpu = Cpu::new();
 
-		cpu.register_bank
-			.write_single_named(SingleRegisters::B, 0b11001010);
+		cpu.register_bank.write_single_named(SingleRegisters::B, 0b11001010);
 		cpu.register_bank
 			.write_double_named(DoubleRegisters::HL, WORKING_RAM_START);
 		cpu.mapped_ram
@@ -208,16 +194,12 @@ mod tests {
 		);
 
 		let actual = instruction.compute_change(&cpu).expect("Compute changes");
-		let expected: Box<dyn Change> =
-			Box::new(SingleRegisterChange::new(SingleRegisters::B, 0b11001011));
+		let expected: Box<dyn Change> = Box::new(SingleRegisterChange::new(SingleRegisters::B, 0b11001011));
 
 		assert_eq!(actual, expected);
 
-		let instruction = SingleBitInstruction::new(
-			SingleBitOperand::MemoryAddress,
-			SingleBitOperation::Write(false),
-			7,
-		);
+		let instruction =
+			SingleBitInstruction::new(SingleBitOperand::MemoryAddress, SingleBitOperation::Write(false), 7);
 
 		let actual = instruction.compute_change(&cpu).expect("Compute changes");
 		let expected: Box<dyn Change> = Box::new(MemoryByteWriteChange::write_to_register(

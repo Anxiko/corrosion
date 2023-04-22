@@ -3,12 +3,12 @@ use std::fmt::{Display, Formatter};
 use crate::hardware::alu::{add_u8, delta_u8};
 use crate::hardware::cpu::Cpu;
 use crate::instructions::base::double_byte::{
-	BinaryDoubleByteInstruction, BinaryDoubleByteOperation, DoubleByteDestination,
-	DoubleByteSource, UnaryDoubleByteInstruction, UnaryDoubleByteOperation,
+	BinaryDoubleByteInstruction, BinaryDoubleByteOperation, DoubleByteDestination, DoubleByteSource,
+	UnaryDoubleByteInstruction, UnaryDoubleByteOperation,
 };
 use crate::instructions::changeset::{BitFlagsChange, Change, ChangeList, ChangesetExecutable};
-use crate::instructions::ExecutionError;
 use crate::instructions::shared::IndexUpdateType;
+use crate::instructions::ExecutionError;
 
 #[derive(Debug)]
 pub(crate) struct BinaryDoubleByteAddOperation;
@@ -72,7 +72,7 @@ impl IncOrDecDoubleByteOperation {
 	fn as_str(&self) -> &str {
 		match self.type_ {
 			IndexUpdateType::Increment => "inc",
-			IndexUpdateType::Decrement => "dec"
+			IndexUpdateType::Decrement => "dec",
 		}
 	}
 }
@@ -161,8 +161,7 @@ mod tests {
 	#[test]
 	fn double_byte_add() {
 		let mut cpu = Cpu::new();
-		cpu.register_bank
-			.write_double_named(DoubleRegisters::HL, 0x1234);
+		cpu.register_bank.write_double_named(DoubleRegisters::HL, 0x1234);
 		cpu.sp.write(0x4321);
 
 		let instruction = BinaryDoubleByteAddInstruction::new(
@@ -174,10 +173,7 @@ mod tests {
 
 		let actual = instruction.compute_change(&cpu).unwrap();
 		let expected = ChangeList::new(vec![
-			Box::new(DoubleRegisterChange::new(
-				DoubleRegisters::HL,
-				0x1234 + 0x4321,
-			)),
+			Box::new(DoubleRegisterChange::new(DoubleRegisters::HL, 0x1234 + 0x4321)),
 			Box::new(
 				BitFlagsChange::keep_all()
 					.with_subtraction_flag(false)
@@ -192,8 +188,7 @@ mod tests {
 	#[test]
 	fn inc() {
 		let mut cpu = Cpu::new();
-		cpu.register_bank
-			.write_double_named(DoubleRegisters::HL, 0x1234);
+		cpu.register_bank.write_double_named(DoubleRegisters::HL, 0x1234);
 
 		let instruction = IncOrDecDoubleInstruction::new(
 			DoubleByteSource::DoubleRegister(DoubleRegisters::HL),
@@ -202,8 +197,7 @@ mod tests {
 		);
 
 		let actual = instruction.compute_change(&cpu).unwrap();
-		let expected: Box<dyn Change> =
-			Box::new(DoubleRegisterChange::new(DoubleRegisters::HL, 0x1234 + 1));
+		let expected: Box<dyn Change> = Box::new(DoubleRegisterChange::new(DoubleRegisters::HL, 0x1234 + 1));
 
 		assert_eq!(actual, expected);
 	}
@@ -212,8 +206,7 @@ mod tests {
 	fn add_byte_to_double_byte() {
 		let mut cpu = Cpu::new();
 		cpu.sp.write(0x1234);
-		cpu.register_bank
-			.write_single_named(SingleRegisters::B, -0x35i8 as u8);
+		cpu.register_bank.write_single_named(SingleRegisters::B, -0x35i8 as u8);
 
 		let instruction = AddSignedByteToDoubleByte::add_to_sp(-0x35);
 

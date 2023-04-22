@@ -2,10 +2,8 @@ use std::fmt::{Display, Formatter};
 
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::BitFlags;
-use crate::instructions::{ACC_REGISTER, ExecutionError};
-use crate::instructions::changeset::{
-	BitFlagsChange, ChangeList, ChangesetExecutable, SingleRegisterChange,
-};
+use crate::instructions::changeset::{BitFlagsChange, ChangeList, ChangesetExecutable, SingleRegisterChange};
+use crate::instructions::{ExecutionError, ACC_REGISTER};
 
 #[derive(Debug)]
 pub(crate) struct DecimalAdjust;
@@ -16,12 +14,7 @@ impl DecimalAdjust {
 	}
 
 	// Implementation derived from here: https://forums.nesdev.org/viewtopic.php?t=15944
-	fn adjust(
-		mut value: u8,
-		sub_flag: bool,
-		carry_flag: bool,
-		half_carry_flag: bool,
-	) -> (u8, bool) {
+	fn adjust(mut value: u8, sub_flag: bool, carry_flag: bool, half_carry_flag: bool) -> (u8, bool) {
 		let mut next_carry_flag = false;
 		if !sub_flag {
 			if carry_flag || value > 0x99 {
@@ -54,8 +47,7 @@ impl ChangesetExecutable for DecimalAdjust {
 		let carry_flag = cpu.register_bank.read_bit_flag(BitFlags::Carry);
 		let half_carry_flag = cpu.register_bank.read_bit_flag(BitFlags::HalfCarry);
 
-		let (next_acc, next_carry_flag) =
-			DecimalAdjust::adjust(acc, sub_flag, carry_flag, half_carry_flag);
+		let (next_acc, next_carry_flag) = DecimalAdjust::adjust(acc, sub_flag, carry_flag, half_carry_flag);
 
 		Ok(ChangeList::new(vec![
 			Box::new(SingleRegisterChange::new(ACC_REGISTER, next_acc)),
@@ -96,37 +88,19 @@ mod tests {
 
 		// High nibble is valid
 
-		assert_eq!(
-			DecimalAdjust::adjust(0x12 + 0x34, false, false, false),
-			(0x46, false)
-		); // Low nibble is valid
+		assert_eq!(DecimalAdjust::adjust(0x12 + 0x34, false, false, false), (0x46, false)); // Low nibble is valid
 
-		assert_eq!(
-			DecimalAdjust::adjust(0x12 + 0x38, false, false, false),
-			(0x50, false)
-		); // Low nibble is not valid
+		assert_eq!(DecimalAdjust::adjust(0x12 + 0x38, false, false, false), (0x50, false)); // Low nibble is not valid
 
-		assert_eq!(
-			DecimalAdjust::adjust(0x18 + 0x38, false, false, true),
-			(0x56, false)
-		); // Low nibble overflows
+		assert_eq!(DecimalAdjust::adjust(0x18 + 0x38, false, false, true), (0x56, false)); // Low nibble overflows
 
 		// High nibble is not valid
 
-		assert_eq!(
-			DecimalAdjust::adjust(0x52 + 0x54, false, false, false),
-			(0x06, true)
-		); // Low nibble is valid
+		assert_eq!(DecimalAdjust::adjust(0x52 + 0x54, false, false, false), (0x06, true)); // Low nibble is valid
 
-		assert_eq!(
-			DecimalAdjust::adjust(0x52 + 0x58, false, false, false),
-			(0x10, true)
-		); // Low nibble is not valid
+		assert_eq!(DecimalAdjust::adjust(0x52 + 0x58, false, false, false), (0x10, true)); // Low nibble is not valid
 
-		assert_eq!(
-			DecimalAdjust::adjust(0x58 + 0x58, false, false, true),
-			(0x16, true)
-		); // Low nibble overflows
+		assert_eq!(DecimalAdjust::adjust(0x58 + 0x58, false, false, true), (0x16, true)); // Low nibble overflows
 
 		// High nibble overflows
 
@@ -160,15 +134,9 @@ mod tests {
 
 		// High nibble no borrow
 
-		assert_eq!(
-			DecimalAdjust::adjust(0x34 - 0x12, true, false, false),
-			(0x22, false)
-		); // Low nibble no borrow
+		assert_eq!(DecimalAdjust::adjust(0x34 - 0x12, true, false, false), (0x22, false)); // Low nibble no borrow
 
-		assert_eq!(
-			DecimalAdjust::adjust(0x34 - 0x15, true, false, true),
-			(0x19, false)
-		); // Low nibble borrow
+		assert_eq!(DecimalAdjust::adjust(0x34 - 0x15, true, false, true), (0x19, false)); // Low nibble borrow
 
 		// High nibble borrow
 
@@ -186,8 +154,7 @@ mod tests {
 	#[test]
 	fn decimal_adjust() {
 		let mut cpu = Cpu::new();
-		cpu.register_bank
-			.write_single_named(ACC_REGISTER, 0x32 + 0x18);
+		cpu.register_bank.write_single_named(ACC_REGISTER, 0x32 + 0x18);
 		cpu.register_bank.write_bit_flag(BitFlags::HalfCarry, true);
 
 		let instruction = DecimalAdjust::new();

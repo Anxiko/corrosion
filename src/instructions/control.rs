@@ -1,8 +1,8 @@
 use std::fmt::{Display, Formatter};
 
 use crate::hardware::cpu::Cpu;
-use crate::instructions::{Executable, ExecutionError};
 use crate::instructions::changeset::{ChangeIme, ChangesetExecutable};
+use crate::instructions::{Executable, ExecutionError};
 
 #[derive(Debug)]
 pub(crate) struct NopInstruction {}
@@ -82,7 +82,7 @@ impl SetImeInstruction {
 	fn as_str(&self) -> &str {
 		match self.value {
 			true => "ei",
-			false => "di"
+			false => "di",
 		}
 	}
 }

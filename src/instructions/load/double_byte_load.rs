@@ -5,9 +5,7 @@ use crate::hardware::ram::Rom;
 use crate::instructions::base::double_byte::{
 	DoubleByteDestination, DoubleByteSource, UnaryDoubleByteInstruction, UnaryDoubleByteOperation,
 };
-use crate::instructions::changeset::{
-	Change, ChangeList, ChangesetExecutable, MemoryDoubleByteWriteChange, SpChange,
-};
+use crate::instructions::changeset::{Change, ChangeList, ChangesetExecutable, MemoryDoubleByteWriteChange, SpChange};
 use crate::instructions::ExecutionError;
 
 #[derive(Debug)]
@@ -62,9 +60,7 @@ impl ChangesetExecutable for PushInstruction {
 
 		Ok(ChangeList::new(vec![
 			Box::new(SpChange::new(address)),
-			Box::new(MemoryDoubleByteWriteChange::write_to_immediate(
-				address, value,
-			)),
+			Box::new(MemoryDoubleByteWriteChange::write_to_immediate(address, value)),
 		]))
 	}
 }
@@ -114,8 +110,7 @@ mod tests {
 	use crate::hardware::register_bank::DoubleRegisters;
 	use crate::instructions::base::double_byte::{DoubleByteDestination, DoubleByteSource};
 	use crate::instructions::changeset::{
-		Change, ChangeList, ChangesetExecutable, DoubleRegisterChange,
-		MemoryDoubleByteWriteChange, SpChange,
+		Change, ChangeList, ChangesetExecutable, DoubleRegisterChange, MemoryDoubleByteWriteChange, SpChange,
 	};
 	use crate::instructions::load::double_byte_load::{
 		DoubleByteLoadInstruction, DoubleByteLoadOperation, PopInstruction, PushInstruction,
@@ -145,11 +140,9 @@ mod tests {
 	fn push() {
 		let mut cpu = Cpu::new();
 		cpu.sp.write(WORKING_RAM_START + 2);
-		cpu.register_bank
-			.write_double_named(DoubleRegisters::BC, 0x1234);
+		cpu.register_bank.write_double_named(DoubleRegisters::BC, 0x1234);
 
-		let instruction =
-			PushInstruction::new(DoubleByteSource::DoubleRegister(DoubleRegisters::BC));
+		let instruction = PushInstruction::new(DoubleByteSource::DoubleRegister(DoubleRegisters::BC));
 
 		let expected = ChangeList::new(vec![
 			Box::new(SpChange::new(WORKING_RAM_START)),
@@ -171,8 +164,7 @@ mod tests {
 			.write_double_byte(WORKING_RAM_START, 0x1234)
 			.expect("Write to RAM");
 
-		let instruction =
-			PopInstruction::new(DoubleByteDestination::DoubleRegister(DoubleRegisters::BC));
+		let instruction = PopInstruction::new(DoubleByteDestination::DoubleRegister(DoubleRegisters::BC));
 
 		let expected = ChangeList::new(vec![
 			Box::new(DoubleRegisterChange::new(DoubleRegisters::BC, 0x1234)),

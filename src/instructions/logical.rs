@@ -1,9 +1,7 @@
 use std::fmt::{Display, Formatter};
 
 use crate::hardware::cpu::Cpu;
-use crate::instructions::base::byte::{
-	BinaryByteInstruction, UnaryByteInstruction, UnaryByteOperation,
-};
+use crate::instructions::base::byte::{BinaryByteInstruction, UnaryByteInstruction, UnaryByteOperation};
 use crate::instructions::base::byte::{BinaryByteOperation, ByteDestination, ByteSource};
 use crate::instructions::changeset::{BitFlagsChange, ChangeList};
 use crate::instructions::ExecutionError;
@@ -43,7 +41,7 @@ impl BinaryLogicalOperation {
 		match self.type_ {
 			BinaryLogicalOperationType::And => "and",
 			BinaryLogicalOperationType::Or => "or",
-			BinaryLogicalOperationType::Xor => "xor"
+			BinaryLogicalOperationType::Xor => "xor",
 		}
 	}
 }
@@ -87,12 +85,7 @@ pub(crate) struct LogicalNegateOperation;
 impl UnaryByteOperation for LogicalNegateOperation {
 	type C = ChangeList;
 
-	fn execute(
-		&self,
-		cpu: &Cpu,
-		src: &ByteSource,
-		dst: &ByteDestination,
-	) -> Result<Self::C, ExecutionError> {
+	fn execute(&self, cpu: &Cpu, src: &ByteSource, dst: &ByteDestination) -> Result<Self::C, ExecutionError> {
 		let value = src.read(cpu)?;
 		let new_value = !value;
 
@@ -128,16 +121,15 @@ impl Display for LogicalNegateOperation {
 #[cfg(test)]
 mod tests {
 	use crate::hardware::register_bank::SingleRegisters;
-	use crate::instructions::ACC_REGISTER;
 	use crate::instructions::changeset::{ChangesetExecutable, SingleRegisterChange};
+	use crate::instructions::ACC_REGISTER;
 
 	use super::*;
 
 	#[test]
 	fn negate() {
 		let mut cpu = Cpu::new();
-		cpu.register_bank
-			.write_single_named(ACC_REGISTER, 0b11001010);
+		cpu.register_bank.write_single_named(ACC_REGISTER, 0b11001010);
 
 		let instruction = LogicalNegateInstruction::negate_acc();
 
@@ -157,10 +149,8 @@ mod tests {
 	#[test]
 	fn and() {
 		let mut cpu = Cpu::new();
-		cpu.register_bank
-			.write_single_named(ACC_REGISTER, 0b11001010);
-		cpu.register_bank
-			.write_single_named(SingleRegisters::B, 0b10101100);
+		cpu.register_bank.write_single_named(ACC_REGISTER, 0b11001010);
+		cpu.register_bank.write_single_named(SingleRegisters::B, 0b10101100);
 
 		let instruction = BinaryLogicalInstruction::new(
 			ByteSource::SingleRegister(ACC_REGISTER),
@@ -181,10 +171,8 @@ mod tests {
 	#[test]
 	fn or() {
 		let mut cpu = Cpu::new();
-		cpu.register_bank
-			.write_single_named(ACC_REGISTER, 0b11001010);
-		cpu.register_bank
-			.write_single_named(SingleRegisters::B, 0b10101100);
+		cpu.register_bank.write_single_named(ACC_REGISTER, 0b11001010);
+		cpu.register_bank.write_single_named(SingleRegisters::B, 0b10101100);
 
 		let instruction = BinaryLogicalInstruction::new(
 			ByteSource::SingleRegister(ACC_REGISTER),
@@ -205,10 +193,8 @@ mod tests {
 	#[test]
 	fn xor() {
 		let mut cpu = Cpu::new();
-		cpu.register_bank
-			.write_single_named(ACC_REGISTER, 0b1100_1010);
-		cpu.register_bank
-			.write_single_named(SingleRegisters::B, 0b1010_1100);
+		cpu.register_bank.write_single_named(ACC_REGISTER, 0b1100_1010);
+		cpu.register_bank.write_single_named(SingleRegisters::B, 0b1010_1100);
 
 		let instruction = BinaryLogicalInstruction::new(
 			ByteSource::SingleRegister(ACC_REGISTER),

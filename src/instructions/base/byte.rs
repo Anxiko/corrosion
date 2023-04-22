@@ -3,10 +3,8 @@ use std::fmt::{Display, Formatter};
 use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::Rom;
 use crate::hardware::register_bank::{DoubleRegisters, SingleRegisters};
-use crate::instructions::{ACC_REGISTER, ExecutionError};
-use crate::instructions::changeset::{
-	Change, ChangesetExecutable, MemoryByteWriteChange, SingleRegisterChange,
-};
+use crate::instructions::changeset::{Change, ChangesetExecutable, MemoryByteWriteChange, SingleRegisterChange};
+use crate::instructions::{ExecutionError, ACC_REGISTER};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub(crate) enum ByteSource {
@@ -46,9 +44,7 @@ impl ByteSource {
 
 	pub(crate) fn read(&self, cpu: &Cpu) -> Result<u8, ExecutionError> {
 		match self {
-			Self::SingleRegister(single_reg) => {
-				Ok(cpu.register_bank.read_single_named(*single_reg))
-			}
+			Self::SingleRegister(single_reg) => Ok(cpu.register_bank.read_single_named(*single_reg)),
 			Self::AddressInRegister(address_register) => {
 				let address = cpu.register_bank.read_double_named(*address_register);
 				let result = cpu.mapped_ram.read_byte(address)?;
@@ -84,18 +80,16 @@ impl ByteDestination {
 
 	pub(crate) fn change_destination(&self, value: u8) -> Box<dyn Change> {
 		match self {
-			Self::SingleRegister(single_reg) => {
-				Box::new(SingleRegisterChange::new(*single_reg, value))
+			Self::SingleRegister(single_reg) => Box::new(SingleRegisterChange::new(*single_reg, value)),
+			Self::AddressImmediate(address_immediate) => {
+				Box::new(MemoryByteWriteChange::write_to_immediate(*address_immediate, value))
 			}
-			Self::AddressImmediate(address_immediate) => Box::new(
-				MemoryByteWriteChange::write_to_immediate(*address_immediate, value),
-			),
 			Self::AddressInRegister(double_reg) => {
 				Box::new(MemoryByteWriteChange::write_to_register(*double_reg, value))
 			}
-			Self::OffsetAddressInRegister { base, offset } => Box::new(
-				MemoryByteWriteChange::write_to_offset(*base, *offset, value),
-			),
+			Self::OffsetAddressInRegister { base, offset } => {
+				Box::new(MemoryByteWriteChange::write_to_offset(*base, *offset, value))
+			}
 		}
 	}
 }
@@ -122,18 +116,13 @@ impl Display for ByteDestination {
 pub(crate) trait UnaryByteOperation {
 	type C: Change;
 
-	fn execute(
-		&self,
-		cpu: &Cpu,
-		src: &ByteSource,
-		dst: &ByteDestination,
-	) -> Result<Self::C, ExecutionError>;
+	fn execute(&self, cpu: &Cpu, src: &ByteSource, dst: &ByteDestination) -> Result<Self::C, ExecutionError>;
 }
 
 #[derive(Debug)]
 pub(crate) struct UnaryByteInstruction<O>
-	where
-		O: UnaryByteOperation,
+where
+	O: UnaryByteOperation,
 {
 	src: ByteSource,
 	dst: ByteDestination,
@@ -147,8 +136,8 @@ impl<O: Display + UnaryByteOperation> Display for UnaryByteInstruction<O> {
 }
 
 impl<O> UnaryByteInstruction<O>
-	where
-		O: UnaryByteOperation,
+where
+	O: UnaryByteOperation,
 {
 	pub(crate) fn new(src: ByteSource, dst: ByteDestination, op: O) -> Self {
 		Self { src, dst, op }
@@ -156,8 +145,8 @@ impl<O> UnaryByteInstruction<O>
 }
 
 impl<O> ChangesetExecutable for UnaryByteInstruction<O>
-	where
-		O: UnaryByteOperation,
+where
+	O: UnaryByteOperation,
 {
 	type C = O::C;
 
@@ -187,12 +176,7 @@ pub(crate) struct BinaryByteInstruction<O: BinaryByteOperation> {
 
 impl<O: BinaryByteOperation> BinaryByteInstruction<O> {
 	pub(crate) fn new(left: ByteSource, right: ByteSource, dst: ByteDestination, op: O) -> Self {
-		Self {
-			left,
-			right,
-			dst,
-			op,
-		}
+		Self { left, right, dst, op }
 	}
 }
 
@@ -200,8 +184,7 @@ impl<O: BinaryByteOperation> ChangesetExecutable for BinaryByteInstruction<O> {
 	type C = O::C;
 
 	fn compute_change(&self, cpu: &Cpu) -> Result<Self::C, ExecutionError> {
-		self.op
-			.compute_changes(cpu, &self.left, &self.right, &self.dst)
+		self.op.compute_changes(cpu, &self.left, &self.right, &self.dst)
 	}
 }
 
@@ -242,11 +225,8 @@ mod tests {
 	#[test]
 	fn source_offset_in_register() {
 		let mut cpu = Cpu::new();
-		cpu.register_bank
-			.write_single_named(SingleRegisters::B, 0x20);
-		cpu.mapped_ram
-			.write_byte(WORKING_RAM_START + 0x20, 0x12)
-			.unwrap();
+		cpu.register_bank.write_single_named(SingleRegisters::B, 0x20);
+		cpu.mapped_ram.write_byte(WORKING_RAM_START + 0x20, 0x12).unwrap();
 
 		let source = ByteSource::OffsetAddressInRegister {
 			base: WORKING_RAM_START,
@@ -259,9 +239,7 @@ mod tests {
 	#[test]
 	fn source_address_in_immediate() {
 		let mut cpu = Cpu::new();
-		cpu.mapped_ram
-			.write_byte(WORKING_RAM_START + 0x20, 0x12)
-			.unwrap();
+		cpu.mapped_ram.write_byte(WORKING_RAM_START + 0x20, 0x12).unwrap();
 
 		let source = ByteSource::AddressInImmediate(WORKING_RAM_START + 0x20);
 
@@ -292,10 +270,7 @@ mod tests {
 		let dest = ByteDestination::AddressInRegister(DoubleRegisters::HL);
 
 		let actual = dest.change_destination(0x12);
-		let expected: Box<dyn Change> = Box::new(MemoryByteWriteChange::write_to_register(
-			DoubleRegisters::HL,
-			0x12,
-		));
+		let expected: Box<dyn Change> = Box::new(MemoryByteWriteChange::write_to_register(DoubleRegisters::HL, 0x12));
 
 		assert_eq!(actual, expected);
 	}
@@ -305,10 +280,7 @@ mod tests {
 		let dest = ByteDestination::AddressImmediate(WORKING_RAM_START);
 
 		let actual = dest.change_destination(0x12);
-		let expected: Box<dyn Change> = Box::new(MemoryByteWriteChange::write_to_immediate(
-			WORKING_RAM_START,
-			0x12,
-		));
+		let expected: Box<dyn Change> = Box::new(MemoryByteWriteChange::write_to_immediate(WORKING_RAM_START, 0x12));
 
 		assert_eq!(actual, expected);
 	}

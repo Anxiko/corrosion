@@ -32,8 +32,8 @@ pub(super) trait ChangesetExecutable {
 }
 
 impl<T> Executable for T
-	where
-		T: ChangesetExecutable,
+where
+	T: ChangesetExecutable,
 {
 	fn execute(&self, cpu: &mut Cpu) -> Result<(), ExecutionError> {
 		let change = self.compute_change(cpu)?;

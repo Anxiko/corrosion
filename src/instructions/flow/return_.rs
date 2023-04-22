@@ -3,11 +3,9 @@ use std::fmt::{Display, Formatter};
 use crate::hardware::cpu::Cpu;
 use crate::hardware::ram::Rom;
 use crate::hardware::register_bank::BitFlags;
-use crate::instructions::changeset::{
-	Change, ChangeIme, ChangeList, ChangesetExecutable, PcChange, SpChange,
-};
-use crate::instructions::ExecutionError;
+use crate::instructions::changeset::{Change, ChangeIme, ChangeList, ChangesetExecutable, PcChange, SpChange};
 use crate::instructions::flow::BranchCondition;
+use crate::instructions::ExecutionError;
 
 #[derive(Debug)]
 pub(crate) struct ReturnInstruction {
@@ -74,9 +72,7 @@ mod tests {
 	use crate::hardware::cpu::Cpu;
 	use crate::hardware::ram::{Ram, WORKING_RAM_START};
 	use crate::hardware::register_bank::BitFlags;
-	use crate::instructions::changeset::{
-		ChangeIme, ChangeList, ChangesetExecutable, PcChange, SpChange,
-	};
+	use crate::instructions::changeset::{ChangeIme, ChangeList, ChangesetExecutable, PcChange, SpChange};
 	use crate::instructions::flow::{BranchCondition, ReturnInstruction};
 
 	fn get_cpu() -> Cpu {

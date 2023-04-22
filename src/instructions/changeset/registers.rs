@@ -57,9 +57,7 @@ mod tests {
 		let change = SingleRegisterChange::new(ACC_REGISTER, 0x34);
 
 		let mut expected = actual.clone();
-		expected
-			.register_bank
-			.write_single_named(ACC_REGISTER, 0x34);
+		expected.register_bank.write_single_named(ACC_REGISTER, 0x34);
 
 		change.commit_change(&mut actual).unwrap();
 		assert_eq!(actual, expected);
@@ -72,9 +70,7 @@ mod tests {
 		let change = DoubleRegisterChange::new(DoubleRegisters::BC, 0x1234);
 
 		let mut expected = actual.clone();
-		expected
-			.register_bank
-			.write_double_named(DoubleRegisters::BC, 0x1234);
+		expected.register_bank.write_double_named(DoubleRegisters::BC, 0x1234);
 
 		change.commit_change(&mut actual).unwrap();
 		assert_eq!(actual, expected);

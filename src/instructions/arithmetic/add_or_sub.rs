@@ -1,10 +1,10 @@
 use std::fmt::{Display, Formatter};
 
-use crate::hardware::alu::{add_with_carry_u8, AluU8Result, sub_u8_with_carry};
+use crate::hardware::alu::{add_with_carry_u8, sub_u8_with_carry, AluU8Result};
 use crate::hardware::cpu::Cpu;
 use crate::hardware::register_bank::BitFlags;
-use crate::instructions::base::byte::{BinaryByteOperation, ByteDestination, ByteSource};
 use crate::instructions::base::byte::BinaryByteInstruction;
+use crate::instructions::base::byte::{BinaryByteOperation, ByteDestination, ByteSource};
 use crate::instructions::changeset::ChangeList;
 use crate::instructions::ExecutionError;
 
@@ -34,10 +34,22 @@ impl BinaryArithmeticOperation {
 
 	fn as_str(&self) -> &str {
 		match self {
-			Self { type_: BinaryArithmeticOperationType::Add, with_carry: false } => "add",
-			Self { type_: BinaryArithmeticOperationType::Add, with_carry: true } => "adc",
-			Self { type_: BinaryArithmeticOperationType::Sub, with_carry: false } => "sub",
-			Self { type_: BinaryArithmeticOperationType::Sub, with_carry: true } => "sbc"
+			Self {
+				type_: BinaryArithmeticOperationType::Add,
+				with_carry: false,
+			} => "add",
+			Self {
+				type_: BinaryArithmeticOperationType::Add,
+				with_carry: true,
+			} => "adc",
+			Self {
+				type_: BinaryArithmeticOperationType::Sub,
+				with_carry: false,
+			} => "sub",
+			Self {
+				type_: BinaryArithmeticOperationType::Sub,
+				with_carry: true,
+			} => "sbc",
 		}
 	}
 }
@@ -81,18 +93,14 @@ mod tests {
 		BinaryArithmeticInstruction, BinaryArithmeticOperation, BinaryArithmeticOperationType,
 	};
 	use crate::instructions::base::byte::{ByteDestination, ByteSource};
-	use crate::instructions::changeset::{
-		BitFlagsChange, ChangeList, ChangesetExecutable, SingleRegisterChange,
-	};
+	use crate::instructions::changeset::{BitFlagsChange, ChangeList, ChangesetExecutable, SingleRegisterChange};
 
 	#[test]
 	fn add() {
 		let mut cpu = Cpu::new();
 		cpu.register_bank.write_bit_flag(BitFlags::Carry, true);
-		cpu.register_bank
-			.write_single_named(SingleRegisters::A, 0x12);
-		cpu.register_bank
-			.write_single_named(SingleRegisters::B, 0x34);
+		cpu.register_bank.write_single_named(SingleRegisters::A, 0x12);
+		cpu.register_bank.write_single_named(SingleRegisters::B, 0x34);
 		let cpu = cpu;
 
 		let instruction = BinaryArithmeticInstruction::new(
@@ -122,10 +130,8 @@ mod tests {
 	fn add_with_carry() {
 		let mut cpu = Cpu::new();
 		cpu.register_bank.write_bit_flag(BitFlags::Carry, true);
-		cpu.register_bank
-			.write_single_named(SingleRegisters::A, 0x18);
-		cpu.register_bank
-			.write_single_named(SingleRegisters::B, 0x37);
+		cpu.register_bank.write_single_named(SingleRegisters::A, 0x18);
+		cpu.register_bank.write_single_named(SingleRegisters::B, 0x37);
 		let cpu = cpu;
 
 		let instruction = BinaryArithmeticInstruction::new(
@@ -155,10 +161,8 @@ mod tests {
 	fn sub() {
 		let mut cpu = Cpu::new();
 		cpu.register_bank.write_bit_flag(BitFlags::Carry, false);
-		cpu.register_bank
-			.write_single_named(SingleRegisters::A, 0x18);
-		cpu.register_bank
-			.write_single_named(SingleRegisters::B, 0x37);
+		cpu.register_bank.write_single_named(SingleRegisters::A, 0x18);
+		cpu.register_bank.write_single_named(SingleRegisters::B, 0x37);
 		let cpu = cpu;
 
 		let instruction = BinaryArithmeticInstruction::new(
