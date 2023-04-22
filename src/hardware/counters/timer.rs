@@ -1,6 +1,6 @@
 use super::Tick;
 use crate::hardware::ram::{Ram, RamError, Rom};
-use num_enum::{FromPrimitive, IntoPrimitive, TryFromPrimitive};
+use num_enum::{IntoPrimitive, TryFromPrimitive};
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, IntoPrimitive, TryFromPrimitive)]
 #[repr(u8)]
