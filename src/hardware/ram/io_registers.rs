@@ -12,9 +12,10 @@ enum IoRegistersMemoryMappingRegion {
 	DividerRegister,
 	Timers,
 	Audio,
+	Wave,
 }
 
-const IO_REGISTER_MAPPING_SIZE: usize = 5;
+const IO_REGISTER_MAPPING_SIZE: usize = 6;
 const IO_REGISTER_MAPPING_ENTRIES: [MemoryMappingEntry<IoRegistersMemoryMappingRegion>; IO_REGISTER_MAPPING_SIZE] = [
 	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::JoypadInput, 0x0, 1),
 	MemoryMappingEntry::new(
@@ -22,12 +23,16 @@ const IO_REGISTER_MAPPING_ENTRIES: [MemoryMappingEntry<IoRegistersMemoryMappingR
 		1,
 		IO_REGISTER_SERIAL_TRANSFER_SIZE,
 	),
-	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::DividerRegister, 0x4, 1),
-	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::Timers, 0x5, 3),
-	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::Audio, 0x10, 0x16),
+	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::DividerRegister, 0x4, 0x1),
+	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::Timers, 0x5, IO_REGISTER_MAPPING_SIZE),
+	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::Audio, 0x10, IO_REGISTER_AUDIO_SIZE),
+	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::Wave, 0x30, IO_REGISTER_WAVE_SIZE),
 ];
 
-const IO_REGISTER_SERIAL_TRANSFER_SIZE: usize = 2;
+const IO_REGISTER_SERIAL_TRANSFER_SIZE: usize = 0x2;
+const IO_REGISTER_TIMERS_SIZE: usize = 0x3;
+const IO_REGISTER_AUDIO_SIZE: usize = 0x16;
+const IO_REGISTER_WAVE_SIZE: usize = 0x10;
 
 struct IoRegistersMemoryMapping {
 	mapping: MemoryMapping<1, IoRegistersMemoryMappingRegion>,
@@ -36,6 +41,7 @@ struct IoRegistersMemoryMapping {
 	divider_register: DividerRegister,
 	timer: Timer,
 	audio: Audio,
+	wave: RamChip<IO_REGISTER_WAVE_SIZE>,
 }
 
 impl RegionToMemoryMapper for IoRegistersMemoryMapping {
@@ -52,6 +58,7 @@ impl RegionToMemoryMapper for IoRegistersMemoryMapping {
 			IoRegistersMemoryMappingRegion::DividerRegister => Ok(&self.divider_register),
 			IoRegistersMemoryMappingRegion::Timers => Ok(&self.timer),
 			IoRegistersMemoryMappingRegion::Audio => Ok(&self.audio),
+			IoRegistersMemoryMappingRegion::Wave => Ok(&self.wave),
 		}
 	}
 
@@ -62,6 +69,7 @@ impl RegionToMemoryMapper for IoRegistersMemoryMapping {
 			IoRegistersMemoryMappingRegion::DividerRegister => Ok(&mut self.serial_transfer),
 			IoRegistersMemoryMappingRegion::Timers => Ok(&mut self.timer),
 			IoRegistersMemoryMappingRegion::Audio => Ok(&mut self.audio),
+			IoRegistersMemoryMappingRegion::Wave => Ok(&mut self.wave),
 		}
 	}
 }
