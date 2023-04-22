@@ -2,6 +2,7 @@ use crate::hardware::audio::Audio;
 use crate::hardware::counters::divider::DividerRegister;
 use crate::hardware::counters::timer::Timer;
 use crate::hardware::ram::{Ram, RamChip, RamError, Rom};
+use crate::hardware::screen::position::ScreenCord;
 
 use super::memory_mapping::{MemoryMapping, MemoryMappingEntry, RegionToMemoryMapper};
 
@@ -14,9 +15,12 @@ pub(super) enum IoRegistersMemoryMappingRegion {
 	Audio,
 	Wave,
 	LcdControl,
+	LcdStatus,
+	ScreenScroll,
+	ScreenPosition,
 }
 
-const IO_REGISTER_MAPPING_SIZE: usize = 7;
+const IO_REGISTER_MAPPING_SIZE: usize = 10;
 const IO_REGISTER_MAPPING_ENTRIES: [MemoryMappingEntry<IoRegistersMemoryMappingRegion>; IO_REGISTER_MAPPING_SIZE] = [
 	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::JoypadInput, 0x0, 1),
 	MemoryMappingEntry::new(
@@ -29,6 +33,9 @@ const IO_REGISTER_MAPPING_ENTRIES: [MemoryMappingEntry<IoRegistersMemoryMappingR
 	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::Audio, 0x10, IO_REGISTER_AUDIO_SIZE),
 	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::Wave, 0x30, IO_REGISTER_WAVE_SIZE),
 	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::LcdControl, 0x40, 0x1),
+	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::LcdStatus, 0x41, 0x1),
+	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::ScreenScroll, 0x42, 0x2),
+	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::ScreenPosition, 0x4A, 0x2),
 ];
 
 const IO_REGISTER_SERIAL_TRANSFER_SIZE: usize = 0x2;
@@ -46,6 +53,9 @@ pub(super) struct IoRegistersMemoryMapping {
 	audio: Audio,
 	wave: RamChip<IO_REGISTER_WAVE_SIZE>,
 	lcd_control: u8,
+	lcd_status: u8,
+	screen_scroll: ScreenCord,
+	screen_position: ScreenCord,
 }
 
 impl Default for MemoryMapping<IO_REGISTER_MAPPING_SIZE, IoRegistersMemoryMappingRegion> {
@@ -70,6 +80,9 @@ impl RegionToMemoryMapper for IoRegistersMemoryMapping {
 			IoRegistersMemoryMappingRegion::Audio => Ok(&self.audio),
 			IoRegistersMemoryMappingRegion::Wave => Ok(&self.wave),
 			IoRegistersMemoryMappingRegion::LcdControl => Ok(&self.lcd_control),
+			IoRegistersMemoryMappingRegion::LcdStatus => Ok(&self.lcd_status),
+			IoRegistersMemoryMappingRegion::ScreenPosition => Ok(&self.screen_position),
+			IoRegistersMemoryMappingRegion::ScreenScroll => Ok(&self.screen_scroll),
 		}
 	}
 
@@ -82,6 +95,9 @@ impl RegionToMemoryMapper for IoRegistersMemoryMapping {
 			IoRegistersMemoryMappingRegion::Audio => Ok(&mut self.audio),
 			IoRegistersMemoryMappingRegion::Wave => Ok(&mut self.wave),
 			IoRegistersMemoryMappingRegion::LcdControl => Ok(&mut self.lcd_control),
+			IoRegistersMemoryMappingRegion::LcdStatus => Ok(&mut self.lcd_status),
+			IoRegistersMemoryMappingRegion::ScreenPosition => Ok(&mut self.screen_position),
+			IoRegistersMemoryMappingRegion::ScreenScroll => Ok(&mut self.screen_scroll),
 		}
 	}
 }
