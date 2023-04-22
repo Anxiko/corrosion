@@ -1,4 +1,5 @@
 pub(super) mod alu;
+pub(crate) mod counters;
 pub mod cpu;
 pub(crate) mod ime;
 pub(crate) mod ram;

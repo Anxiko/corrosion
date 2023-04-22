@@ -53,8 +53,8 @@ pub(super) trait RegionToMemoryMapper {
 	type R: MemoryMappingEntryRegion;
 	fn matching_entry(&self, address: u16) -> Result<&MemoryMappingEntry<Self::R>, RamError>;
 
-	fn get_rom(&self, region: Self::R) -> Result<Box<dyn Rom>, RamError>;
-	fn get_ram(&self, region: Self::R) -> Result<Box<dyn Ram>, RamError>;
+	fn get_rom(&self, region: Self::R) -> Result<&dyn Rom, RamError>;
+	fn get_ram(&self, region: Self::R) -> Result<&dyn Ram, RamError>;
 }
 
 impl<M: RegionToMemoryMapper> Rom for M {
