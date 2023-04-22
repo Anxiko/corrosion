@@ -328,7 +328,7 @@ impl Ram for u8 {
 		}
 	}
 
-	fn write_double_byte(&mut self, address: u16, value: u16) -> Result<(), RamError> {
+	fn write_double_byte(&mut self, address: u16, _value: u16) -> Result<(), RamError> {
 		Err(RamError::InvalidAddress(address))
 	}
 }
