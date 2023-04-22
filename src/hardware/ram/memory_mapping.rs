@@ -8,6 +8,7 @@ pub(super) trait MemoryMappingEntryRegion: Copy + Clone + PartialEq + Eq + Debug
 
 impl<T: Copy + Clone + PartialEq + Eq + Debug> MemoryMappingEntryRegion for T {}
 
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub(super) struct MemoryMappingEntry<R: MemoryMappingEntryRegion> {
 	region: R,
 	offset: u16,
@@ -51,10 +52,10 @@ impl<const S: usize, R: MemoryMappingEntryRegion> MemoryMapping<S, R> {
 
 pub(super) trait RegionToMemoryMapper {
 	type R: MemoryMappingEntryRegion;
-	fn matching_entry(&self, address: u16) -> Result<&MemoryMappingEntry<Self::R>, RamError>;
+	fn matching_entry(&self, address: u16) -> Result<MemoryMappingEntry<Self::R>, RamError>;
 
 	fn get_rom(&self, region: Self::R) -> Result<&dyn Rom, RamError>;
-	fn get_ram(&self, region: Self::R) -> Result<&dyn Ram, RamError>;
+	fn get_ram(&mut self, region: Self::R) -> Result<&mut dyn Ram, RamError>;
 }
 
 impl<M: RegionToMemoryMapper> Rom for M {
@@ -77,14 +78,14 @@ impl<M: RegionToMemoryMapper> Ram for M {
 	fn write_byte(&mut self, address: u16, value: u8) -> Result<(), RamError> {
 		let entry = self.matching_entry(address)?;
 		self.get_ram(entry.region)
-			.and_then(|mut ram| ram.write_byte(entry.adjust_address(address), value))
+			.and_then(|ram| ram.write_byte(entry.adjust_address(address), value))
 			.map_err(|err| entry.bubble_error(err))
 	}
 
 	fn write_double_byte(&mut self, address: u16, value: u16) -> Result<(), RamError> {
 		let entry = self.matching_entry(address)?;
 		self.get_ram(entry.region)
-			.and_then(|mut ram| ram.write_double_byte(entry.adjust_address(address), value))
+			.and_then(|ram| ram.write_double_byte(entry.adjust_address(address), value))
 			.map_err(|err| entry.bubble_error(err))
 	}
 }

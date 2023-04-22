@@ -34,8 +34,8 @@ struct IoRegistersMemoryMapping {
 impl RegionToMemoryMapper for IoRegistersMemoryMapping {
 	type R = IoRegistersMemoryMappingRegion;
 
-	fn matching_entry(&self, address: u16) -> Result<&MemoryMappingEntry<Self::R>, RamError> {
-		self.mapping.find_mapping(address)
+	fn matching_entry(&self, address: u16) -> Result<MemoryMappingEntry<Self::R>, RamError> {
+		self.mapping.find_mapping(address).copied()
 	}
 
 	fn get_rom(&self, region: Self::R) -> Result<&dyn Rom, RamError> {
@@ -46,11 +46,11 @@ impl RegionToMemoryMapper for IoRegistersMemoryMapping {
 		}
 	}
 
-	fn get_ram(&self, region: Self::R) -> Result<&dyn Ram, RamError> {
+	fn get_ram(&mut self, region: Self::R) -> Result<&mut dyn Ram, RamError> {
 		match region {
-			IoRegistersMemoryMappingRegion::JoypadInput => Ok(&self.joypad_input),
-			IoRegistersMemoryMappingRegion::SerialTransfer => Ok(&self.serial_transfer),
-			IoRegistersMemoryMappingRegion::DividerRegister => Ok(&self.serial_transfer),
+			IoRegistersMemoryMappingRegion::JoypadInput => Ok(&mut self.joypad_input),
+			IoRegistersMemoryMappingRegion::SerialTransfer => Ok(&mut self.serial_transfer),
+			IoRegistersMemoryMappingRegion::DividerRegister => Ok(&mut self.serial_transfer),
 		}
 	}
 }
