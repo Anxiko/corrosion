@@ -6,7 +6,7 @@ use crate::hardware::ram::{Ram, RamChip, RamError, Rom};
 use super::memory_mapping::{MemoryMapping, MemoryMappingEntry, RegionToMemoryMapper};
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
-enum IoRegistersMemoryMappingRegion {
+pub(super) enum IoRegistersMemoryMappingRegion {
 	JoypadInput,
 	SerialTransfer,
 	DividerRegister,
@@ -25,7 +25,7 @@ const IO_REGISTER_MAPPING_ENTRIES: [MemoryMappingEntry<IoRegistersMemoryMappingR
 		IO_REGISTER_SERIAL_TRANSFER_SIZE,
 	),
 	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::DividerRegister, 0x4, 0x1),
-	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::Timers, 0x5, IO_REGISTER_MAPPING_SIZE),
+	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::Timers, 0x5, IO_REGISTER_TIMERS_SIZE),
 	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::Audio, 0x10, IO_REGISTER_AUDIO_SIZE),
 	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::Wave, 0x30, IO_REGISTER_WAVE_SIZE),
 	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::LcdControl, 0x40, 0x1),
@@ -36,8 +36,9 @@ const IO_REGISTER_TIMERS_SIZE: usize = 0x3;
 const IO_REGISTER_AUDIO_SIZE: usize = 0x16;
 const IO_REGISTER_WAVE_SIZE: usize = 0x10;
 
-struct IoRegistersMemoryMapping {
-	mapping: MemoryMapping<1, IoRegistersMemoryMappingRegion>,
+#[derive(Debug, Eq, PartialEq, Clone, Default)]
+pub(super) struct IoRegistersMemoryMapping {
+	mapping: MemoryMapping<IO_REGISTER_MAPPING_SIZE, IoRegistersMemoryMappingRegion>,
 	joypad_input: u8,
 	serial_transfer: RamChip<IO_REGISTER_SERIAL_TRANSFER_SIZE>,
 	divider_register: DividerRegister,
@@ -45,6 +46,12 @@ struct IoRegistersMemoryMapping {
 	audio: Audio,
 	wave: RamChip<IO_REGISTER_WAVE_SIZE>,
 	lcd_control: u8,
+}
+
+impl Default for MemoryMapping<IO_REGISTER_MAPPING_SIZE, IoRegistersMemoryMappingRegion> {
+	fn default() -> Self {
+		Self::new(IO_REGISTER_MAPPING_ENTRIES)
+	}
 }
 
 impl RegionToMemoryMapper for IoRegistersMemoryMapping {

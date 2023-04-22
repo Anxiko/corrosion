@@ -33,12 +33,13 @@ impl<R: MemoryMappingEntryRegion> MemoryMappingEntry<R> {
 	}
 }
 
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub(super) struct MemoryMapping<const S: usize, R: MemoryMappingEntryRegion> {
 	regions: [MemoryMappingEntry<R>; S],
 }
 
 impl<const S: usize, R: MemoryMappingEntryRegion> MemoryMapping<S, R> {
-	fn new(regions: [MemoryMappingEntry<R>; S]) -> Self {
+	pub(super) fn new(regions: [MemoryMappingEntry<R>; S]) -> Self {
 		Self { regions }
 	}
 

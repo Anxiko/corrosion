@@ -1,7 +1,7 @@
 use super::Tick;
 use crate::hardware::ram::{Ram, RamError, Rom};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub(crate) struct DividerRegister {
 	value: u16,
 }

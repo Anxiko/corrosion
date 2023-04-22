@@ -1,6 +1,7 @@
 use std::fmt::{Display, Formatter};
 
 use crate::hardware::ram::bootstrap::BOOTSTRAP_DATA;
+use crate::hardware::ram::io_registers::IoRegistersMemoryMapping;
 
 pub(crate) const BOOSTRAP_RAM_START: u16 = 0x0000;
 
@@ -80,12 +81,12 @@ impl Display for RamError {
 	}
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct MappedRam {
 	boostrap_ram: RomChip<'static, BOOTSTRAP_RAM_SIZE>,
 	working_ram: RamChip<WORKING_RAM_SIZE>,
 	video_ram: RamChip<VIDEO_RAM_SIZE>,
-	mapped_io_registers: MappedIoRegisters,
+	mapped_io_registers: IoRegistersMemoryMapping,
 	oam: RamChip<OAM_SIZE>,
 }
 
@@ -142,10 +143,10 @@ impl MappedRam {
 	pub(crate) fn new() -> Self {
 		Self {
 			boostrap_ram: RomChip::new(BOOTSTRAP_DATA),
-			working_ram: RamChip::new(),
-			video_ram: RamChip::new(),
-			mapped_io_registers: MappedIoRegisters::new(),
-			oam: RamChip::new(),
+			working_ram: RamChip::default(),
+			video_ram: RamChip::default(),
+			mapped_io_registers: IoRegistersMemoryMapping::default(),
+			oam: RamChip::default(),
 		}
 	}
 
@@ -198,7 +199,7 @@ impl Ram for MappedRam {
 	}
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct RomChip<'a, const S: usize> {
 	ref_memory: &'a [u8; S],
 }
@@ -218,16 +219,20 @@ impl<'a, const S: usize> Rom for RomChip<'a, S> {
 	}
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 struct RamChip<const S: usize> {
 	memory: Box<[u8; S]>,
 }
 
 impl<const S: usize> RamChip<S> {
-	fn new() -> Self {
-		Self {
-			memory: Box::new([0; S]),
-		}
+	fn new(memory: Box<[u8; S]>) -> Self {
+		Self { memory }
+	}
+}
+
+impl<const S: usize> Default for RamChip<S> {
+	fn default() -> Self {
+		RamChip::new(Box::new([0; S]))
 	}
 }
 
@@ -249,58 +254,6 @@ impl<const S: usize> Ram for RamChip<S> {
 
 		*ptr = value;
 		Ok(())
-	}
-}
-
-#[derive(Copy, Clone)]
-enum IoRegisters {
-	LcdControl,
-}
-
-#[derive(Default, Debug, PartialEq, Clone)]
-struct MappedIoRegisters {
-	lcd_control: u8,
-}
-
-impl MappedIoRegisters {
-	fn new() -> Self {
-		Self::default()
-	}
-
-	fn resolve_address(address: u16) -> Result<IoRegisters, RamError> {
-		match address {
-			0x40 => Ok(IoRegisters::LcdControl),
-			address if address < 0x80 => Err(RamError::UnmappedRegion(address)),
-			_ => Err(RamError::InvalidAddress(address)),
-		}
-	}
-
-	fn get_io_register(&self, io_register: IoRegisters) -> &u8 {
-		match io_register {
-			IoRegisters::LcdControl => &self.lcd_control,
-		}
-	}
-
-	fn get_io_register_mut(&mut self, io_register: IoRegisters) -> &mut u8 {
-		match io_register {
-			IoRegisters::LcdControl => &mut self.lcd_control,
-		}
-	}
-}
-
-impl Rom for MappedIoRegisters {
-	fn read_byte(&self, address: u16) -> Result<u8, RamError> {
-		MappedIoRegisters::resolve_address(address).map(|io_register| *self.get_io_register(io_register))
-	}
-}
-
-impl Ram for MappedIoRegisters {
-	fn write_byte(&mut self, address: u16, value: u8) -> Result<(), RamError> {
-		MappedIoRegisters::resolve_address(address)
-			.map(|io_register| self.get_io_register_mut(io_register))
-			.map(|ptr| {
-				*ptr = value;
-			})
 	}
 }
 

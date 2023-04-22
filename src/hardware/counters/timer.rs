@@ -2,9 +2,10 @@ use super::Tick;
 use crate::hardware::ram::{Ram, RamError, Rom};
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, IntoPrimitive, TryFromPrimitive)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, IntoPrimitive, TryFromPrimitive, Default)]
 #[repr(u8)]
 enum InputClockSelect {
+	#[default]
 	C00 = 0b00,
 	C01 = 0b01,
 	C10 = 0b10,
@@ -22,6 +23,7 @@ impl InputClockSelect {
 	}
 }
 
+#[derive(Debug, Eq, PartialEq, Clone, Default)]
 pub(crate) struct Timer {
 	enabled: bool,
 	selected_clock_speed: InputClockSelect,

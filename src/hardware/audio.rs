@@ -1,6 +1,7 @@
 use crate::hardware::ram::{Ram, RamError, Rom};
 
 // TODO: implement audio
+#[derive(Debug, Eq, PartialEq, Clone, Default)]
 pub(crate) struct Audio;
 
 impl Rom for Audio {
