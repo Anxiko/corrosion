@@ -18,9 +18,10 @@ pub(super) enum IoRegistersMemoryMappingRegion {
 	LcdStatus,
 	ScreenScroll,
 	ScreenPosition,
+	Bgp,
 }
 
-const IO_REGISTER_MAPPING_SIZE: usize = 10;
+const IO_REGISTER_MAPPING_SIZE: usize = 11;
 const IO_REGISTER_MAPPING_ENTRIES: [MemoryMappingEntry<IoRegistersMemoryMappingRegion>; IO_REGISTER_MAPPING_SIZE] = [
 	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::JoypadInput, 0x0, 1),
 	MemoryMappingEntry::new(
@@ -36,6 +37,7 @@ const IO_REGISTER_MAPPING_ENTRIES: [MemoryMappingEntry<IoRegistersMemoryMappingR
 	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::LcdStatus, 0x41, 0x1),
 	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::ScreenScroll, 0x42, 0x2),
 	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::ScreenPosition, 0x4A, 0x2),
+	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::Bgp, 0x47, 0x1),
 ];
 
 const IO_REGISTER_SERIAL_TRANSFER_SIZE: usize = 0x2;
@@ -56,6 +58,7 @@ pub(super) struct IoRegistersMemoryMapping {
 	lcd_status: u8,
 	screen_scroll: ScreenCord,
 	screen_position: ScreenCord,
+	bgp: u8,
 }
 
 impl Default for MemoryMapping<IO_REGISTER_MAPPING_SIZE, IoRegistersMemoryMappingRegion> {
@@ -83,6 +86,7 @@ impl RegionToMemoryMapper for IoRegistersMemoryMapping {
 			IoRegistersMemoryMappingRegion::LcdStatus => Ok(&self.lcd_status),
 			IoRegistersMemoryMappingRegion::ScreenPosition => Ok(&self.screen_position),
 			IoRegistersMemoryMappingRegion::ScreenScroll => Ok(&self.screen_scroll),
+			IoRegistersMemoryMappingRegion::Bgp => Ok(&self.bgp),
 		}
 	}
 
@@ -98,6 +102,7 @@ impl RegionToMemoryMapper for IoRegistersMemoryMapping {
 			IoRegistersMemoryMappingRegion::LcdStatus => Ok(&mut self.lcd_status),
 			IoRegistersMemoryMappingRegion::ScreenPosition => Ok(&mut self.screen_position),
 			IoRegistersMemoryMappingRegion::ScreenScroll => Ok(&mut self.screen_scroll),
+			IoRegistersMemoryMappingRegion::Bgp => Ok(&mut self.bgp),
 		}
 	}
 }
