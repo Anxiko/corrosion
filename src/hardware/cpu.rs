@@ -38,6 +38,10 @@ impl Cpu {
 		let byte = self.mapped_ram.read_byte(pc)?;
 		Ok(byte)
 	}
+
+	pub fn current_pc(&self) -> u16 {
+		self.pc.read()
+	}
 }
 
 impl Default for Cpu {

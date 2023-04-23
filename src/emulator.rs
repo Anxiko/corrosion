@@ -3,8 +3,9 @@ use corrosion::hardware::cpu::Cpu;
 use corrosion::instructions::ExecutionError;
 
 fn update_cpu(cpu: &mut Cpu) -> Result<(), ExecutionError> {
+	let pc = cpu.current_pc();
 	let instruction = fetch_and_decode(cpu)?;
-	println!("{instruction}");
+	println!("{pc:#06X}: {instruction}");
 	instruction.execute(cpu)
 }
 
