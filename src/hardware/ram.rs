@@ -1,5 +1,3 @@
-use std::fmt::{Display, Formatter};
-
 use crate::hardware::ram::bootstrap::BOOTSTRAP_DATA;
 use crate::hardware::ram::io_registers::IoRegistersMemoryMapping;
 
@@ -17,10 +15,12 @@ pub(crate) const OAM_START: u16 = 0xFE00;
 pub(crate) const IO_REGISTERS_MAPPING_START: u16 = 0xFF00;
 
 mod bootstrap;
+mod error;
 mod io_registers;
 mod memory_mapping;
 mod traits;
 
+pub(crate) use error::RamError;
 pub(crate) use traits::{Ram, Rom};
 
 const BOOTSTRAP_RAM_SIZE: usize = 0x100;
@@ -28,39 +28,6 @@ const WORKING_RAM_SIZE: usize = (ECHO_RAM_START - WORKING_RAM_START) as usize;
 const VIDEO_RAM_SIZE: usize = 8 * 1024;
 const IO_REGISTERS_MAPPING_SIZE: usize = 0x80;
 const OAM_SIZE: usize = 0xA0;
-
-#[derive(Debug, Copy, Clone)]
-pub enum RamError {
-	InvalidAddress(u16),
-	UnmappedRegion(u16),
-	WriteOnRom(u16),
-}
-
-impl RamError {
-	fn adjust_for_offset(self, offset: u16) -> Self {
-		match self {
-			Self::InvalidAddress(address) => Self::InvalidAddress(address + offset),
-			Self::UnmappedRegion(address) => Self::UnmappedRegion(address + offset),
-			Self::WriteOnRom(address) => Self::WriteOnRom(address + offset),
-		}
-	}
-}
-
-impl Display for RamError {
-	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-		match self {
-			Self::UnmappedRegion(address) => {
-				write!(f, "No mapped RAM region for {address:#06X}")
-			}
-			Self::InvalidAddress(address) => {
-				write!(f, "Attempted to access invalid address {address:#06X}")
-			}
-			Self::WriteOnRom(address) => {
-				write!(f, "Attempted write to ROM address {address:#06X}")
-			}
-		}
-	}
-}
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct MappedRam {
