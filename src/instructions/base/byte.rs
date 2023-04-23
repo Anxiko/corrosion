@@ -31,7 +31,7 @@ impl Display for ByteSource {
 				write!(f, "({a:#06X})")
 			}
 			Self::Immediate(i) => {
-				write!(f, "({i:#04X})")
+				write!(f, "{i:#04X}")
 			}
 		}
 	}
