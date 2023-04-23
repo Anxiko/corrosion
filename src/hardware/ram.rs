@@ -2,7 +2,7 @@ use crate::hardware::ram::bootstrap::BOOTSTRAP_DATA;
 use crate::hardware::ram::io_registers::IoRegistersMemoryMapping;
 use chips::{RamChip, RomChip};
 
-pub(crate) const BOOSTRAP_RAM_START: u16 = 0x0000;
+pub(crate) const BOOTSTRAP_RAM_START: u16 = 0x0000;
 
 pub(crate) const VIDEO_RAM_START: u16 = 0x8000;
 #[allow(unused)]
@@ -22,6 +22,7 @@ mod io_registers;
 mod memory_mapping;
 mod traits;
 
+use crate::hardware::ram::memory_mapping::{MemoryMapping, MemoryMappingEntry, RegionToMemoryMapper, RegionToMemoryMapperError};
 pub(crate) use error::RamError;
 pub(crate) use traits::{Ram, Rom};
 
@@ -31,17 +32,8 @@ const VIDEO_RAM_SIZE: usize = 8 * 1024;
 const IO_REGISTERS_MAPPING_SIZE: usize = 0x80;
 const OAM_SIZE: usize = 0xA0;
 
-#[derive(Debug, PartialEq, Eq, Clone)]
-pub struct MappedRam {
-	boostrap_ram: RomChip<'static, BOOTSTRAP_RAM_SIZE>,
-	working_ram: RamChip<WORKING_RAM_SIZE>,
-	video_ram: RamChip<VIDEO_RAM_SIZE>,
-	mapped_io_registers: IoRegistersMemoryMapping,
-	oam: RamChip<OAM_SIZE>,
-}
-
-#[derive(Copy, Clone)]
-enum RamRegion {
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
+enum MappedMemoryRegion {
 	Bootstrap,
 	WorkingRam,
 	VideoRam,
@@ -49,49 +41,33 @@ enum RamRegion {
 	Oam,
 }
 
-struct RamMapping {
-	region: RamRegion,
-	offset: u16,
-	size: usize,
-}
-
-impl RamMapping {
-	fn mapped_here(&self, address: u16) -> bool {
-		address >= self.offset && usize::from(address - self.offset) < self.size
-	}
-}
-
-const RAM_MAPPINGS: [RamMapping; 5] = [
-	RamMapping {
-		region: RamRegion::Bootstrap,
-		offset: BOOSTRAP_RAM_START,
-		size: BOOTSTRAP_RAM_SIZE,
-	},
-	RamMapping {
-		region: RamRegion::WorkingRam,
-		offset: WORKING_RAM_START,
-		size: WORKING_RAM_SIZE,
-	},
-	RamMapping {
-		region: RamRegion::VideoRam,
-		offset: VIDEO_RAM_START,
-		size: VIDEO_RAM_SIZE,
-	},
-	RamMapping {
-		region: RamRegion::IoRegisters,
-		offset: IO_REGISTERS_MAPPING_START,
-		size: IO_REGISTERS_MAPPING_SIZE,
-	},
-	RamMapping {
-		region: RamRegion::Oam,
-		offset: OAM_START,
-		size: OAM_SIZE,
-	},
+const MEMORY_MAPPING_SIZE: usize = 5;
+const MEMORY_MAPPING_REGIONS: [MemoryMappingEntry<MappedMemoryRegion>; MEMORY_MAPPING_SIZE] = [
+	MemoryMappingEntry::new(MappedMemoryRegion::Bootstrap, BOOTSTRAP_RAM_START, BOOTSTRAP_RAM_SIZE),
+	MemoryMappingEntry::new(MappedMemoryRegion::WorkingRam, WORKING_RAM_START, WORKING_RAM_SIZE),
+	MemoryMappingEntry::new(MappedMemoryRegion::VideoRam, VIDEO_RAM_START, VIDEO_RAM_SIZE),
+	MemoryMappingEntry::new(
+		MappedMemoryRegion::IoRegisters,
+		IO_REGISTERS_MAPPING_START,
+		IO_REGISTERS_MAPPING_SIZE,
+	),
+	MemoryMappingEntry::new(MappedMemoryRegion::Oam, OAM_START, OAM_SIZE),
 ];
 
-impl MappedRam {
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub struct MappedMemory {
+	mapping: MemoryMapping<MEMORY_MAPPING_SIZE, MappedMemoryRegion>,
+	boostrap_ram: RomChip<'static, BOOTSTRAP_RAM_SIZE>,
+	working_ram: RamChip<WORKING_RAM_SIZE>,
+	video_ram: RamChip<VIDEO_RAM_SIZE>,
+	mapped_io_registers: IoRegistersMemoryMapping,
+	oam: RamChip<OAM_SIZE>,
+}
+
+impl MappedMemory {
 	pub(crate) fn new() -> Self {
 		Self {
+			mapping: MemoryMapping::new(MEMORY_MAPPING_REGIONS),
 			boostrap_ram: RomChip::new(BOOTSTRAP_DATA),
 			working_ram: RamChip::default(),
 			video_ram: RamChip::default(),
@@ -99,52 +75,32 @@ impl MappedRam {
 			oam: RamChip::default(),
 		}
 	}
-
-	fn mapping_for_address(address: u16) -> Option<&'static RamMapping> {
-		RAM_MAPPINGS.iter().find(|mapping| mapping.mapped_here(address))
-	}
-
-	fn get_mapped_ram(&self, region: RamRegion) -> &dyn Rom {
-		match region {
-			RamRegion::Bootstrap => &self.boostrap_ram,
-			RamRegion::WorkingRam => &self.working_ram,
-			RamRegion::VideoRam => &self.video_ram,
-			RamRegion::IoRegisters => &self.mapped_io_registers,
-			RamRegion::Oam => &self.oam,
-		}
-	}
-
-	fn get_mapped_ram_mut(&mut self, region: RamRegion) -> &mut dyn Ram {
-		match region {
-			RamRegion::Bootstrap => panic!("Attempted to obtain write access to a ROM chip"),
-			RamRegion::WorkingRam => &mut self.working_ram,
-			RamRegion::VideoRam => &mut self.video_ram,
-			RamRegion::IoRegisters => &mut self.mapped_io_registers,
-			RamRegion::Oam => &mut self.oam,
-		}
-	}
 }
 
-impl Rom for MappedRam {
-	fn read_byte(&self, address: u16) -> Result<u8, RamError> {
-		let ram_mapping = MappedRam::mapping_for_address(address).ok_or(RamError::UnmappedRegion(address))?;
-		let mapped_ram = self.get_mapped_ram(ram_mapping.region);
+impl RegionToMemoryMapper for MappedMemory {
+	type R = MappedMemoryRegion;
 
-		let region_address = address - ram_mapping.offset;
-		mapped_ram
-			.read_byte(region_address)
-			.map_err(|ram_error| ram_error.adjust_for_offset(ram_mapping.offset))
+	fn matching_entry(&self, address: u16) -> Result<MemoryMappingEntry<Self::R>, RamError> {
+		self.mapping.find_mapping(address).copied()
 	}
-}
 
-impl Ram for MappedRam {
-	fn write_byte(&mut self, address: u16, value: u8) -> Result<(), RamError> {
-		let ram_mapping = MappedRam::mapping_for_address(address).ok_or(RamError::UnmappedRegion(address))?;
-		let mapped_ram = self.get_mapped_ram_mut(ram_mapping.region);
+	fn get_rom(&self, region: Self::R) -> Result<&dyn Rom, RegionToMemoryMapperError> {
+		Ok(match region {
+			MappedMemoryRegion::Bootstrap => &self.boostrap_ram,
+			MappedMemoryRegion::WorkingRam => &self.working_ram,
+			MappedMemoryRegion::VideoRam => &self.video_ram,
+			MappedMemoryRegion::IoRegisters => &self.mapped_io_registers,
+			MappedMemoryRegion::Oam => &self.oam,
+		})
+	}
 
-		let region_address = address - ram_mapping.offset;
-		mapped_ram
-			.write_byte(region_address, value)
-			.map_err(|ram_error| ram_error.adjust_for_offset(ram_mapping.offset))
+	fn get_ram(&mut self, region: Self::R) -> Result<&mut dyn Ram, RegionToMemoryMapperError> {
+		match region {
+			MappedMemoryRegion::Bootstrap => Err(RegionToMemoryMapperError::WriteOnRom),
+			MappedMemoryRegion::WorkingRam => Ok(&mut self.working_ram),
+			MappedMemoryRegion::VideoRam => Ok(&mut self.video_ram),
+			MappedMemoryRegion::IoRegisters => Ok(&mut self.mapped_io_registers),
+			MappedMemoryRegion::Oam => Ok(&mut self.oam),
+		}
 	}
 }

@@ -3,13 +3,13 @@ use crate::hardware::ram::Rom;
 use crate::hardware::register_bank::{ProgramCounter, StackPointer};
 use crate::instructions::ExecutionError;
 
-use super::ram::MappedRam;
+use super::ram::MappedMemory;
 use super::register_bank::RegisterBank;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Cpu {
 	pub(crate) register_bank: RegisterBank,
-	pub(crate) mapped_ram: MappedRam,
+	pub(crate) mapped_ram: MappedMemory,
 	pub(crate) pc: ProgramCounter,
 	pub(crate) sp: StackPointer,
 	pub(crate) ime: Ime,
@@ -19,7 +19,7 @@ impl Cpu {
 	pub fn new() -> Self {
 		Self {
 			register_bank: RegisterBank::new(),
-			mapped_ram: MappedRam::new(),
+			mapped_ram: MappedMemory::new(),
 			pc: ProgramCounter::new(),
 			sp: StackPointer::new(),
 			ime: Ime::new(),

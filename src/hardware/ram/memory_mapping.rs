@@ -51,18 +51,32 @@ impl<const S: usize, R: MemoryMappingEntryRegion> MemoryMapping<S, R> {
 	}
 }
 
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
+pub(super) enum RegionToMemoryMapperError {
+	WriteOnRom,
+}
+
+impl RegionToMemoryMapperError {
+	fn as_ram_error(&self, address: u16) -> RamError {
+		match self {
+			Self::WriteOnRom => RamError::WriteOnRom(address),
+		}
+	}
+}
+
 pub(super) trait RegionToMemoryMapper {
 	type R: MemoryMappingEntryRegion;
 	fn matching_entry(&self, address: u16) -> Result<MemoryMappingEntry<Self::R>, RamError>;
 
-	fn get_rom(&self, region: Self::R) -> Result<&dyn Rom, RamError>;
-	fn get_ram(&mut self, region: Self::R) -> Result<&mut dyn Ram, RamError>;
+	fn get_rom(&self, region: Self::R) -> Result<&dyn Rom, RegionToMemoryMapperError>;
+	fn get_ram(&mut self, region: Self::R) -> Result<&mut dyn Ram, RegionToMemoryMapperError>;
 }
 
 impl<M: RegionToMemoryMapper> Rom for M {
 	fn read_byte(&self, address: u16) -> Result<u8, RamError> {
 		let entry = self.matching_entry(address)?;
 		self.get_rom(entry.region)
+			.map_err(|e| e.as_ram_error(address))
 			.and_then(|rom| rom.read_byte(entry.adjust_address(address)))
 			.map_err(|err| entry.bubble_error(err))
 	}
@@ -70,6 +84,7 @@ impl<M: RegionToMemoryMapper> Rom for M {
 	fn read_double_byte(&self, address: u16) -> Result<u16, RamError> {
 		let entry = self.matching_entry(address)?;
 		self.get_rom(entry.region)
+			.map_err(|e| e.as_ram_error(address))
 			.and_then(|rom| rom.read_double_byte(entry.adjust_address(address)))
 			.map_err(|err| entry.bubble_error(err))
 	}
@@ -79,6 +94,7 @@ impl<M: RegionToMemoryMapper> Ram for M {
 	fn write_byte(&mut self, address: u16, value: u8) -> Result<(), RamError> {
 		let entry = self.matching_entry(address)?;
 		self.get_ram(entry.region)
+			.map_err(|e| e.as_ram_error(address))
 			.and_then(|ram| ram.write_byte(entry.adjust_address(address), value))
 			.map_err(|err| entry.bubble_error(err))
 	}
@@ -86,6 +102,7 @@ impl<M: RegionToMemoryMapper> Ram for M {
 	fn write_double_byte(&mut self, address: u16, value: u16) -> Result<(), RamError> {
 		let entry = self.matching_entry(address)?;
 		self.get_ram(entry.region)
+			.map_err(|e| e.as_ram_error(address))
 			.and_then(|ram| ram.write_double_byte(entry.adjust_address(address), value))
 			.map_err(|err| entry.bubble_error(err))
 	}

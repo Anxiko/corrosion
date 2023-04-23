@@ -3,6 +3,7 @@ use crate::hardware::counters::divider::DividerRegister;
 use crate::hardware::counters::timer::Timer;
 use crate::hardware::ram::{Ram, RamError, Rom};
 use crate::hardware::ram::chips::RamChip;
+use crate::hardware::ram::memory_mapping::RegionToMemoryMapperError;
 use crate::hardware::screen::position::ScreenCord;
 
 use super::memory_mapping::{MemoryMapping, MemoryMappingEntry, RegionToMemoryMapper};
@@ -75,7 +76,7 @@ impl RegionToMemoryMapper for IoRegistersMemoryMapping {
 		self.mapping.find_mapping(address).copied()
 	}
 
-	fn get_rom(&self, region: Self::R) -> Result<&dyn Rom, RamError> {
+	fn get_rom(&self, region: Self::R) -> Result<&dyn Rom, RegionToMemoryMapperError> {
 		match region {
 			IoRegistersMemoryMappingRegion::JoypadInput => Ok(&self.joypad_input),
 			IoRegistersMemoryMappingRegion::SerialTransfer => Ok(&self.serial_transfer),
@@ -91,7 +92,7 @@ impl RegionToMemoryMapper for IoRegistersMemoryMapping {
 		}
 	}
 
-	fn get_ram(&mut self, region: Self::R) -> Result<&mut dyn Ram, RamError> {
+	fn get_ram(&mut self, region: Self::R) -> Result<&mut dyn Ram, RegionToMemoryMapperError> {
 		match region {
 			IoRegistersMemoryMappingRegion::JoypadInput => Ok(&mut self.joypad_input),
 			IoRegistersMemoryMappingRegion::SerialTransfer => Ok(&mut self.serial_transfer),
