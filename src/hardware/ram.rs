@@ -1,5 +1,6 @@
 use crate::hardware::ram::bootstrap::BOOTSTRAP_DATA;
 use crate::hardware::ram::io_registers::IoRegistersMemoryMapping;
+use chips::{RamChip, RomChip};
 
 pub(crate) const BOOSTRAP_RAM_START: u16 = 0x0000;
 
@@ -15,6 +16,7 @@ pub(crate) const OAM_START: u16 = 0xFE00;
 pub(crate) const IO_REGISTERS_MAPPING_START: u16 = 0xFF00;
 
 mod bootstrap;
+mod chips;
 mod error;
 mod io_registers;
 mod memory_mapping;
@@ -144,63 +146,5 @@ impl Ram for MappedRam {
 		mapped_ram
 			.write_byte(region_address, value)
 			.map_err(|ram_error| ram_error.adjust_for_offset(ram_mapping.offset))
-	}
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-struct RomChip<'a, const S: usize> {
-	ref_memory: &'a [u8; S],
-}
-
-impl<'a, const S: usize> RomChip<'a, S> {
-	fn new(ref_memory: &'a [u8; S]) -> Self {
-		Self { ref_memory }
-	}
-}
-
-impl<'a, const S: usize> Rom for RomChip<'a, S> {
-	fn read_byte(&self, address: u16) -> Result<u8, RamError> {
-		self.ref_memory
-			.get(usize::from(address))
-			.copied()
-			.ok_or(RamError::InvalidAddress(address))
-	}
-}
-
-#[derive(Debug, PartialEq, Eq, Clone)]
-struct RamChip<const S: usize> {
-	memory: Box<[u8; S]>,
-}
-
-impl<const S: usize> RamChip<S> {
-	fn new(memory: Box<[u8; S]>) -> Self {
-		Self { memory }
-	}
-}
-
-impl<const S: usize> Default for RamChip<S> {
-	fn default() -> Self {
-		RamChip::new(Box::new([0; S]))
-	}
-}
-
-impl<const S: usize> Rom for RamChip<S> {
-	fn read_byte(&self, address: u16) -> Result<u8, RamError> {
-		self.memory
-			.get(usize::from(address))
-			.copied()
-			.ok_or(RamError::InvalidAddress(address))
-	}
-}
-
-impl<const S: usize> Ram for RamChip<S> {
-	fn write_byte(&mut self, address: u16, value: u8) -> Result<(), RamError> {
-		let ptr = self
-			.memory
-			.get_mut(usize::from(address))
-			.ok_or(RamError::InvalidAddress(address))?;
-
-		*ptr = value;
-		Ok(())
 	}
 }

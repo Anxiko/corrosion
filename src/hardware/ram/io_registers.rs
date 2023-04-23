@@ -1,7 +1,8 @@
 use crate::hardware::audio::Audio;
 use crate::hardware::counters::divider::DividerRegister;
 use crate::hardware::counters::timer::Timer;
-use crate::hardware::ram::{Ram, RamChip, RamError, Rom};
+use crate::hardware::ram::{Ram, RamError, Rom};
+use crate::hardware::ram::chips::RamChip;
 use crate::hardware::screen::position::ScreenCord;
 
 use super::memory_mapping::{MemoryMapping, MemoryMappingEntry, RegionToMemoryMapper};
