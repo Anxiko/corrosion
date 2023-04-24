@@ -6,3 +6,4 @@ pub(crate) mod ime;
 pub(crate) mod ram;
 pub mod register_bank;
 pub(crate) mod screen;
+pub(crate) mod ppu;
