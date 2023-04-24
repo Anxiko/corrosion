@@ -1,9 +1,9 @@
 use crate::hardware::audio::Audio;
 use crate::hardware::counters::divider::DividerRegister;
 use crate::hardware::counters::timer::Timer;
-use crate::hardware::ram::{Ram, RamError, Rom};
 use crate::hardware::ram::chips::RamChip;
 use crate::hardware::ram::memory_mapping::RegionToMemoryMapperError;
+use crate::hardware::ram::{Ram, RamError, Rom};
 use crate::hardware::screen::position::ScreenCord;
 
 use super::memory_mapping::{MemoryMapping, MemoryMappingEntry, RegionToMemoryMapper};
@@ -21,9 +21,11 @@ pub(super) enum IoRegistersMemoryMappingRegion {
 	ScreenScroll,
 	ScreenPosition,
 	Bgp,
+	Obp0,
+	Obp1,
 }
 
-const IO_REGISTER_MAPPING_SIZE: usize = 11;
+const IO_REGISTER_MAPPING_SIZE: usize = 13;
 const IO_REGISTER_MAPPING_ENTRIES: [MemoryMappingEntry<IoRegistersMemoryMappingRegion>; IO_REGISTER_MAPPING_SIZE] = [
 	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::JoypadInput, 0x0, 1),
 	MemoryMappingEntry::new(
@@ -40,6 +42,8 @@ const IO_REGISTER_MAPPING_ENTRIES: [MemoryMappingEntry<IoRegistersMemoryMappingR
 	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::ScreenScroll, 0x42, 0x2),
 	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::ScreenPosition, 0x4A, 0x2),
 	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::Bgp, 0x47, 0x1),
+	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::Obp0, 0x48, 0x1),
+	MemoryMappingEntry::new(IoRegistersMemoryMappingRegion::Obp1, 0x49, 0x1),
 ];
 
 const IO_REGISTER_SERIAL_TRANSFER_SIZE: usize = 0x2;
@@ -61,6 +65,8 @@ pub(super) struct IoRegistersMemoryMapping {
 	screen_scroll: ScreenCord,
 	screen_position: ScreenCord,
 	bgp: u8,
+	obp0: u8,
+	obp1: u8,
 }
 
 impl Default for MemoryMapping<IO_REGISTER_MAPPING_SIZE, IoRegistersMemoryMappingRegion> {
@@ -89,6 +95,8 @@ impl RegionToMemoryMapper for IoRegistersMemoryMapping {
 			IoRegistersMemoryMappingRegion::ScreenPosition => Ok(&self.screen_position),
 			IoRegistersMemoryMappingRegion::ScreenScroll => Ok(&self.screen_scroll),
 			IoRegistersMemoryMappingRegion::Bgp => Ok(&self.bgp),
+			IoRegistersMemoryMappingRegion::Obp0 => Ok(&self.obp0),
+			IoRegistersMemoryMappingRegion::Obp1 => Ok(&self.obp1),
 		}
 	}
 
@@ -105,6 +113,8 @@ impl RegionToMemoryMapper for IoRegistersMemoryMapping {
 			IoRegistersMemoryMappingRegion::ScreenPosition => Ok(&mut self.screen_position),
 			IoRegistersMemoryMappingRegion::ScreenScroll => Ok(&mut self.screen_scroll),
 			IoRegistersMemoryMappingRegion::Bgp => Ok(&mut self.bgp),
+			IoRegistersMemoryMappingRegion::Obp0 => Ok(&mut self.obp0),
+			IoRegistersMemoryMappingRegion::Obp1 => Ok(&mut self.obp1),
 		}
 	}
 }
