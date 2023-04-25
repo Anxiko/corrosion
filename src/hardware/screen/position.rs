@@ -2,8 +2,8 @@ use crate::hardware::ram::{Ram, RamError, Rom};
 
 #[derive(Debug, Eq, PartialEq, Clone, Default)]
 pub(crate) struct ScreenCord {
-	y: u8, // Y appears before X in memory mappings
-	x: u8,
+	pub y: u8, // Y appears before X in memory mappings
+	pub x: u8,
 }
 
 impl Rom for ScreenCord {
