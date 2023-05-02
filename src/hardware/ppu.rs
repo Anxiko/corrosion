@@ -9,7 +9,15 @@ use crate::hardware::screen::position::ScreenCord;
 const SCREEN_SIZE_WIDTH: usize = 160;
 const SCREEN_SIZE_HEIGHT: usize = 144;
 
+const TILE_MAP_SIZE: usize = 32; // Tile maps are square, so this is the width and height in tiles
+const BITS_PER_TILE: usize = 8; // Tiles themselves are also squares
+
+
+const VRAM_TILE_MAP_OFFSET: usize = 0x1800;
+
+
 mod lcd_control;
+mod tile_index;
 
 pub(crate) trait PpuDevice {
 	fn get_lcd_control(&self) -> u8;
