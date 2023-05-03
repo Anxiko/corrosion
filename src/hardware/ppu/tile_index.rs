@@ -88,9 +88,24 @@ mod tests {
 		}];
 		expected.extend((0..9).map(|x| x + 5).map(|x| TileIndex { index: x, bits: None }));
 		expected.push(TileIndex {
-			index: 4+10,
+			index: 4 + 10,
 			bits: Some(0..3),
 		});
+
+		assert_eq!(actual, expected);
+	}
+
+	#[test]
+	fn incomplete_tile() {
+		let start = 4 * 8 + 3;
+		let end = start + 2;
+		let range = TileIndexRange::new(start, end);
+
+		let actual = range.into_iter().collect::<Vec<_>>();
+		let expected = vec![TileIndex {
+			index: 4,
+			bits: Some(3..5),
+		}];
 
 		assert_eq!(actual, expected);
 	}
