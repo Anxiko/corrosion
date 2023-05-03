@@ -1,25 +1,42 @@
+use super::BITS_PER_TILE;
 use std::cmp::min;
 use std::ops::Range;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
-struct TileIndex {
+pub(super) struct TileIndex {
 	index: u8,
 	bits: Option<Range<u8>>,
 }
 
+impl TileIndex {
+	pub(super) fn n_bits(&self) -> u8 {
+		match &self.bits {
+			None => BITS_PER_TILE as u8,
+			Some(range) => range.len() as u8,
+		}
+	}
+}
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-struct TileIndexRange {
+pub(super) struct TileIndexRange {
 	bit_start: u16,
 	bit_end: u16, // Exclusive
 }
 
 impl TileIndexRange {
-	fn new(bit_start: u16, bit_end: u16) -> Self {
+	pub(super) fn new(bit_start: u16, bit_end: u16) -> Self {
 		Self { bit_start, bit_end }
+	}
+
+	pub(super) fn with_length(bit_start: u8, length: u8) -> Self {
+		let bit_start: u16 = bit_start.into();
+		let length: u16 = length.into();
+
+		Self::new(bit_start, bit_start + length)
 	}
 }
 
-struct TileIndexIterator {
+pub(super) struct TileIndexIterator {
 	position: u16,
 	remaining: u16,
 }
