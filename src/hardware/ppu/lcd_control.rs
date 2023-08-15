@@ -1,4 +1,5 @@
 use crate::bits::byte_to_bits;
+use crate::hardware::ram::VIDEO_RAM_START;
 
 const DISPLAY_ENABLED_BIT: usize = 7;
 const TILE_SOURCE_BIT: usize = 4;
@@ -19,10 +20,20 @@ impl From<bool> for TileDataAddressMode {
 	}
 }
 
+impl TileDataAddressMode {
+	fn address_from_index(&self, index: u8) -> u16 {
+		match self {
+			TileDataAddressMode::SignedAddressing => VIDEO_RAM_START + u16::from(index),
+			TileDataAddressMode::UnsignedAddressing => VIDEO_RAM_START.checked_add_signed(i16::from(index as i8)).unwrap()
+		}
+	}
+}
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub(super) enum TileMapAddressMode {
 	/* The addressing mode used by BG and Window for the tile map */
-	First,  // 0x9800 to 0x9BFF
+	First,
+	// 0x9800 to 0x9BFF
 	Second, // 0x9C00 to 0x9FFF
 }
 

@@ -22,7 +22,9 @@ mod io_registers;
 mod memory_mapping;
 mod traits;
 
-use crate::hardware::ram::memory_mapping::{MemoryMapping, MemoryMappingEntry, RegionToMemoryMapper, RegionToMemoryMapperError};
+use crate::hardware::ram::memory_mapping::{
+	MemoryMapping, MemoryMappingEntry, RegionToMemoryMapper, RegionToMemoryMapperError,
+};
 pub(crate) use error::RamError;
 pub(crate) use traits::{Ram, Rom};
 

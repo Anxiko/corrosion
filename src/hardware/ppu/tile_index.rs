@@ -9,6 +9,10 @@ pub(super) struct TileIndex {
 }
 
 impl TileIndex {
+	pub(super) fn get_index(&self) -> u8 {
+		self.index
+	}
+
 	pub(super) fn n_bits(&self) -> u8 {
 		match &self.bits {
 			None => BITS_PER_TILE as u8,
